@@ -1,6 +1,4 @@
 import React, { FC, useEffect, useRef, useState } from "react";
-import { CollectionEditor } from "../components/CollectionEditor";
-import { Chip } from "../components/Chip";
 import { DurationPicker } from "../components/DurationPicker";
 
 interface CustomisePrelaunchSettingsPaneProps {
@@ -50,7 +48,7 @@ export const CustomisePrelaunchSettingsPane: FC<
       <div className="grid grid-cols-2 gap-4 items-center">
         <label
           htmlFor="presale-target"
-          className="text-sm font-medium text-white"
+          className="text-sm font-medium text-gray-400"
         >
           Presale Target
         </label>
@@ -58,7 +56,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           type="text"
           inputMode="numeric"
           id="presale-target"
-          className="w-24 text-center text-sm block p-1 bg-gray-800/30 rounded border-b border-gray-500  placeholder-gray-400 text-white focus:outline-none"
+          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
           placeholder={presaleTarget.toString()}
           value={presaleTarget.replaceAll(" Sol", "") + " Sol"}
           onChange={(e) => {
@@ -74,7 +72,7 @@ export const CustomisePrelaunchSettingsPane: FC<
       <div className="grid grid-cols-2 gap-4 items-center">
         <label
           htmlFor="vesting-supply"
-          className="text-sm font-medium text-white"
+          className="text-sm font-medium text-gray-400"
         >
           Vesting Supply
         </label>
@@ -82,7 +80,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           type="text"
           inputMode="numeric"
           id="vesting-supply"
-          className="w-24 text-center text-sm block p-1 bg-gray-800/30 rounded border-b border-gray-500  placeholder-gray-400 text-white focus:outline-none"
+          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
           placeholder={vestingSupply.toString()}
           value={vestingSupply.replaceAll("%", "") + "%"}
           onChange={(e) => {
@@ -97,7 +95,7 @@ export const CustomisePrelaunchSettingsPane: FC<
       <div className="grid grid-cols-2 items-center gap-4">
         <label
           htmlFor="creator-fees"
-          className="text-sm font-medium text-white"
+          className="text-sm font-medium text-gray-400"
         >
           Creator Fees
         </label>
@@ -105,7 +103,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           type="text"
           inputMode="numeric"
           id="creator-fees"
-          className="w-24 text-center text-sm block p-1 bg-gray-800/30 rounded border-b border-gray-500  placeholder-gray-400 text-white focus:outline-none"
+          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
           placeholder={creatorFees.toString()}
           value={creatorFees.replaceAll("%", "") + "%"}
           onChange={(e) => {

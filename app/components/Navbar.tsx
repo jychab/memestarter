@@ -9,16 +9,13 @@ export const Navbar: FC = () => {
   const { publicKey } = useWallet();
 
   return (
-    <nav>
-      <div className="container mx-auto w-full p-4 flex justify-between items-center">
-        <Link
-          className="shadow-2xl text-blue-100 uppercase text-base lg:text-2xl"
-          href="/"
-        >
+    <nav className="bg-white border-b border-gray-200 px-4 pt-8 pb-8 shadow-sm">
+      <div className="mx-auto flex justify-between items-center max-w-screen-2xl">
+        <Link className="text-black uppercase text-base lg:text-xl" href="/">
           MEME STARTER
         </Link>
-        <div className="flex items-end justify-end gap-4">
-          <CreateProjectBtn />
+        <div className="flex items-center justify-end gap-4">
+          {publicKey && <CreateProjectBtn />}
           {!publicKey ? <SignInBtn /> : <UserProfileBtn />}
         </div>
       </div>

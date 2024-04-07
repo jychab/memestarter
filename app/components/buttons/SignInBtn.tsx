@@ -53,7 +53,7 @@ export const SignInBtn: FC = () => {
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="px-4 py-1 border flex gap-2 border-blue-gray-200 border-blue-gray-700 rounded-lg text-white text-blue-gray-200 hover:border-blue-gray-400 hover:border-blue-gray-500 hover:text-blue-gray-400 hover:text-blue-gray-300 hover:shadow transition duration-150"
+          className="px-4 py-1 text-black hover:text-blue-800 transition-duration-150"
         >
           Sign In
         </button>
@@ -63,7 +63,7 @@ export const SignInBtn: FC = () => {
         hidden={!open}
       >
         <div className="flex flex-col items-center justify-center h-full">
-          <div className="rounded p-4 w-2/3 max-w-fit max-h-full flex flex-col items-center font-semibold justify-center text-white text-base bg-gray-800 border-2 border-gray-700">
+          <div className="rounded p-8 w-2/3 max-w-fit max-h-full flex flex-col items-center font-semibold justify-center text-black text-base bg-white border border-gray-700">
             <div
               ref={signInDialogRef}
               className="flex flex-col gap-4 items-center justify-center"
@@ -76,7 +76,7 @@ export const SignInBtn: FC = () => {
                   .filter((wallet) => wallet.readyState === "Installed")
                   .map((wallet) => (
                     <button
-                      className="flex items-center gap-4 max-w-sm px-4 py-2 border rounded-lg shadow bg-gray-800 border-gray-700 hover:bg-gray-700"
+                      className="flex items-center gap-4 max-w-sm px-4 py-2 border rounded-lg shadow bg-white border-gray-700 hover:bg-gray-300"
                       key={wallet.adapter.name}
                       onClick={() => setSelectedWallet(wallet)}
                     >

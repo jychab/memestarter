@@ -13,7 +13,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="bg-gray-900">
+      <div className="bg-white">
         <Navbar />
         <main className="flex text-white justify-center p-6 w-full min-h-screen">
           <ToastContainer position="bottom-left" theme="dark" />

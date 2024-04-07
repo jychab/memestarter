@@ -242,7 +242,7 @@ export function Pool() {
     name &&
     symbol && (
       <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
-        <div className="rounded bg-gray-800 p-2 border w-full border-gray-900">
+        <div className="rounded border w-full shadow-sm">
           <ReviewPane
             decimal={pool.decimal}
             mint={pool.mint}
@@ -309,7 +309,7 @@ export function Pool() {
             </button>
             <span
               hidden={status !== Status.PresaleInProgress}
-              className="text-[10px] text-gray-300"
+              className="text-[10px] text-gray-400"
             >
               {"Creator Fees: " +
                 parseInt(pool.creatorFeeBasisPoints) / 100 +

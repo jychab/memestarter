@@ -52,33 +52,33 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   description,
 }) => {
   return (
-    <div className="flex flex-col text-gray-400 p-4 rounded gap-8">
+    <div className="flex flex-col text-gray-400 font-medium p-4 rounded gap-8">
       <div className="flex gap-8">
         <Image
           width={0}
           height={0}
           sizes="100vw"
           priority={true}
-          className="w-2/3 max-w-64 h-auto rounded"
+          className="w-1/2 max-w-64 h-auto rounded border border-black"
           src={image}
           alt={""}
         />
         <div className="flex flex-col text-xs gap-2 ">
           <span>Name</span>
-          <span className=" text-gray-200">{name}</span>
+          <span className=" text-black">{name}</span>
           <span>Symbol</span>
-          <span className="text-gray-200">{symbol}</span>
+          <span className="text-black">{symbol}</span>
           <span>Decimals</span>
-          <span className=" text-gray-200">{decimals}</span>
+          <span className=" text-black">{decimals}</span>
           {mint && <span>Mint Address</span>}
-          {mint && <span className="w-24 truncate text-gray-200">{mint}</span>}
+          {mint && <span className="w-24 truncate text-black">{mint}</span>}
         </div>
       </div>
       {status && (
         <div className="grid grid-cols-10 items-end justify-center gap-4">
           <div className="col-span-4 flex flex-col gap-1">
             <div className="flex items-center gap-1">
-              <span className="text-sm text-white">
+              <span className="text-sm text-black">
                 {`${liquidityCollected / LAMPORTS_PER_SOL}`}
               </span>
               <Image
@@ -95,11 +95,11 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
             } Sol funded`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-white">{uniqueWallets}</span>
+            <span className="text-sm text-black">{uniqueWallets}</span>
             <span className="text-[10px]">{`unqiue wallets`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-white">{`${
+            <span className="text-sm text-black">{`${
               convertSecondsToNearestUnit(
                 presaleTimeLimit - Date.now() / 1000
               ).split(" ")[0]
@@ -112,7 +112,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           </div>
           <div className="col-span-4 flex flex-col gap-1">
             <div className="flex items-center gap-1">
-              <span className="text-sm text-white">
+              <span className="text-sm text-black">
                 {`${separateNumberWithComma(
                   (totalSupply / 10 ** decimals).toString()
                 )} ${symbol}`}
@@ -121,13 +121,13 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
             <span className="text-[10px]">{`total supply`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-white">
+            <span className="text-sm text-black">
               {((vestedSupply / totalSupply) * 100).toString() + "%"}
             </span>
             <span className="text-[10px]">{`vested supply`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-white">{`${convertSecondsToNearestUnit(
+            <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
               vestingPeriod
             )}`}</span>
             <span className="text-[10px]">{`vesting period`}</span>
@@ -139,7 +139,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Description</span>
         )}
         {!status && description && (
-          <span className="col-span-4 sm:col-span-5 text-gray-200">
+          <span className="col-span-4 sm:col-span-5 text-black">
             {description}
           </span>
         )}
@@ -147,7 +147,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">External Url</span>
         )}
         {!status && externalUrl && (
-          <span className="col-span-4 sm:col-span-5 text-gray-200">
+          <span className="col-span-4 sm:col-span-5 text-black">
             {externalUrl}
           </span>
         )}
@@ -155,7 +155,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Total Supply</span>
         )}
         {!status && (
-          <span className="col-span-4 sm:col-span-5 text-gray-200">
+          <span className="col-span-4 sm:col-span-5 text-black">
             {separateNumberWithComma(totalSupply.toString()) + ` ${symbol}`}
           </span>
         )}
@@ -163,7 +163,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Vested Supply</span>
         )}
         {!status && (
-          <span className="col-span-4 sm:col-span-2 text-gray-200">
+          <span className="col-span-4 sm:col-span-2 text-black">
             {((vestedSupply / totalSupply) * 100).toString() + "%"}
           </span>
         )}
@@ -171,7 +171,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Vesting Period</span>
         )}
         {!status && (
-          <span className="col-span-4 sm:col-span-2 text-gray-200">
+          <span className="col-span-4 sm:col-span-2 text-black">
             {convertSecondsToNearestUnit(vestingPeriod)}
           </span>
         )}
@@ -179,7 +179,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Presale Target</span>
         )}
         {!status && (
-          <span className="col-span-4 sm:col-span-2 text-gray-200">
+          <span className="col-span-4 sm:col-span-2 text-black">
             {presaleTarget / LAMPORTS_PER_SOL + ` Sol`}
           </span>
         )}
@@ -187,7 +187,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Max Presale Duration</span>
         )}
         {maxPresaleTime && (
-          <span className="col-span-4 sm:col-span-2 text-gray-200">
+          <span className="col-span-4 sm:col-span-2 text-black">
             {convertSecondsToNearestUnit(maxPresaleTime)}
           </span>
         )}
@@ -195,7 +195,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Creator Fees</span>
         )}
         {creatorFees && (
-          <span className="col-span-4 sm:col-span-5 text-gray-200">
+          <span className="col-span-4 sm:col-span-5 text-black">
             {creatorFees / 100 + "%"}
           </span>
         )}

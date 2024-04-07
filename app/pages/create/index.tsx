@@ -197,19 +197,19 @@ function CreateCollection() {
   return (
     publicKey && (
       <div className="mx-auto w-full lg:max-w-3xl">
-        <div className="bg-gray-800/50 p-4 relative shadow-md sm:rounded-lg overflow-hidden">
+        <div className="p-4 relative shadow-md sm:rounded-lg overflow-hidden">
           <form onSubmit={handleSubmit}>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg text-white font-semibold ml-4">
+              <h2 className="text-lg text-black ml-4">
                 {page === 1 && (
                   <p>
-                    Step 1:
+                    Step 1 of 3:
                     <span className="text-base"> Design Your Own Token</span>
                   </p>
                 )}
                 {page === 2 && (
                   <p>
-                    Step 2:
+                    Step 2 of 3:
                     <span className="text-base">
                       {" "}
                       Customize Your Presale Launch
@@ -218,7 +218,7 @@ function CreateCollection() {
                 )}
                 {page === 3 && (
                   <p>
-                    Step 3:
+                    Step 3 of 3:
                     <span className="text-base"> Review</span>
                   </p>
                 )}
@@ -284,13 +284,13 @@ function CreateCollection() {
                 hidden={page === 1}
                 type="button"
                 onClick={() => setPage(page - 1)}
-                className="bg-gray-600 text-gray-200 py-1 px-2 items-center justify-center rounded-md hover:bg-gray-600 transition duration-300"
+                className="text-gray-600 py-1 px-2 items-center justify-center rounded-md hover:text-blue-600 transition duration-300"
               >
                 <span className="p-2">Back</span>
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-gray-200 py-1 px-2 items-center justify-center rounded-md hover:bg-blue-600 transition duration-300"
+                className="border border-gray-300 text-black py-1 px-2 items-center justify-center rounded-md hover:text-blue-600 transition duration-300"
               >
                 {loading && (
                   <svg

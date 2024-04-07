@@ -13,8 +13,8 @@ export const DurationPicker: FC<DurationPickerProps> = ({
 }) => {
   const showDurationDialogRef = useRef<HTMLDivElement>(null);
   const [showDuration, setShowDuration] = useState(false);
-  const [value, setValue] = useState<number>(period / (24 * 60 * 60));
-  const [periodEnum, setPeriodEnum] = useState<Period>(Period.Days);
+  const [value, setValue] = useState<number>();
+  const [periodEnum, setPeriodEnum] = useState<Period>(Period.Hours);
   useEffect(() => {
     // Function to handle click outside the dialog
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,20 +40,34 @@ export const DurationPicker: FC<DurationPickerProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDuration]);
+
   useEffect(() => {
-    if (periodEnum && value && setPeriod) {
+    if (value && periodEnum) {
       if (periodEnum === Period.Days) {
-        setPeriod(value * 24 * 60 * 60);
+        setPeriod(value * (24 * 60 * 60));
       } else if (periodEnum === Period.Hours) {
         setPeriod(value * (60 * 60));
       } else {
         setPeriod(value * (30 * 24 * 60 * 60));
       }
     }
-  }, [periodEnum, value, setPeriod]);
+  }, [value, periodEnum]);
+
+  useEffect(() => {
+    if (periodEnum && period) {
+      if (periodEnum === Period.Days) {
+        setValue(period / (24 * 60 * 60));
+      } else if (periodEnum === Period.Hours) {
+        setValue(period / (60 * 60));
+      } else {
+        setValue(period / (30 * 24 * 60 * 60));
+      }
+    }
+  }, [periodEnum]);
+
   return (
     <div className="grid grid-cols-2 items-center">
-      <label htmlFor="time" className="text-sm font-medium text-white">
+      <label htmlFor="time" className="text-sm font-medium text-gray-400">
         {title}
       </label>
       <div className="flex">
@@ -61,11 +75,13 @@ export const DurationPicker: FC<DurationPickerProps> = ({
           type="text"
           inputMode="numeric"
           id="time"
-          className="rounded-none rounded-s-lg w-12 text-center leading-none text-sm p-2 bg-gray-700 border border-gray-600 placeholder-gray-400 text-white focus:outline-none"
-          value={value}
+          className="rounded-none rounded-s-lg w-14 text-center leading-none text-sm p-2 border border-gray-300  text-black"
+          value={!Number.isNaN(value) ? value : ""}
           onChange={(e) => {
             if (e.target.value) {
               setValue(parseInt(e.target.value));
+            } else {
+              setValue(NaN);
             }
           }}
           required
@@ -74,7 +90,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
           <button
             id="dropdown-duration-button"
             onClick={() => setShowDuration(!showDuration)}
-            className="relative border-s-0 flex-shrink-0 z-10 w-24 inline-flex items-center py-2 px-2 pr-4 justify-between text-sm font-medium text-center border rounded-e-lg focus:outline-none  bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+            className="relative border-s-0 flex-shrink-0 z-10 w-24 inline-flex items-center py-2 px-2 pr-4 justify-center text-sm font-medium text-center border rounded-e-lg focus:outline-none text-black border-gray-300"
             type="button"
           >
             {periodEnum}
@@ -92,13 +108,13 @@ export const DurationPicker: FC<DurationPickerProps> = ({
             id="dropdown-duration"
             hidden={!showDuration}
             ref={showDurationDialogRef}
-            className="z-20 mt-2 absolute divide-y divide-gray-100 rounded-lg shadow w-36 bg-gray-700"
+            className="z-20 mt-2 absolute  rounded-lg shadow w-24"
           >
-            <ul className="py-2 text-sm text-gray-200">
+            <ul className="py-2 text-sm text-black bg-white border-gray-300 border">
               <li>
                 <button
                   type="button"
-                  className="inline-flex w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:text-white"
+                  className="inline-flex w-full px-4 py-2 text-sm "
                   onClick={() => setPeriodEnum(Period.Hours)}
                 >
                   Hours
@@ -107,7 +123,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
               <li>
                 <button
                   type="button"
-                  className="inline-flex w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:text-white"
+                  className="inline-flex w-full px-4 py-2 text-sm "
                   role="menuitem"
                   onClick={() => setPeriodEnum(Period.Days)}
                 >
@@ -117,7 +133,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
               <li>
                 <button
                   type="button"
-                  className="inline-flex w-full px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:text-white"
+                  className="inline-flex w-full px-4 py-2 text-sm "
                   role="menuitem"
                   onClick={() => setPeriodEnum(Period.Months)}
                 >

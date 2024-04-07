@@ -36,25 +36,25 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
   setSupply,
 }) => {
   return (
-    <div className="animate-fade-right flex flex-col p-4 lg:flex-row lg:gap-x-16 gap-4">
+    <div className="animate-fade-right flex flex-col p-4 lg:flex-row gap-4">
       <div className="relative w-48 h-48 rounded-md overflow-hidden">
         <div className="flex items-center justify-center w-full">
           <label
             htmlFor="dropzone-file"
-            className={`cursor-pointer flex flex-col w-48 h-48 justify-center items-center border-2rounded-lg hover:bg-bray-800 bg-gray-700 border-gray-600 hover:border-gray-500 hover:bg-gray-600`}
+            className={`cursor-pointer relative flex flex-col w-48 h-48 justify-center items-center`}
           >
             {tempImageUrl ? (
               <Image
-                src={tempImageUrl}
                 width={0}
                 height={0}
                 sizes="100vw"
-                alt="Selected"
-                className="object-cover w-48 h-auto"
-                quality={100}
+                priority={true}
+                className="w-full max-w-64 h-auto rounded border border-black"
+                src={tempImageUrl}
+                alt={""}
               />
             ) : (
-              <div className="flex flex-col w-full h-full items-center justify-center">
+              <div className="flex flex-col w-full h-full border bg-gray-100 hover:bg-gray-200 hover:border-gray-200 items-center justify-center">
                 <svg
                   className="w-8 h-8 mb-4 text-gray-400"
                   aria-hidden="true"
@@ -94,7 +94,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
               maxLength={32}
               name="floating_name"
               id="floating_name"
-              className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-black border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               value={name}
               placeholder={name}
               onChange={handleNameChange}
@@ -113,7 +113,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
               maxLength={10}
               name="floating_symbol"
               id="floating_symbol"
-              className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-black border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               value={symbol}
               placeholder={symbol}
               onChange={handleSymbolChange}
@@ -133,7 +133,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
             maxLength={10}
             name="floating_externalUrl"
             id="floating_externalUrl"
-            className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-white border-gray-600 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-black border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             value={externalUrl}
             placeholder={externalUrl}
             onChange={handleExternalUrlChange}
@@ -148,60 +148,57 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
         <textarea
           id="description"
           rows={4}
-          className="block p-2.5 w-full text-sm rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 focus:outline-none"
+          className="block p-2.5 w-full text-sm rounded-lg border bg-white border-gray-300 placeholder-gray-400 text-black scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-700 focus:outline-none"
           placeholder="Write a description..."
           value={description}
           onChange={handleDescriptionChange}
         />
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex gap-2 items-center">
-            <label
-              htmlFor="decimal-input"
-              className="block text-sm font-medium text-gray-400"
-            >
-              Decimals:
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              id="decimal-input"
-              className="w-16 text-center text-sm block p-1 bg-gray-800/30 rounded border-b border-gray-500  placeholder-gray-400 text-white focus:outline-none"
-              placeholder={decimals.toString()}
-              value={decimals}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setDecimals(parseInt(e.target.value));
-                } else {
-                  setDecimals(NaN);
-                }
-              }}
-              required
-            />
-          </div>
-          <div className="flex gap-2 items-center">
-            <label
-              htmlFor="supply-input"
-              className="block text-sm font-medium text-gray-400"
-            >
-              Supply:
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              id="supply-input"
-              className="w-44 text-center text-sm block p-1 bg-gray-800/30 rounded border-b border-gray-500  placeholder-gray-400 text-white focus:outline-none"
-              placeholder={supply.toString()}
-              value={separateNumberWithComma(supply.replaceAll(",", ""))}
-              onChange={(e) => {
-                const amount = e.target.value.replaceAll(",", "");
-                console.log(amount);
-                if (!amount || amount.match(/^\d+$/)) {
-                  setSupply(e.target.value);
-                }
-              }}
-              required
-            />
-          </div>
+        <div className="grid grid-cols-5 md:grid-cols-10 gap-4 items-center">
+          <label
+            htmlFor="decimal-input"
+            className="block text-sm font-medium text-gray-400 col-span-2"
+          >
+            Decimals:
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="decimal-input"
+            className="col-span-3 md:col-span-2 w-16 text-center text-sm block p-1 rounded border border-gray-300  text-black "
+            placeholder={decimals.toString()}
+            value={decimals}
+            onChange={(e) => {
+              if (e.target.value) {
+                setDecimals(parseInt(e.target.value));
+              } else {
+                setDecimals(NaN);
+              }
+            }}
+            required
+          />
+
+          <label
+            htmlFor="supply-input"
+            className="block text-sm font-medium text-gray-400 col-span-2 md:col-span-3"
+          >
+            Total Supply:
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            id="supply-input"
+            className="col-span-3 text-center text-sm block p-1 rounded border border-gray-300 text-black "
+            placeholder={supply.toString()}
+            value={separateNumberWithComma(supply.replaceAll(",", ""))}
+            onChange={(e) => {
+              const amount = e.target.value.replaceAll(",", "");
+              console.log(amount);
+              if (!amount || amount.match(/^\d+$/)) {
+                setSupply(e.target.value);
+              }
+            }}
+            required
+          />
         </div>
       </div>
     </div>

@@ -47,7 +47,7 @@ export const UserProfileBtn: FC = () => {
       <button
         type="button"
         onClick={() => setExpand(!expand)}
-        className="flex text-sm bg-gray-800 rounded md:me-0 focus:ring-4 focus:ring-gray-600"
+        className="flex text-sm rounded md:me-0"
         id="user-menu-button"
       >
         <Image
@@ -62,14 +62,14 @@ export const UserProfileBtn: FC = () => {
       <div
         ref={dialogRef}
         hidden={!expand}
-        className="absolute right-0 z-50 my-4 text-base list-none divide-y rounded-lg shadow bg-gray-700 divide-gray-600"
+        className="absolute right-0 z-50 my-4 text-base list-none divide-y rounded-lg shadow bg-white border border-gray-100 divide-gray-100"
         id="user-dropdown"
       >
         <div className="px-4 py-3">
-          <span className="block text-sm truncate max-w-36 text-white">
+          <span className="block text-sm truncate max-w-36 text-black">
             {publicKey ? publicKey.toString() : ""}
           </span>
-          <span className="block text-sm truncate text-gray-400">
+          <span className="block text-sm truncate text-black">
             {networkConfiguration}
           </span>
         </div>
@@ -80,7 +80,7 @@ export const UserProfileBtn: FC = () => {
                 router.push("/profile");
                 setExpand(false);
               }}
-              className="flex w-full px-4 py-2 text-sm hover:bg-gray-600 text-gray-200 hover:text-white"
+              className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
               Profile
             </button>
@@ -107,7 +107,7 @@ export const UserProfileBtn: FC = () => {
                 }
                 setExpand(false);
               }}
-              className="flex w-full px-4 py-2 text-sm hover:bg-gray-600 text-gray-200 hover:text-white"
+              className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
               Sign out
             </button>

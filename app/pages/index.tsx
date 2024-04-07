@@ -86,7 +86,7 @@ function Projects() {
 
   return (
     <div className="flex flex-col w-full h-fit max-w-screen-2xl mx-auto gap-4">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 p-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {projects &&
           projects.length > 0 &&
           projects.map((project) => (

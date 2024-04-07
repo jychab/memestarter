@@ -106,7 +106,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   return (
     image &&
     name && (
-      <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 bg-gray-800 rounded right-2">
+      <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 border text-black border-gray-300 rounded right-2">
         <div className="flex flex-col gap-4">
           <div
             className={`flex items-center ${
@@ -231,19 +231,17 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             />
             <div className="flex flex-col w-3/4 overflow-hidden gap-2">
               <div className="flex flex-col">
-                <span className="text-[8px] sm:text-[10px] uppercase text-gray-400">
+                <span className="text-[10px] sm:text-xs uppercase text-gray-400">
                   Name
                 </span>
-                <span className="text-[10px] sm:text-xs">{name}</span>
+                <span className="text-xs">{name}</span>
               </div>
               <div className="flex gap-2">
                 <div className="flex flex-col">
-                  <span className="text-[8px] sm:text-[10px] uppercase text-gray-400">
+                  <span className="text-[10px] sm:text-xs uppercase text-gray-400">
                     Mint
                   </span>
-                  <span className="text-[10px] max-w-20 truncate text-gray-400">
-                    {item.id}
-                  </span>
+                  <span className="text-xs max-w-36 truncate">{item.id}</span>
                 </div>
               </div>
             </div>
@@ -251,8 +249,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
           <div className="flex flex-col text-xs text-gray-400 gap-4">
             <span>Funded</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-700">
-                <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-300">
+                <thead className="uppercase border-b border-gray-300">
                   <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
@@ -303,8 +301,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             </div>
             <span>Vesting</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-700 text-gray-400">
-                <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-300">
+                <thead className="uppercase border-b border-gray-300">
                   <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
@@ -356,8 +354,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             </div>
             <span>Completed</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-700 text-gray-400">
-                <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-300">
+                <thead className="uppercase border-b border-gray-300">
                   <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
@@ -408,8 +406,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             </div>
             <span>Expired</span>
             <div className="overflow-x-auto">
-              <table className="w-full  text-left rtl:text-right border border-gray-700 text-gray-400">
-                <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-300">
+                <thead className="uppercase border-b border-gray-300">
                   <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
