@@ -333,8 +333,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 className="z-20 mt-2 absolute rounded w-28"
               >
                 <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
-                  {Object.values(ProjectType).map((value) => (
-                    <li>
+                  {Object.values(ProjectType).map((value, index) => (
+                    <li key={index}>
                       <button
                         type="button"
                         className="inline-flex w-full px-4 py-2 text-sm "
