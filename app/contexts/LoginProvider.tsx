@@ -12,6 +12,8 @@ import useUmi from "../hooks/useUmi";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { publicKey as pubKey } from "@metaplex-foundation/umi";
+import { getSignature } from "../utils/helper";
+import { toast } from "react-toastify";
 
 export interface LoginProviderProps {
   children: ReactNode;
@@ -19,7 +21,7 @@ export interface LoginProviderProps {
 
 export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const { publicKey } = useWallet();
+  const { publicKey, signMessage, disconnect } = useWallet();
   const [nft, setNft] = useState<DasApiAsset>();
   const [signedMessage, setSignedMessage] = useLocalStorage<string | null>(
     "signedMessage",
@@ -34,6 +36,27 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   useEffect(() => {
     if (publicKey && user === null) {
       signInAnonymously(auth);
+    }
+    if (publicKey && user && signMessage) {
+      setSessionKey(null);
+      getSignature(
+        user,
+        signedMessage,
+        sessionKey,
+        signMessage,
+        setSignedMessage,
+        setSessionKey
+      )
+        .then(() => toast.success("Signed In"))
+        .catch(() => {
+          if (publicKey) {
+            disconnect();
+          }
+          if (user !== null) {
+            auth.signOut();
+          }
+          toast.error("Unable to Sign In");
+        });
     }
     if (publicKey && user && umi) {
       const unsubscribe = onSnapshot(
@@ -55,7 +78,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
       );
       return () => unsubscribe();
     }
-    setSessionKey(null);
   }, [publicKey, user]);
 
   useEffect(() => {

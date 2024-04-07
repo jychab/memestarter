@@ -22,7 +22,7 @@ import {
   launchTokenAmm,
   getMetadata,
 } from "../../../utils/helper";
-import { MarketDetails, Pool, Status } from "../../../utils/types";
+import { MarketDetails, PoolType, Status } from "../../../utils/types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../../utils/firebase";
 import {
@@ -31,6 +31,7 @@ import {
   buildTransaction,
 } from "@raydium-io/raydium-sdk";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { getAccount } from "@solana/spl-token";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export function Pool() {
     setSessionKey,
     sessionKey,
   } = useLogin();
-  const [pool, setPool] = useState<Pool>();
+  const [pool, setPool] = useState<PoolType>();
   const [image, setImage] = useState();
   const [name, setName] = useState();
   const [description, setDescription] = useState();
@@ -70,7 +71,7 @@ export function Pool() {
     if (poolId) {
       getDoc(doc(db, `Pool/${poolId}`)).then((doc) => {
         if (doc.exists()) {
-          setPool(doc.data() as Pool);
+          setPool(doc.data() as PoolType);
         }
       });
     }
@@ -84,11 +85,6 @@ export function Pool() {
   const handleClick = async (e: any) => {
     e.preventDefault();
     try {
-      if (!nft) {
-        toast.error("Missing Profile...");
-        router.push("/profile");
-        return;
-      }
       if (
         publicKey &&
         user &&
@@ -98,10 +94,18 @@ export function Pool() {
         signTransaction
       ) {
         setLoading(true);
+        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (
           status === Status.PresaleTargetMet &&
           pool.authority === publicKey.toBase58()
         ) {
+          if (
+            !amountOfSolInWallet ||
+            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3
+          ) {
+            toast.error("Insufficient SOL. You need at least 3 Sol.");
+            return;
+          }
           const docRef = await getDoc(
             doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
           );
@@ -184,6 +188,19 @@ export function Pool() {
             signTransaction
           );
         } else if (status === Status.PresaleInProgress) {
+          if (!nft) {
+            toast.error("Missing Profile...");
+            router.push("/profile");
+            return;
+          }
+          if (
+            !amountOfSolInWallet ||
+            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL
+          ) {
+            toast.error("Insufficient SOL. You need at least 1 Sol.");
+            return;
+          }
+
           let ix = [];
           ix.push(
             await buyPresaleIx(
@@ -215,7 +232,7 @@ export function Pool() {
     }
   };
 
-  function getColorfromStatus(status: Status | undefined, pool: Pool) {
+  function getColorfromStatus(status: Status | undefined, pool: PoolType) {
     if (
       status === Status.PresaleInProgress ||
       (status === Status.PresaleTargetMet &&

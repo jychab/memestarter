@@ -1,13 +1,15 @@
 import React, { FC, useEffect, useState } from "react";
-import { Pool } from "../utils/types";
+import { PoolType } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import solanaLogo from "../public/solanaLogoMark.png";
 import Image from "next/image";
 import { convertSecondsToNearestUnit, getMetadata } from "../utils/helper";
 import Link from "next/link";
+import { Chip } from "./Chip";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface CardItemProps {
-  pool: Pool;
+  pool: PoolType;
   timer: number | undefined;
 }
 
@@ -15,6 +17,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
   const [image, setImage] = useState();
   const [name, setName] = useState();
+  const { publicKey } = useWallet();
   const [description, setDescription] = useState();
   useEffect(() => {
     if (pool) {
@@ -40,23 +43,25 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
         href={`pool/${pool.pool}`}
       >
         <div className="group cursor overflow-hidden rounded shadow-xl duration-200 hover:-translate-y-4">
-          <div className="flex h-40 lg:h-60 flex-col justify-between overflow-hidden">
+          <div className="relative w-40 h-40 lg:w-60 lg:h-60 overflow-hidden">
             <Image
-              width={0}
-              height={0}
-              sizes="100vw"
-              priority={true}
-              className="h-full w-full"
+              className={`rounded object-cover cursor-pointer`}
+              fill={true}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               src={image}
               alt={""}
             />
           </div>
           <div className="flex flex-col min-h-16 lg:min-h-16 h-fit group-hover:max-h-64 gap-2 overflow-hidden bg-white px-4 py-2 lg:py-4">
-            <div className="flex justify-between">
-              <h6 className="group-hover:text-gray-900 text-gray-800 text-sm lg:text-base">
-                {name}
-              </h6>
-
+            <div className="flex items-end md:items-center justify-between">
+              <div className="flex flex-col gap-1 md:flex-row md:items-center ">
+                {publicKey?.toBase58() === pool.authority && (
+                  <Chip k={"YOURS"} v={""} />
+                )}
+                <h6 className="group-hover:text-gray-900 max-w-20 truncate text-gray-800 text-sm lg:text-base">
+                  {name}
+                </h6>
+              </div>
               <div className="flex gap-1 items-center group-hover:hidden ">
                 <h6 className="text-gray-800 ">
                   {pool.liquidityCollected
@@ -64,10 +69,8 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                     : 0}
                 </h6>
                 <Image
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  className="h-3 w-3"
+                  width={16}
+                  height={16}
                   src={solanaLogo}
                   alt={"solana logo"}
                 />
@@ -145,10 +148,8 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                   } / ${pool.presaleTarget / LAMPORTS_PER_SOL}`}
                 </span>
                 <Image
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  className="h-auto w-4"
+                  width={16}
+                  height={16}
                   src={solanaLogo}
                   alt={"solana logo"}
                 />

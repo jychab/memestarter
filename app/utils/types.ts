@@ -99,7 +99,7 @@ export interface MarketDetails {
   baseMint: string;
   quoteMint: string;
 }
-export interface Pool {
+export interface PoolType {
   decimal: number;
   mintMetadata: DAS.GetAssetResponse;
   amountCoin: number;
@@ -124,7 +124,7 @@ export interface Pool {
   updatedAt: Timestamp;
 }
 
-export interface Mint {
+export interface MintType {
   originalMint: string;
   pool: string;
   amount: number;

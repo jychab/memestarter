@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from "react";
-import { Mint, Pool, Status } from "../utils/types";
+import { MintType, PoolType, Status } from "../utils/types";
 import Image from "next/image";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import {
@@ -35,7 +35,7 @@ enum ProjectType {
   expired = "Expired",
 }
 
-export interface Project extends Mint, Pool {}
+export interface Project extends MintType, PoolType {}
 
 export const InventoryItem: FC<InventoryItemProps> = ({
   item,
@@ -92,10 +92,10 @@ export const InventoryItem: FC<InventoryItemProps> = ({
     const temp: Project[] = [];
     await Promise.all(
       docs.map(async (docRef) => {
-        const data = docRef.data() as Mint;
+        const data = docRef.data() as MintType;
         const document = await getDoc(doc(db, `Pool/${data.pool}`));
         if (document.exists()) {
-          const poolData = document.data() as Pool;
+          const poolData = document.data() as PoolType;
           temp.push({ ...data, ...poolData });
         }
       })
@@ -195,22 +195,23 @@ export const InventoryItem: FC<InventoryItemProps> = ({
               </button>
             )}
             {collectionImage && collectionName && (
-              <>
-                <Image
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  className="h-auto w-8 sm:h-auto rounded"
-                  src={collectionImage}
-                  alt={""}
-                />
+              <div className="flex items-center">
+                <div className="relative h-12 w-12">
+                  <Image
+                    className={`rounded object-cover cursor-pointer`}
+                    fill={true}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    src={collectionImage}
+                    alt={""}
+                  />
+                </div>
                 <div className="flex flex-col">
                   <span className="text-[8px] sm:text-[10px] uppercase text-gray-400">
                     Collection
                   </span>
                   <span className="uppercase">{collectionName}</span>
                 </div>
-              </>
+              </div>
             )}
             {handleSubmit && (
               <button
@@ -282,14 +283,15 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             )}
           </div>
           <div className="flex gap-4">
-            <Image
-              className="w-24 h-auto rounded items-center justify-center object-cover"
-              width={0}
-              height={0}
-              sizes="100vw"
-              src={image}
-              alt={item.id}
-            />
+            <div className="relative h-40 w-40">
+              <Image
+                className={`rounded object-cover cursor-pointer`}
+                fill={true}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                src={image}
+                alt={""}
+              />
+            </div>
             <div className="flex flex-col w-3/4 overflow-hidden gap-2">
               <div className="flex flex-col">
                 <span className="text-[10px] sm:text-xs uppercase text-gray-400">

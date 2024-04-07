@@ -82,7 +82,7 @@ function InventoryScreen() {
       await createNft(umi, {
         mint: randomNft,
         authority: umi.identity,
-        name: "Testing 123",
+        name: "MEME",
         uri: "https://qgp7lco5ylyitscysc2c7clhpxipw6sexpc2eij7g5rq3pnkcx2q.arweave.net/gZ_1id3C8InIWJC0L4lnfdD7ekS7xaIhPzdjDb2qFfU",
         sellerFeeBasisPoints: percentAmount(9.99, 2), // 9.99%
       }).sendAndConfirm(umi);
@@ -158,10 +158,8 @@ function InventoryScreen() {
             <div className="flex items-center gap-1">
               <span>Mint one for 0.1</span>
               <Image
-                width={0}
-                height={0}
-                sizes="100vw"
-                className="h-auto w-3.5"
+                width={16}
+                height={16}
                 src={solanaLogo}
                 alt={"solana logo"}
               />

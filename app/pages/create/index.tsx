@@ -10,34 +10,14 @@ import { toast } from "react-toastify";
 import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
-import {
-  ComputeBudgetProgram,
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  uploadString,
-} from "firebase/storage";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
   getIdentifierIx,
-  getSimulationUnits,
   initializePoolIx,
   buildAndSendTransaction,
 } from "../../utils/helper";
 import useUmi from "../../hooks/useUmi";
-import {
-  createGenericFile,
-  createGenericFileFromBrowserFile,
-} from "@metaplex-foundation/umi";
-import assert from "assert";
+import { createGenericFileFromBrowserFile } from "@metaplex-foundation/umi";
 import { ReviewPane } from "../../sections/ReviewPane";
 
 function CreateCollection() {

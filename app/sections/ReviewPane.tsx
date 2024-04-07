@@ -54,15 +54,15 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   return (
     <div className="flex flex-col text-gray-400 font-medium p-4 rounded gap-8">
       <div className="flex gap-8">
-        <Image
-          width={0}
-          height={0}
-          sizes="100vw"
-          priority={true}
-          className="w-1/2 max-w-64 h-auto rounded border border-black"
-          src={image}
-          alt={""}
-        />
+        <div className="relative h-40 w-40 lg:w-60 lg:h-60">
+          <Image
+            className={`rounded object-cover cursor-pointer`}
+            fill={true}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            src={image}
+            alt={""}
+          />
+        </div>
         <div className="flex flex-col text-xs gap-2 ">
           <span>Name</span>
           <span className=" text-black">{name}</span>
@@ -82,10 +82,8 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
                 {`${liquidityCollected / LAMPORTS_PER_SOL}`}
               </span>
               <Image
-                width={0}
-                height={0}
-                sizes="100vw"
-                className="h-auto w-4"
+                width={16}
+                height={16}
                 src={solanaLogo}
                 alt={"solana logo"}
               />

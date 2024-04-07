@@ -8,7 +8,7 @@ import {
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
-import { Pool } from "../utils/types";
+import { PoolType } from "../utils/types";
 import CardItem from "../components/CardItem";
 import { CreateProjectBtn } from "../components/buttons/CreateProjectBtn";
 
@@ -20,7 +20,7 @@ enum SortCriteria {
 }
 
 function Projects() {
-  const [projects, setProjects] = useState<Pool[]>();
+  const [projects, setProjects] = useState<PoolType[]>();
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
     SortCriteria.createdTime
   );
@@ -43,7 +43,7 @@ function Projects() {
       const unsubscribe = onSnapshot(mintedItems, (querySnapshot) => {
         setProjects((prev) => (!prev ? [] : prev));
         querySnapshot.docChanges().forEach((change) => {
-          const newData = change.doc.data() as Pool;
+          const newData = change.doc.data() as PoolType;
           if (change.type === "added") {
             // Handle added document
             if (
@@ -85,7 +85,7 @@ function Projects() {
   }, [page, sortCriteria, projects]);
 
   return (
-    <div className="flex flex-col w-full h-fit max-w-screen-2xl mx-auto gap-4">
+    <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {projects &&
           projects.length > 0 &&

@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import { Project } from "../InventoryItem";
 import { getStatus } from "../../utils/helper";
-import { Pool, Status } from "../../utils/types";
+import { PoolType, Status } from "../../utils/types";
 import { TableRow } from "../TableRow";
 
 interface FundedTableProps {
@@ -45,8 +45,8 @@ export const FundedTable: FC<FundedTableProps> = ({ projects, timer }) => {
           {projects
             .filter(
               (item) =>
-                getStatus(item as Pool) === Status.PresaleInProgress ||
-                getStatus(item as Pool) === Status.PresaleTargetMet
+                getStatus(item as PoolType) === Status.PresaleInProgress ||
+                getStatus(item as PoolType) === Status.PresaleTargetMet
             )
             .map((project, index) => (
               <TableRow key={index} project={project} timer={timer} />

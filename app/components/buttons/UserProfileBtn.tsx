@@ -47,14 +47,12 @@ export const UserProfileBtn: FC = () => {
       <button
         type="button"
         onClick={() => setExpand(!expand)}
-        className="flex text-sm rounded md:me-0"
+        className="flex rounded md:me-0"
         id="user-menu-button"
       >
         <Image
-          width={0}
-          height={0}
-          sizes="100vw"
-          className="w-8 h-auto rounded"
+          width={30}
+          height={30}
           src={wallet ? wallet.adapter.icon : placeholder}
           alt={""}
         />

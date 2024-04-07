@@ -1,7 +1,7 @@
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   NATIVE_MINT,
-  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
@@ -14,7 +14,7 @@ import {
   LaunchTokenAmmArgs,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   PROGRAM_ID,
-  Pool,
+  PoolType,
   Status,
   WithdrawArgs,
   WithdrawLpArgs,
@@ -268,7 +268,7 @@ export async function initializePoolIx(
       rewardMintMetadata: rewardMintMetadata,
       poolRewardMintAta: poolAndMintRewardAta,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
       mplTokenProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     })
@@ -414,7 +414,7 @@ export async function launchTokenAmm(
       poolTokenLp: poolTokenLp,
       rent: RENT_PROGRAM_ID,
       systemProgram: SYSTEM_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       ammCoinMint: poolInfo.baseMint,
       ammPcMint: poolInfo.quoteMint,
@@ -471,7 +471,7 @@ export async function claim(args: ClaimArgs, connection: Connection) {
       nftOwnerRewardMintTokenAccount: nftOwnerRewardMintTokenAccount,
       payer: args.signer,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     })
     .instruction();
@@ -515,7 +515,7 @@ export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
       lpMint: args.lpMint,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
     })
     .instruction();
 }
@@ -553,12 +553,12 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
       wsol: NATIVE_MINT,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
     })
     .instruction();
 }
 
-export function getStatus(pool: Pool) {
+export function getStatus(pool: PoolType) {
   if (pool.vestingEndingAt && Date.now() / 1000 > pool.vestingEndingAt) {
     return Status.VestingCompleted;
   } else if (pool.vestingStartedAt) {
@@ -662,7 +662,8 @@ export async function getSignature(
   const sessKey = await user.getIdToken();
   let sig = signedMessage;
   if (!sig || sessionKey !== sessKey) {
-    const message = new TextEncoder().encode(sessKey);
+    const prepend = "Sign In To Meme Starter!\n\nSession Key: ";
+    const message = new TextEncoder().encode(prepend + sessKey);
     sig = Buffer.from(await signMessage(message)).toString("base64");
     setSignedMessage(sig);
     setSessionKey(sessKey);
@@ -671,7 +672,7 @@ export async function getSignature(
 }
 
 export async function getMetadata(
-  pool: Pool | string
+  pool: PoolType | string
 ): Promise<any | undefined> {
   if (typeof pool === "string") {
     const res = await fetch(pool);

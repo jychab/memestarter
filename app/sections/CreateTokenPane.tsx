@@ -37,54 +37,50 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
 }) => {
   return (
     <div className="animate-fade-right flex flex-col p-4 lg:flex-row gap-4">
-      <div className="relative w-48 h-48 rounded-md overflow-hidden">
-        <div className="flex items-center justify-center w-full">
-          <label
-            htmlFor="dropzone-file"
-            className={`cursor-pointer relative flex flex-col w-48 h-48 justify-center items-center`}
-          >
-            {tempImageUrl ? (
-              <Image
-                width={0}
-                height={0}
-                sizes="100vw"
-                priority={true}
-                className="w-full max-w-64 h-auto rounded border border-black"
-                src={tempImageUrl}
-                alt={""}
-              />
-            ) : (
-              <div className="flex flex-col w-full h-full border bg-gray-100 hover:bg-gray-200 hover:border-gray-200 items-center justify-center">
-                <svg
-                  className="w-8 h-8 mb-4 text-gray-400"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 16"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                  />
-                </svg>
-                <p className="text-sm text-center flex flex-col text-gray-400">
-                  <span className="font-semibold">Click to upload</span>
-                  <span>or drag and drop</span>
-                </p>
-              </div>
-            )}
-            <input
-              id="dropzone-file"
-              type="file"
-              className="hidden"
-              name="dropzone-file"
-              onChange={handlePictureChange}
+      <div className="flex w-40 h-40 lg:w-60 lg:h-60 items-center justify-center">
+        <label
+          htmlFor="dropzone-file"
+          className={`cursor-pointer relative flex flex-col w-40 h-40 lg:w-60 lg:h-60 justify-center items-center`}
+        >
+          {tempImageUrl ? (
+            <Image
+              className={`rounded object-cover cursor-pointer`}
+              fill={true}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              src={tempImageUrl}
+              alt={""}
             />
-          </label>
-        </div>
+          ) : (
+            <div className="flex flex-col w-full h-full border bg-gray-100 hover:bg-gray-200 hover:border-gray-200 items-center justify-center">
+              <svg
+                className="w-8 h-8 mb-4 text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 20 16"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                />
+              </svg>
+              <p className="text-sm text-center flex flex-col text-gray-400">
+                <span className="font-semibold">Click to upload</span>
+                <span>or drag and drop</span>
+              </p>
+            </div>
+          )}
+          <input
+            id="dropzone-file"
+            type="file"
+            className="hidden"
+            name="dropzone-file"
+            onChange={handlePictureChange}
+          />
+        </label>
       </div>
       <div className="flex flex-col gap-8">
         <div className="grid md:grid-cols-2 gap-4">
@@ -166,7 +162,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
             id="decimal-input"
             className="col-span-3 md:col-span-2 w-16 text-center text-sm block p-1 rounded border border-gray-300  text-black "
             placeholder={decimals.toString()}
-            value={decimals}
+            value={!Number.isNaN(decimals) ? decimals : 0}
             onChange={(e) => {
               if (e.target.value) {
                 setDecimals(parseInt(e.target.value));

@@ -10,7 +10,7 @@ export const Navbar: FC = () => {
 
   return (
     <nav className="bg-white border-b border-gray-200 px-4 pt-8 pb-8 shadow-sm">
-      <div className="mx-auto flex justify-between items-center max-w-screen-2xl">
+      <div className="mx-auto flex justify-between items-center max-w-screen-xl">
         <Link className="text-black uppercase text-base lg:text-xl" href="/">
           MEME STARTER
         </Link>

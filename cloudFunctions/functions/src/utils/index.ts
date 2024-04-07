@@ -43,7 +43,8 @@ export function verifyPubKey(
 ): boolean {
   const idToken =
     context.rawRequest.headers.authorization!.split("Bearer ")[1]!;
-  const msg = new TextEncoder().encode(idToken);
+  const prepend = "Sign In To Meme Starter!\n\nSession Key: ";
+  const msg = new TextEncoder().encode(prepend + idToken);
   const sig = new Uint8Array(Buffer.from(signature, "base64"));
   const publicKey = new PublicKey(pubKey).toBytes();
   return nacl.sign.detached.verify(msg, sig, publicKey);

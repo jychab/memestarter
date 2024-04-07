@@ -13,7 +13,7 @@ import {
   withdraw,
   withdrawLp,
 } from "../utils/helper";
-import { Pool, Status } from "../utils/types";
+import { PoolType, Status } from "../utils/types";
 import { Project } from "./InventoryItem";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
@@ -65,7 +65,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
 
   useEffect(() => {
     if (project) {
-      getMetadata(project as Pool).then((response) => {
+      getMetadata(project as PoolType).then((response) => {
         if (response) {
           setImage(response.image);
           setName(response.name);
@@ -188,14 +188,15 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           scope="row"
           className="cursor-pointer hidden sm:table-cell p-2"
         >
-          <Image
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="w-8 h-auto sm:w-10 rounded"
-            src={image}
-            alt={""}
-          />
+          <div className="relative w-8 h-8">
+            <Image
+              className={`rounded object-cover cursor-pointer`}
+              fill={true}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              src={image}
+              alt={""}
+            />
+          </div>
         </td>
         <td
           onClick={() => router.push(`/pool/${project.pool}`)}
