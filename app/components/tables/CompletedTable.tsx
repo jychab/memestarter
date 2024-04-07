@@ -1,7 +1,5 @@
 import React, { FC } from "react";
 import { Project } from "../InventoryItem";
-import { getStatus } from "../../utils/helper";
-import { PoolType, Status } from "../../utils/types";
 import { TableRow } from "../TableRow";
 
 interface CompletedTableProps {

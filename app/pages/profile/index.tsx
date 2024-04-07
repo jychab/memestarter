@@ -1,26 +1,27 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { InventoryItem } from "../../components/InventoryItem";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useLogin } from "../../hooks/useLogin";
 import { toast } from "react-toastify";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
+import {
+  DasApiAsset,
+  DasApiAssetList,
+} from "@metaplex-foundation/digital-asset-standard-api";
 import useUmi from "../../hooks/useUmi";
 import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
 import { createNft } from "@metaplex-foundation/mpl-token-metadata";
 import { getSignature } from "../../utils/helper";
 import solanaLogo from "../../public/solanaLogoMark.png";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 interface Request {
   signature: string;
   pubKey: string;
   nft: DasApiAsset;
 }
-
-const imageStyle = {
-  height: "auto",
-};
 
 function InventoryScreen() {
   const {
@@ -33,9 +34,9 @@ function InventoryScreen() {
     signedMessage,
   } = useLogin();
   const { publicKey, signMessage } = useWallet();
+  const { connection } = useConnection();
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState<number>();
   const [showWallet, setShowWallet] = useState(false);
   const [walletAssets, setWalletAssets] = useState<DasApiAsset[]>(
     Array(20).fill(undefined)
@@ -47,6 +48,30 @@ function InventoryScreen() {
     return nft && item && item.id === nft.id;
   }
 
+  async function loadAssets(
+    walletData: DasApiAssetList,
+    connection: Connection
+  ) {
+    let temp: DasApiAsset[] = Array(20).fill(undefined);
+    const filteredWalletItems = [];
+    for (let item of walletData.items) {
+      const accountInfo = await connection.getAccountInfo(
+        new PublicKey(item.id.toString())
+      );
+      if (
+        accountInfo &&
+        accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID.toBase58()
+      ) {
+        filteredWalletItems.push(item);
+      }
+    }
+    filteredWalletItems
+      .filter((_, index) => index >= (page - 1) * 20 && index < page * 20)
+      .forEach((item, index) => {
+        temp[index] = item;
+      });
+    setWalletAssets(temp);
+  }
   useEffect(() => {
     if (publicKey && !nft) {
       setShowWallet(true);
@@ -58,20 +83,17 @@ function InventoryScreen() {
   useEffect(() => {
     if (publicKey && page && showWallet) {
       umi.rpc
-        .getAssetsByOwner({
+        .searchAssets({
           owner: umi.identity.publicKey,
+          compressed: false,
+          sortBy: {
+            sortBy: "recent_action",
+            sortDirection: "desc",
+          },
           limit: page * 20,
         })
         .then((walletData) => {
-          let temp: DasApiAsset[] = Array(20).fill(undefined);
-          setTotal(walletData.total);
-          walletData.items
-            .filter((item) => !item.compression.compressed)
-            .filter((_, index) => index >= (page - 1) * 20 && index < page * 20)
-            .forEach((item, index) => {
-              temp[index] = item;
-            });
-          setWalletAssets(temp);
+          loadAssets(walletData, connection);
         });
     }
   }, [publicKey, page, showWallet]);
@@ -194,19 +216,9 @@ function InventoryScreen() {
                 </div>
               ))}
             </div>
-            {total && total > 20 && (
+            {walletAssets && walletAssets.length > 20 && (
               <div className="overflow-hidden flex items-end justify-end">
                 <div className="flex items-center">
-                  <span className="text-sm font-normal text-gray-400 px-2">
-                    Showing
-                    <span className="font-semibold text-white px-2">
-                      {`${(page - 1) * 10 + 1} to ${walletAssets.length}`}
-                    </span>
-                    of
-                    <span className="font-semibold text-white px-2">
-                      {total}
-                    </span>
-                  </span>
                   <div className="flex items-center justify-end gap-2 ">
                     <button
                       onClick={() => setPage(Math.max(1, page - 1))}
@@ -215,9 +227,7 @@ function InventoryScreen() {
                       Previous
                     </button>
                     <button
-                      onClick={() =>
-                        setPage(Math.min(page + 1, Math.ceil(total / 20)))
-                      }
+                      onClick={() => setPage(page + 1)}
                       className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
                     >
                       Next

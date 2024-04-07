@@ -109,9 +109,9 @@ function CreateCollection() {
       setPage(page + 1);
     } else {
       if (user === null || !publicKey || picture === null || !signTransaction) {
-        toast.error("Missing picture");
         return;
       }
+
       const creatorFeesBasisPts =
         parseInt(creatorFees.replaceAll("%", "")) * 100;
       const presaleTargetLamports =
@@ -119,16 +119,29 @@ function CreateCollection() {
       const totalSupplyNum = parseInt(supply.replaceAll(",", ""));
       const vestingSupplyNum =
         (parseInt(vestingSupply.replaceAll(",", "")) / 100) * totalSupplyNum;
+
       if (creatorFeesBasisPts > 5000) {
         toast.error("Creator Fees cannot be higher than 50%");
         return;
       }
       if (presaleTargetLamports > 10000 * LAMPORTS_PER_SOL) {
-        toast.error("Presale Target seems unrealistic");
+        toast.error(
+          "Presale Target is too high. You will not be able to launch your project unless the target is met."
+        );
+        return;
+      }
+      if (presaleTargetLamports < LAMPORTS_PER_SOL) {
+        toast.error(
+          "Presale Target is too low. It needs to be higher than 1 Sol."
+        );
+        return;
+      }
+      if (totalSupplyNum < 1000000) {
+        toast.error("Total supply cannot be lower than 1,000,000");
         return;
       }
       if (vestingSupplyNum > totalSupplyNum) {
-        toast.error("Vesting supply cannot be higher than total supply");
+        toast.error("Vesting supply cannot be higher than Total supply");
         return;
       }
       try {

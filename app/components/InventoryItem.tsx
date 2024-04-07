@@ -29,6 +29,7 @@ interface InventoryItemProps {
 }
 
 enum ProjectType {
+  all = "All",
   funded = "Funded",
   vesting = "Vesting",
   completed = "Completed",
@@ -46,40 +47,15 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   actionText,
 }) => {
   const [projects, setProjects] = useState<Project[]>();
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [image, setImage] = useState();
   const [name, setName] = useState();
   const [collectionImage, setCollectionImage] = useState();
   const [collectionName, setCollectionName] = useState();
-  const [projectType, setProjectType] = useState<ProjectType>(
-    ProjectType.funded
-  );
+  const [projectType, setProjectType] = useState<ProjectType>(ProjectType.all);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
 
   const [timer, setTimer] = useState<number>();
-
-  useEffect(() => {
-    if (projects && projectType) {
-      setFilteredProjects(
-        projects.filter((item) => {
-          const status = getStatus(item);
-          if (projectType === ProjectType.funded) {
-            return (
-              status === Status.PresaleInProgress ||
-              status === Status.PresaleTargetMet
-            );
-          } else if (projectType === ProjectType.vesting) {
-            return status === Status.VestingInProgress;
-          } else if (projectType === ProjectType.completed) {
-            return status === Status.VestingCompleted;
-          } else {
-            return status === Status.Expired;
-          }
-        })
-      );
-    }
-  }, [projects, projectType]);
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
@@ -351,18 +327,52 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             </div>
           </div>
           <div className="flex flex-col text-xs text-gray-400 gap-4">
-            {projectType === ProjectType.funded && timer && (
-              <FundedTable projects={filteredProjects} timer={timer} />
-            )}
-            {projectType === ProjectType.vesting && timer && (
-              <VestingTable projects={filteredProjects} timer={timer} />
-            )}
-            {projectType === ProjectType.completed && timer && (
-              <CompletedTable projects={filteredProjects} timer={timer} />
-            )}
-            {projectType === ProjectType.expired && timer && (
-              <ExpiredTable projects={filteredProjects} timer={timer} />
-            )}
+            {(projectType === ProjectType.funded ||
+              projectType === ProjectType.all) &&
+              timer &&
+              projects && (
+                <FundedTable
+                  projects={projects.filter(
+                    (item) =>
+                      getStatus(item) === Status.PresaleInProgress ||
+                      getStatus(item) === Status.PresaleTargetMet
+                  )}
+                  timer={timer}
+                />
+              )}
+            {(projectType === ProjectType.vesting ||
+              projectType === ProjectType.all) &&
+              projects &&
+              timer && (
+                <VestingTable
+                  projects={projects.filter(
+                    (item) => getStatus(item) === Status.VestingInProgress
+                  )}
+                  timer={timer}
+                />
+              )}
+            {(projectType === ProjectType.completed ||
+              projectType === ProjectType.all) &&
+              projects &&
+              timer && (
+                <CompletedTable
+                  projects={projects.filter(
+                    (item) => getStatus(item) === Status.VestingCompleted
+                  )}
+                  timer={timer}
+                />
+              )}
+            {(projectType === ProjectType.expired ||
+              projectType === ProjectType.all) &&
+              projects &&
+              timer && (
+                <ExpiredTable
+                  projects={projects.filter(
+                    (item) => getStatus(item) === Status.Expired
+                  )}
+                  timer={timer}
+                />
+              )}
           </div>
         </div>
       </div>
