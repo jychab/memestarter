@@ -66,7 +66,7 @@ function InventoryScreen() {
           let temp: DasApiAsset[] = Array(20).fill(undefined);
           setTotal(walletData.total);
           walletData.items
-            .filter((item) => item.interface === "V1_NFT")
+            .filter((item) => !item.compression.compressed)
             .filter((_, index) => index >= (page - 1) * 20 && index < page * 20)
             .forEach((item, index) => {
               temp[index] = item;

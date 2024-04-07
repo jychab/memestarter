@@ -1,23 +1,23 @@
-import React, { FC, useEffect, useState } from "react";
-import { DAS, Mint, Pool, Status } from "../utils/types";
+import React, { FC, useEffect, useRef, useState } from "react";
+import { Mint, Pool, Status } from "../utils/types";
 import Image from "next/image";
-import { Chip } from "./Chip";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import {
   query,
-  orderBy,
-  limit,
   onSnapshot,
   collection,
-  getDocs,
   getDoc,
   doc,
   DocumentData,
   QueryDocumentSnapshot,
+  where,
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { TableRow } from "./TableRow";
 import { getMetadata, getStatus } from "../utils/helper";
+import { FundedTable } from "./tables/FundedTable";
+import { VestingTable } from "./tables/VestingTable";
+import { CompletedTable } from "./tables/CompletedTable";
+import { ExpiredTable } from "./tables/ExpiredTable";
 
 interface InventoryItemProps {
   item: DasApiAsset;
@@ -26,6 +26,13 @@ interface InventoryItemProps {
   setSelectedItem?: (item: any) => void;
   handleSubmit?: (item: any) => void;
   actionText?: string;
+}
+
+enum ProjectType {
+  funded = "Funded",
+  vesting = "Vesting",
+  completed = "Completed",
+  expired = "Expired",
 }
 
 export interface Project extends Mint, Pool {}
@@ -39,12 +46,40 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   actionText,
 }) => {
   const [projects, setProjects] = useState<Project[]>();
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [image, setImage] = useState();
   const [name, setName] = useState();
   const [collectionImage, setCollectionImage] = useState();
   const [collectionName, setCollectionName] = useState();
+  const [projectType, setProjectType] = useState<ProjectType>(
+    ProjectType.funded
+  );
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
 
   const [timer, setTimer] = useState<number>();
+
+  useEffect(() => {
+    if (projects && projectType) {
+      setFilteredProjects(
+        projects.filter((item) => {
+          const status = getStatus(item);
+          if (projectType === ProjectType.funded) {
+            return (
+              status === Status.PresaleInProgress ||
+              status === Status.PresaleTargetMet
+            );
+          } else if (projectType === ProjectType.vesting) {
+            return status === Status.VestingInProgress;
+          } else if (projectType === ProjectType.completed) {
+            return status === Status.VestingCompleted;
+          } else {
+            return status === Status.Expired;
+          }
+        })
+      );
+    }
+  }, [projects, projectType]);
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
@@ -101,7 +136,33 @@ export const InventoryItem: FC<InventoryItemProps> = ({
       }
     );
     return () => unsubscribe();
-  }, [item]);
+  }, [item, projectType]);
+
+  useEffect(() => {
+    // Function to handle click outside the dialog
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        // Click occurred outside the dialog, so close the dialog
+        setShow(false);
+      }
+    };
+
+    // Attach event listener when the dialog is open
+    if (show) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      // Remove event listener when the dialog is closed
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [show]);
 
   return (
     image &&
@@ -246,207 +307,60 @@ export const InventoryItem: FC<InventoryItemProps> = ({
               </div>
             </div>
           </div>
+          <div className="flex items-center justify-start">
+            <div className="relative">
+              <button
+                id="dropdown-type-button"
+                onClick={() => setShow(!show)}
+                className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 pr-2 justify-center text-sm font-medium text-center border rounded focus:outline-none text-black border-gray-300"
+                type="button"
+              >
+                {projectType}
+                <svg
+                  className="w-2.5 h-2.5 ms-2.5"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 10 6"
+                >
+                  <path stroke="currentColor" d="m1 1 4 4 4-4" />
+                </svg>
+              </button>
+              <div
+                id="dropdown-type"
+                hidden={!show}
+                ref={dropdownRef}
+                className="z-20 mt-2 absolute rounded w-28"
+              >
+                <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
+                  {Object.values(ProjectType).map((value) => (
+                    <li>
+                      <button
+                        type="button"
+                        className="inline-flex w-full px-4 py-2 text-sm "
+                        onClick={() => setProjectType(value)}
+                      >
+                        {value}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-col text-xs text-gray-400 gap-4">
-            <span>Funded</span>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-300">
-                <thead className="uppercase border-b border-gray-300">
-                  <tr className="text-[10px]">
-                    <th scope="col" className="hidden sm:table-cell w-16 p-2" />
-                    <th scope="col" className="w-auto p-2">
-                      Project
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Funded
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Liquidity
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Presale Target
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Presale End
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects &&
-                    projects.filter(
-                      (item) =>
-                        getStatus(item as Pool) === Status.PresaleInProgress ||
-                        getStatus(item as Pool) === Status.PresaleTargetMet
-                    ).length === 0 && (
-                      <tr>
-                        <td className="p-2 text-xs" colSpan={6}>
-                          <span>No projects found.</span>
-                        </td>
-                      </tr>
-                    )}
-                  {projects &&
-                    projects.length > 0 &&
-                    projects
-                      .filter(
-                        (item) =>
-                          getStatus(item as Pool) ===
-                            Status.PresaleInProgress ||
-                          getStatus(item as Pool) === Status.PresaleTargetMet
-                      )
-                      .map((project, index) => (
-                        <TableRow key={index} project={project} timer={timer} />
-                      ))}
-                </tbody>
-              </table>
-            </div>
-            <span>Vesting</span>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-300">
-                <thead className="uppercase border-b border-gray-300">
-                  <tr className="text-[10px]">
-                    <th scope="col" className="hidden sm:table-cell w-16 p-2" />
-                    <th scope="col" className="w-auto p-2">
-                      Project
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Funded
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Mint Elligible (unvested)
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Mint Claimed
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Mint Elligible (Allocated)
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Vesting End
-                    </th>
-
-                    <th scope="col" className="w-24 text-center p-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects &&
-                    projects.filter(
-                      (item) =>
-                        getStatus(item as Pool) === Status.VestingInProgress
-                    ).length === 0 && (
-                      <tr>
-                        <td className="p-2 text-xs" colSpan={6}>
-                          <span>No projects found.</span>
-                        </td>
-                      </tr>
-                    )}
-                  {projects &&
-                    projects.length > 0 &&
-                    projects
-                      .filter(
-                        (item) =>
-                          getStatus(item as Pool) === Status.VestingInProgress
-                      )
-                      .map((project, index) => (
-                        <TableRow key={index} project={project} timer={timer} />
-                      ))}
-                </tbody>
-              </table>
-            </div>
-            <span>Completed</span>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-300">
-                <thead className="uppercase border-b border-gray-300">
-                  <tr className="text-[10px]">
-                    <th scope="col" className="hidden sm:table-cell w-16 p-2" />
-                    <th scope="col" className="w-auto p-2">
-                      Project
-                    </th>
-
-                    <th scope="col" className="w-24 text-center p-2">
-                      Funded
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Mint Elligible (Unvested)
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Mint Claimed
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Lp Elligible (Unvested)
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Lp Claimed
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects &&
-                    projects.filter(
-                      (item) =>
-                        getStatus(item as Pool) === Status.VestingCompleted
-                    ).length === 0 && (
-                      <tr>
-                        <td className="p-2 text-xs" colSpan={6}>
-                          <span>No projects found.</span>
-                        </td>
-                      </tr>
-                    )}
-                  {projects &&
-                    projects
-                      .filter(
-                        (item) =>
-                          getStatus(item as Pool) === Status.VestingCompleted
-                      )
-                      .map((project, index) => (
-                        <TableRow key={index} project={project} timer={timer} />
-                      ))}
-                </tbody>
-              </table>
-            </div>
-            <span>Expired</span>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left rtl:text-right border border-gray-300">
-                <thead className="uppercase border-b border-gray-300">
-                  <tr className="text-[10px]">
-                    <th scope="col" className="hidden sm:table-cell w-16 p-2" />
-                    <th scope="col" className="w-auto p-2">
-                      Project
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Funded
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Liquidity
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2">
-                      Funds Withdrawn
-                    </th>
-                    <th scope="col" className="w-24 text-center p-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects &&
-                    projects.filter(
-                      (item) => getStatus(item as Pool) === Status.Expired
-                    ).length === 0 && (
-                      <tr>
-                        <td className="p-2 text-xs" colSpan={6}>
-                          <span>No projects found.</span>
-                        </td>
-                      </tr>
-                    )}
-                  {projects &&
-                    projects
-                      .filter(
-                        (item) => getStatus(item as Pool) === Status.Expired
-                      )
-                      .map((project, index) => (
-                        <TableRow key={index} project={project} timer={timer} />
-                      ))}
-                </tbody>
-              </table>
-            </div>
+            {projectType === ProjectType.funded && timer && (
+              <FundedTable projects={filteredProjects} timer={timer} />
+            )}
+            {projectType === ProjectType.vesting && timer && (
+              <VestingTable projects={filteredProjects} timer={timer} />
+            )}
+            {projectType === ProjectType.completed && timer && (
+              <CompletedTable projects={filteredProjects} timer={timer} />
+            )}
+            {projectType === ProjectType.expired && timer && (
+              <ExpiredTable projects={filteredProjects} timer={timer} />
+            )}
           </div>
         </div>
       </div>
