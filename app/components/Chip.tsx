@@ -15,13 +15,13 @@ export const Chip: FC<AttributeProps> = ({
   dismiss,
 }) => (
   <div
-    className={`flex items-center gap-2 max-w-28 w-fit overflow-hidden pt-1 pb-1 px-2 text-sm ${bgColor} rounded  ${textColor}`}
+    className={`flex absolute right-2 top-2 lg:right-4 lg:top-4 items-center gap-2 max-w-28 w-fit overflow-hidden py-1 px-2 text-xs ${bgColor} rounded  ${textColor}`}
   >
     <div className="flex flex-col flex-1 min-w-0">
-      <span className="text-ellipsis overflow-hidden text-xs whitespace-nowrap">
+      <span className="text-ellipsis overflow-hidden whitespace-nowrap">
         {k}
       </span>
-      <span className="text-ellipsis overflow-hidden text-xs whitespace-nowrap">
+      <span className="text-ellipsis overflow-hidden whitespace-nowrap">
         {v}
       </span>
     </div>

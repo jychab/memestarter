@@ -51,29 +51,20 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
               src={image}
               alt={""}
             />
+            <Chip k={"YOURS"} v={""} />
           </div>
           <div className="flex flex-col min-h-16 lg:min-h-16 h-fit group-hover:max-h-64 gap-2 overflow-hidden bg-white px-4 py-2 lg:py-4">
-            <div className="flex items-end md:items-center justify-between">
-              <div className="flex flex-col gap-1 md:flex-row md:items-center ">
-                {publicKey?.toBase58() === pool.authority && (
-                  <Chip k={"YOURS"} v={""} />
-                )}
-                <h6 className="group-hover:text-gray-900 max-w-20 truncate text-gray-800 text-sm lg:text-base">
-                  {name}
-                </h6>
-              </div>
+            <div className="flex items-center justify-between">
+              <h6 className="group-hover:text-gray-900 max-w-20 truncate text-gray-800 text-sm lg:text-base">
+                {name}
+              </h6>
               <div className="flex gap-1 items-center group-hover:hidden ">
-                <h6 className="text-gray-800 ">
+                <h6 className="text-black text-xs">
                   {pool.liquidityCollected
                     ? pool.liquidityCollected / LAMPORTS_PER_SOL
                     : 0}
                 </h6>
-                <Image
-                  width={16}
-                  height={16}
-                  src={solanaLogo}
-                  alt={"solana logo"}
-                />
+                <span className="text-gray-400 text-xs">SOL</span>
               </div>
 
               <div className="items-center gap-1 flex-none text-gray-800 hidden group-hover:flex focus:text-gray-900 hover:text-gray-800">
