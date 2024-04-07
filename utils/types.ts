@@ -10,6 +10,7 @@ import {
   UseMethods,
 } from "./enums";
 import BN from "bn.js";
+import { Timestamp } from "firebase/firestore";
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -59,6 +60,34 @@ export interface InitializePoolArgs {
   identifierId: PublicKey;
   identifier: BN;
 }
+
+export interface WithdrawArgs {
+  poolId: PublicKey;
+  nft: PublicKey;
+  signer: PublicKey;
+}
+
+export interface WithdrawLpArgs {
+  poolId: PublicKey;
+  nft: PublicKey;
+  signer: PublicKey;
+  poolAuthority: PublicKey;
+  lpMint: PublicKey;
+}
+
+export interface ClaimArgs {
+  signer: PublicKey;
+  nftOwner: PublicKey;
+  nft: PublicKey;
+  poolId: PublicKey;
+  mint: PublicKey;
+}
+
+export interface CheckClaimElligbilityArgs {
+  poolId: PublicKey;
+  nft: PublicKey;
+  signer: PublicKey;
+}
 export interface MarketDetails {
   marketId: string;
   requestQueue: string;
@@ -71,9 +100,12 @@ export interface MarketDetails {
   quoteMint: string;
 }
 export interface Pool {
+  decimal: number;
   mintMetadata: DAS.GetAssetResponse;
   amountCoin: number;
   amountLpReceived: number;
+  amountLpWithdrawn: number;
+  amountWsolWithdrawn: number;
   amountPc: number;
   authority: string;
   creatorFeeBasisPoints: string;
@@ -88,25 +120,28 @@ export interface Pool {
   vestingEndingAt: number;
   vestingPeriod: number;
   vestingStartedAt: number;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface Mint {
   originalMint: string;
   pool: string;
   amount: number;
+  lastClaimedAt: number;
   lpElligible: number;
+  lpClaimed: number;
   mintClaimed: number;
+  lpElligibleAfterFees: number;
   mintElligible: number;
-  updatedAt: number;
+  updatedAt: Timestamp;
   mintMetadata: DAS.GetAssetResponse;
 }
 
 export interface Transaction {
   event: string;
   signature: string;
-  updatedAt: number;
+  updatedAt: Timestamp;
 }
 
 export declare namespace DAS {

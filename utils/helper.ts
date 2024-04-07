@@ -6,6 +6,8 @@ import {
 } from "@solana/spl-token";
 import {
   BuyPresaleArgs,
+  CheckClaimElligbilityArgs,
+  ClaimArgs,
   CreateMarketArgs,
   DAS,
   InitializePoolArgs,
@@ -14,6 +16,8 @@ import {
   PROGRAM_ID,
   Pool,
   Status,
+  WithdrawArgs,
+  WithdrawLpArgs,
 } from "./types";
 import {
   Connection,
@@ -421,6 +425,139 @@ export async function launchTokenAmm(
     .instruction();
 }
 
+export async function checkClaimElligibility(
+  args: CheckClaimElligbilityArgs,
+  connection: Connection
+) {
+  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
+    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
+    program(connection).programId
+  );
+
+  return await program(connection)
+    .methods.checkClaimEllgibility()
+    .accounts({
+      purchaseReceipt: purchaseReceipt,
+      pool: args.poolId,
+      payer: args.signer,
+    })
+    .instruction();
+}
+
+export async function claim(args: ClaimArgs, connection: Connection) {
+  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
+    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
+    program(connection).programId
+  );
+  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
+    args.nft,
+    args.nftOwner,
+    true
+  );
+  const nftOwnerRewardMintTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.nftOwner,
+    true
+  );
+  return await program(connection)
+    .methods.claimRewards()
+    .accounts({
+      purchaseReceipt: purchaseReceipt,
+      pool: args.poolId,
+      nft: args.nft,
+      nftOwner: args.nftOwner,
+      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      rewardMint: args.mint,
+      nftOwnerRewardMintTokenAccount: nftOwnerRewardMintTokenAccount,
+      payer: args.signer,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+}
+
+export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
+  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
+    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
+    program(connection).programId
+  );
+  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
+    args.nft,
+    args.signer,
+    true
+  );
+  const poolAuthorityLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolAuthority,
+    true
+  );
+  const signerLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.signer,
+    true
+  );
+  const poolLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolId,
+    true
+  );
+  return await program(connection)
+    .methods.withdrawLpToken()
+    .accounts({
+      purchaseReceipt: purchaseReceipt,
+      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      pool: args.poolId,
+      poolAuthorityTokenLp: poolAuthorityLpTokenAccount,
+      userWallet: args.signer,
+      userTokenLp: signerLpTokenAccount,
+      poolTokenLp: poolLpTokenAccount,
+      lpMint: args.lpMint,
+      systemProgram: SystemProgram.programId,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction();
+}
+
+export async function withdraw(args: WithdrawArgs, connection: Connection) {
+  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
+    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
+    program(connection).programId
+  );
+  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
+    args.nft,
+    args.signer,
+    true
+  );
+  const signerWsolTokenAccount = getAssociatedTokenAddressSync(
+    NATIVE_MINT,
+    args.signer,
+    true
+  );
+  const poolWsolTokenAccount = getAssociatedTokenAddressSync(
+    NATIVE_MINT,
+    args.poolId,
+    true
+  );
+
+  return await program(connection)
+    .methods.withdraw()
+    .accounts({
+      purchaseReceipt: purchaseReceipt,
+      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      pool: args.poolId,
+      userWallet: args.signer,
+      userTokenWsol: signerWsolTokenAccount,
+      poolTokenWsol: poolWsolTokenAccount,
+      wsol: NATIVE_MINT,
+      systemProgram: SystemProgram.programId,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction();
+}
+
 export function getStatus(pool: Pool) {
   if (pool.vestingEndingAt && Date.now() / 1000 > pool.vestingEndingAt) {
     return Status.VestingCompleted;
@@ -464,7 +601,7 @@ export function convertSecondsToNearestUnit(seconds: number) {
 
   // Determine the nearest unit
   if (seconds < minute) {
-    return `${seconds.toFixed(2)} second${seconds === 1 ? "" : "s"}`;
+    return `${seconds.toFixed(0)} second${seconds === 1 ? "" : "s"}`;
   } else if (seconds < hour) {
     const minutes = Math.floor(seconds / minute);
     const remainingSeconds = seconds % minute;

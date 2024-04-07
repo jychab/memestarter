@@ -13,7 +13,7 @@ interface ReviewPaneProps {
   name: string;
   symbol: string;
   mint?: string;
-  decimals?: number;
+  decimal: number;
   externalUrl?: string;
   totalSupply: number;
   vestedSupply: number;
@@ -48,7 +48,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   presaleTimeLimit = 0,
   presaleTarget = 0,
   status,
-  decimals,
+  decimal: decimals,
   description,
 }) => {
   return (
@@ -59,7 +59,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           height={0}
           sizes="100vw"
           priority={true}
-          className="w-32 h-auto rounded"
+          className="w-2/3 max-w-64 h-auto rounded"
           src={image}
           alt={""}
         />
@@ -68,8 +68,8 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className=" text-gray-200">{name}</span>
           <span>Symbol</span>
           <span className="text-gray-200">{symbol}</span>
-          {decimals && <span>Decimals</span>}
-          {decimals && <span className=" text-gray-200">{decimals}</span>}
+          <span>Decimals</span>
+          <span className=" text-gray-200">{decimals}</span>
           {mint && <span>Mint Address</span>}
           {mint && <span className="w-24 truncate text-gray-200">{mint}</span>}
         </div>
@@ -113,7 +113,9 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <div className="col-span-4 flex flex-col gap-1">
             <div className="flex items-center gap-1">
               <span className="text-sm text-white">
-                {`${separateNumberWithComma(totalSupply.toString())} ${symbol}`}
+                {`${separateNumberWithComma(
+                  (totalSupply / 10 ** decimals).toString()
+                )} ${symbol}`}
               </span>
             </div>
             <span className="text-[10px]">{`total supply`}</span>

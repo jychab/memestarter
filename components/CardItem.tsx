@@ -8,27 +8,33 @@ import Link from "next/link";
 
 interface CardItemProps {
   pool: Pool;
+  timer: number | undefined;
 }
 
-export const CardItem: FC<CardItemProps> = ({ pool }) => {
+export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
   const [image, setImage] = useState();
   const [name, setName] = useState();
   const [description, setDescription] = useState();
   useEffect(() => {
     if (pool) {
-      const percent = (pool.liquidityCollected / pool.presaleTarget) * 100;
+      const percent = pool.liquidityCollected
+        ? (pool.liquidityCollected / pool.presaleTarget) * 100
+        : 0;
       setPercentage(percent);
       getMetadata(pool).then((response) => {
-        setName(response.name);
-        setDescription(response.description);
-        setImage(response.image);
+        if (response) {
+          setName(response.name);
+          setDescription(response.description);
+          setImage(response.image);
+        }
       });
     }
   }, [pool]);
 
   return (
-    image && (
+    image &&
+    timer && (
       <Link
         className="mx-auto max-w-screen-sm cursor-pointer"
         href={`pool/${pool.pool}`}
@@ -50,6 +56,23 @@ export const CardItem: FC<CardItemProps> = ({ pool }) => {
               <h6 className="group-hover:text-gray-900 text-gray-800 text-sm lg:text-base">
                 {name}
               </h6>
+
+              <div className="flex gap-1 items-center group-hover:hidden ">
+                <h6 className="text-gray-800 ">
+                  {pool.liquidityCollected
+                    ? pool.liquidityCollected / LAMPORTS_PER_SOL
+                    : 0}
+                </h6>
+                <Image
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="h-3 w-3"
+                  src={solanaLogo}
+                  alt={"solana logo"}
+                />
+              </div>
+
               <div className="items-center gap-1 flex-none text-gray-800 hidden group-hover:flex focus:text-gray-900 hover:text-gray-800">
                 <svg
                   className="h-4 w-4"
@@ -75,7 +98,7 @@ export const CardItem: FC<CardItemProps> = ({ pool }) => {
                   />
                 </svg>
                 <h5 className="text-[10px] lg:text-xs ">
-                  {`${pool.vestingPeriod / (24 * 60 * 60)}d`}
+                  {`${convertSecondsToNearestUnit(pool.vestingPeriod)}`}
                 </h5>
               </div>
             </div>
@@ -101,19 +124,25 @@ export const CardItem: FC<CardItemProps> = ({ pool }) => {
                   />
                 </svg>
                 <span className="text-[10px] lg:text-xs">
-                  {`${convertSecondsToNearestUnit(
-                    pool.presaleTimeLimit - Date.now() / 1000
-                  )
-                    .split(" ")
-                    .slice(0, 2)
-                    .join(" ")} left`}
+                  {`${
+                    timer / 1000 > pool.presaleTimeLimit
+                      ? "Expired"
+                      : convertSecondsToNearestUnit(
+                          pool.presaleTimeLimit - timer / 1000
+                        )
+                          .split(" ")
+                          .slice(0, 2)
+                          .join(" ") + " left"
+                  }`}
                 </span>
               </div>
               <div className="hidden gap-1 group-hover:flex items-center">
                 <span className="text-[10px] lg:text-xs text-gray-900 ">
-                  {`${pool.liquidityCollected / LAMPORTS_PER_SOL} / ${
-                    pool.presaleTarget / LAMPORTS_PER_SOL
-                  }`}
+                  {`${
+                    pool.liquidityCollected
+                      ? pool.liquidityCollected / LAMPORTS_PER_SOL
+                      : 0
+                  } / ${pool.presaleTarget / LAMPORTS_PER_SOL}`}
                 </span>
                 <Image
                   width={0}

@@ -24,6 +24,10 @@ interface Request {
   nft: DasApiAsset;
 }
 
+const imageStyle = {
+  height: "auto",
+};
+
 function InventoryScreen() {
   const {
     user,
@@ -79,18 +83,22 @@ function InventoryScreen() {
   }, [publicKey, page, showWallet]);
 
   const handleMintNft = async () => {
-    // Create the Collection NFT.
-    const collectionMint = generateSigner(umi);
-    await createNft(umi, {
-      mint: collectionMint,
-      authority: umi.identity,
-      name: "Testing 123",
-      uri: "https://qgp7lco5ylyitscysc2c7clhpxipw6sexpc2eij7g5rq3pnkcx2q.arweave.net/gZ_1id3C8InIWJC0L4lnfdD7ekS7xaIhPzdjDb2qFfU",
-      sellerFeeBasisPoints: percentAmount(9.99, 2), // 9.99%
-    }).sendAndConfirm(umi);
-    const data = await umi.rpc.getAsset(collectionMint.publicKey);
-    await handleLinkage(data);
-    setNft(data);
+    try {
+      const randomNft = generateSigner(umi);
+      await createNft(umi, {
+        mint: randomNft,
+        authority: umi.identity,
+        name: "Testing 123",
+        uri: "https://qgp7lco5ylyitscysc2c7clhpxipw6sexpc2eij7g5rq3pnkcx2q.arweave.net/gZ_1id3C8InIWJC0L4lnfdD7ekS7xaIhPzdjDb2qFfU",
+        sellerFeeBasisPoints: percentAmount(9.99, 2), // 9.99%
+      }).sendAndConfirm(umi);
+      const data = await umi.rpc.getAsset(randomNft.publicKey);
+      await handleLinkage(data);
+      setNft(data);
+      toast.success("Success");
+    } catch (error) {
+      toast.error(`${error}`);
+    }
   };
 
   const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
@@ -187,23 +195,19 @@ function InventoryScreen() {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <div className="grid gap-2 grid-cols-5 sm:grid-cols-10 bg-gray-700 rounded-lg p-2">
+              <div className="grid gap-2 grid-cols-5 bg-gray-700 rounded-lg p-2">
                 {walletAssets.map((item, index) => (
                   <div
-                    className="w-14 h-14 items-center flex rounded bg-gray-600"
+                    className="relative overflow-hidden w-14 h-14 lg:w-32 lg:h-32 items-center flex rounded bg-gray-600"
                     key={item ? item.id : index}
                     onClick={() => item && setSelectedItem(item)}
                   >
                     {item && (
                       <Image
-                        className={`rounded cursor-pointer w-14 h-auto ${
-                          isItemCurrentlyEquipped(item) &&
-                          "border-2 border-blue-800"
-                        }`}
+                        className={`rounded object-cover cursor-pointer`}
                         key={item.id}
-                        sizes="100vw"
-                        width={0}
-                        height={0}
+                        fill={true}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         src={item.content!.links!.image! as string}
                         alt={""}
                       />

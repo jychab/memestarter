@@ -45,6 +45,13 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   const [collectionImage, setCollectionImage] = useState();
   const [collectionName, setCollectionName] = useState();
 
+  const [timer, setTimer] = useState<number>();
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimer(Date.now()), 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   async function loadProject(
     docs: QueryDocumentSnapshot<DocumentData, DocumentData>[]
   ) {
@@ -64,40 +71,53 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   useEffect(() => {
     if (item) {
       getMetadata(item.content.json_uri).then((response) => {
-        setImage(response.image);
-        setName(response.name);
+        if (response) {
+          setImage(response.image);
+          setName(response.name);
+        }
       });
     }
   }, [item]);
   useEffect(() => {
     if (collectionItem) {
       getMetadata(collectionItem.content.json_uri).then((response) => {
-        setCollectionImage(response.image);
-        setCollectionName(response.name);
+        if (response) {
+          setCollectionImage(response.image);
+          setCollectionName(response.name);
+        }
       });
     }
   }, [collectionItem]);
 
   useEffect(() => {
-    getDocs(collection(db, `Mint/${item.id}/Pool`)).then((docs) => {
-      if (docs.empty) {
-        setProjects([]);
-      } else {
-        setProjects((prev) => (!prev ? [] : prev));
-        loadProject(docs.docs).then((res) => setProjects(res));
+    const unsubscribe = onSnapshot(
+      query(collection(db, `Mint/${item.id}/Pool`)),
+      (snapshot) => {
+        if (snapshot.empty) {
+          setProjects([]);
+        } else {
+          setProjects((prev) => (!prev ? [] : prev));
+          loadProject(snapshot.docs).then((res) => setProjects(res));
+        }
       }
-    });
+    );
+    return () => unsubscribe();
   }, [item]);
 
   return (
     image &&
     name && (
-      <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 justify-between gap-4 bg-gray-800 rounded right-2">
+      <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 bg-gray-800 rounded right-2">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
+          <div
+            className={`flex items-center ${
+              setSelectedItem ? "justify-between" : "justify-end"
+            } gap-2`}
+          >
             {setSelectedItem && (
               <button onClick={() => setSelectedItem(undefined)}>
                 <svg
+                  className="w-4 h-4 sm:w-6 sm:h-6"
                   xmlns="http://www.w3.org/2000/svg"
                   width="20px"
                   height="20px"
@@ -114,7 +134,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 </svg>
               </button>
             )}
-            {collectionItem && collectionItem.content.links && (
+            {collectionImage && collectionName && (
               <>
                 <Image
                   width={0}
@@ -135,10 +155,14 @@ export const InventoryItem: FC<InventoryItemProps> = ({
             {handleSubmit && (
               <button
                 onClick={() => handleSubmit(item)}
-                className="flex justify-end items-end w-full"
+                className={`flex items-center gap-1 rounded ${
+                  actionText === "Link" ? "bg-blue-700" : "bg-red-700"
+                } px-2 py-1 text-blue-200`}
               >
+                <span className="text-[10px] sm:text-xs">{actionText}</span>
                 {actionText === "Link" && !loading && (
                   <svg
+                    className="w-4 h-4"
                     xmlns="http://www.w3.org/2000/svg"
                     width="24px"
                     height="24px"
@@ -157,6 +181,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 )}
                 {actionText === "Unlink" && !loading && (
                   <svg
+                    className="w-4 h-4"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="currentColor"
                     width="24px"
@@ -178,7 +203,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 )}
                 {loading && (
                   <svg
-                    className="inline w-5 h-5 animate-spin text-gray-600 fill-gray-300"
+                    className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
                     viewBox="0 0 100 100"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -227,32 +252,34 @@ export const InventoryItem: FC<InventoryItemProps> = ({
           <div className="flex flex-col text-xs text-gray-400 gap-4">
             <span>Funded</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-[8px] sm:text-[10px] text-left rtl:text-right border border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-700">
                 <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
-                  <tr className="">
+                  <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
                       Project
                     </th>
-                    <th scope="col" className="w-24 p-2">
-                      Status
-                    </th>
-                    <th scope="col" className="w-24 p-2">
-                      Liquidity
-                    </th>
-                    <th scope="col" className="w-24 p-2">
+                    <th scope="col" className="w-24 text-center p-2">
                       Funded
                     </th>
-                    <th scope="col" className="w-24 p-2">
+                    <th scope="col" className="w-24 text-center p-2">
+                      Liquidity
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2">
+                      Presale Target
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2">
                       Presale End
                     </th>
+                    <th scope="col" className="w-24 text-center p-2" />
                   </tr>
                 </thead>
                 <tbody>
                   {projects &&
                     projects.filter(
                       (item) =>
-                        getStatus(item as Pool) === Status.PresaleInProgress
+                        getStatus(item as Pool) === Status.PresaleInProgress ||
+                        getStatus(item as Pool) === Status.PresaleTargetMet
                     ).length === 0 && (
                       <tr>
                         <td className="p-2 text-xs" colSpan={6}>
@@ -265,44 +292,42 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                     projects
                       .filter(
                         (item) =>
-                          getStatus(item as Pool) === Status.PresaleInProgress
+                          getStatus(item as Pool) ===
+                            Status.PresaleInProgress ||
+                          getStatus(item as Pool) === Status.PresaleTargetMet
                       )
                       .map((project, index) => (
-                        <TableRow key={index} project={project} />
+                        <TableRow key={index} project={project} timer={timer} />
                       ))}
                 </tbody>
               </table>
             </div>
             <span>Vesting</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-[8px] sm:text-[10px] text-left rtl:text-right border border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-700 text-gray-400">
                 <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
-                  <tr className="">
+                  <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
                       Project
                     </th>
-                    <th scope="col" className="w-16 p-2">
-                      Status
-                    </th>
-                    <th scope="col" className="w-16 p-2">
+                    <th scope="col" className="w-24 text-center p-2">
                       Funded
                     </th>
-                    <th scope="col" className="w-20 text-center p-2">
-                      Lp Elligible
+                    <th scope="col" className="w-24 text-center p-2">
+                      Mint Elligible (unvested)
                     </th>
-
-                    <th scope="col" className="w-20 text-center p-2">
-                      Mint Elligible
-                    </th>
-                    <th scope="col" className="w-20 text-center p-2">
+                    <th scope="col" className="w-24 text-center p-2">
                       Mint Claimed
                     </th>
-                    <th scope="col" className="w-20 text-center p-2">
+                    <th scope="col" className="w-24 text-center p-2">
+                      Mint Elligible (Allocated)
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2">
                       Vesting End
                     </th>
 
-                    <th scope="col" className="w-16 p-2" />
+                    <th scope="col" className="w-24 text-center p-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -325,40 +350,37 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                           getStatus(item as Pool) === Status.VestingInProgress
                       )
                       .map((project, index) => (
-                        <TableRow key={index} project={project} />
+                        <TableRow key={index} project={project} timer={timer} />
                       ))}
                 </tbody>
               </table>
             </div>
             <span>Completed</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-[8px] sm:text-[10px] text-left rtl:text-right border border-gray-700 text-gray-400">
+              <table className="w-full text-left rtl:text-right border border-gray-700 text-gray-400">
                 <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
-                  <tr className="">
+                  <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
                       Project
                     </th>
-                    <th scope="col" className="w-24 p-2">
-                      Status
-                    </th>
-                    <th scope="col" className="w-16 p-2">
+
+                    <th scope="col" className="w-24 text-center p-2">
                       Funded
                     </th>
-                    <th scope="col" className="w-16 p-2">
-                      Lp Elligible
+                    <th scope="col" className="w-24 text-center p-2">
+                      Mint Elligible (Unvested)
                     </th>
-
-                    <th scope="col" className="w-16 p-2">
-                      Mint Elligible
-                    </th>
-                    <th scope="col" className="w-16 p-2">
+                    <th scope="col" className="w-24 text-center p-2">
                       Mint Claimed
                     </th>
-                    <th scope="col" className="w-24 p-2">
-                      Vesting End
+                    <th scope="col" className="w-24 text-center p-2">
+                      Lp Elligible (Unvested)
                     </th>
-                    <th scope="col" className="w-16 p-2" />
+                    <th scope="col" className="w-24 text-center p-2">
+                      Lp Claimed
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -380,30 +402,30 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                           getStatus(item as Pool) === Status.VestingCompleted
                       )
                       .map((project, index) => (
-                        <TableRow key={index} project={project} />
+                        <TableRow key={index} project={project} timer={timer} />
                       ))}
                 </tbody>
               </table>
             </div>
             <span>Expired</span>
             <div className="overflow-x-auto">
-              <table className="w-full text-[8px] sm:text-[10px] text-left rtl:text-right border border-gray-700 text-gray-400">
+              <table className="w-full  text-left rtl:text-right border border-gray-700 text-gray-400">
                 <thead className="uppercase bg-gray-800 border-b border-gray-700 text-gray-400">
-                  <tr className="">
+                  <tr className="text-[10px]">
                     <th scope="col" className="hidden sm:table-cell w-16 p-2" />
                     <th scope="col" className="w-auto p-2">
                       Project
                     </th>
-                    <th scope="col" className="w-24 p-2">
-                      Status
-                    </th>
-                    <th scope="col" className="w-16 p-2">
-                      Liquidity
-                    </th>
-                    <th scope="col" className="w-16 p-2">
+                    <th scope="col" className="w-24 text-center p-2">
                       Funded
                     </th>
-                    <th scope="col" className="w-16 p-2" />
+                    <th scope="col" className="w-24 text-center p-2">
+                      Liquidity
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2">
+                      Funds Withdrawn
+                    </th>
+                    <th scope="col" className="w-24 text-center p-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -423,7 +445,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                         (item) => getStatus(item as Pool) === Status.Expired
                       )
                       .map((project, index) => (
-                        <TableRow key={index} project={project} />
+                        <TableRow key={index} project={project} timer={timer} />
                       ))}
                 </tbody>
               </table>

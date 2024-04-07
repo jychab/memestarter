@@ -55,6 +55,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
       );
       return () => unsubscribe();
     }
+    setSessionKey(null);
   }, [publicKey, user]);
 
   useEffect(() => {

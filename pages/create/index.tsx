@@ -262,7 +262,7 @@ function CreateCollection() {
                 name={name}
                 description={description}
                 symbol={symbol}
-                decimals={decimals}
+                decimal={decimals}
                 externalUrl={externalUrl}
                 totalSupply={parseInt(supply.replaceAll(",", ""))}
                 vestedSupply={

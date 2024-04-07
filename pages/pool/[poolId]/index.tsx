@@ -56,10 +56,12 @@ export function Pool() {
   useEffect(() => {
     if (pool) {
       getMetadata(pool).then((response) => {
-        setName(response.name);
-        setDescription(response.description);
-        setImage(response.image);
-        setSymbol(response.symbol);
+        if (response) {
+          setName(response.name);
+          setDescription(response.description);
+          setImage(response.image);
+          setSymbol(response.symbol);
+        }
       });
     }
   }, [pool]);
@@ -76,8 +78,6 @@ export function Pool() {
   useEffect(() => {
     if (pool) {
       setStatus(getStatus(pool));
-
-      console.log(getStatus(pool));
     }
   }, [pool]);
 
@@ -215,10 +215,17 @@ export function Pool() {
     }
   };
 
-  function getColorfromStatus(status: Status | undefined) {
-    if (status === Status.PresaleInProgress) {
+  function getColorfromStatus(status: Status | undefined, pool: Pool) {
+    if (
+      status === Status.PresaleInProgress ||
+      (status === Status.PresaleTargetMet &&
+        pool.authority !== publicKey?.toBase58())
+    ) {
       return "text-green-100 bg-green-700 hover:bg-green-800";
-    } else if (status === Status.PresaleTargetMet) {
+    } else if (
+      status === Status.PresaleTargetMet &&
+      pool.authority === publicKey?.toBase58()
+    ) {
       return "text-red-100 bg-red-700 hover:bg-red-800";
     } else if (status === Status.VestingInProgress) {
       return "text-yellow-100 bg-yellow-700 hover:bg-yellow-800";
@@ -233,11 +240,11 @@ export function Pool() {
     pool &&
     image &&
     name &&
-    symbol &&
-    description && (
-      <div className="flex flex-1 items-center justify-center gap-4 w-full h-full">
-        <div className="p-2 rounded bg-gray-800 pt-4 pb-4 border border-gray-900">
+    symbol && (
+      <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
+        <div className="rounded bg-gray-800 p-2 border w-full border-gray-900">
           <ReviewPane
+            decimal={pool.decimal}
             mint={pool.mint}
             image={image!}
             name={name!}
@@ -256,19 +263,19 @@ export function Pool() {
             <button
               onClick={handleClick}
               className={`${getColorfromStatus(
-                status
-              )} flex items-center justify-center rounded max-w-64 px-4 py-1`}
+                status,
+                pool
+              )} flex items-center justify-center rounded max-w-64 gap-1 px-4 py-1`}
               disabled={
                 !(
                   status === Status.PresaleInProgress ||
-                  (status === Status.PresaleTargetMet &&
-                    publicKey?.toBase58() === pool.authority)
+                  status === Status.PresaleTargetMet
                 )
               }
             >
               {loading && (
                 <svg
-                  className="inline w-5 h-5 animate-spin text-gray-600 fill-gray-300"
+                  className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
                   viewBox="0 0 100 100"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -283,10 +290,15 @@ export function Pool() {
                   />
                 </svg>
               )}
-              {status === Status.PresaleInProgress && (
+              {(status === Status.PresaleInProgress ||
+                (status === Status.PresaleTargetMet &&
+                  pool.authority !== publicKey?.toBase58())) && (
                 <span>{loading ? "Funding..." : "Fund for 1 SOL"}</span>
               )}
               {status === Status.Expired && <span>{"Expired"}</span>}
+              {status === Status.VestingCompleted && (
+                <span>{"Vesting Completed"}</span>
+              )}
               {status === Status.VestingInProgress && (
                 <span>{"Vesting in Progress"}</span>
               )}
@@ -297,7 +309,7 @@ export function Pool() {
             </button>
             <span
               hidden={status !== Status.PresaleInProgress}
-              className="text-[10px]text-gray-300"
+              className="text-[10px] text-gray-300"
             >
               {"Creator Fees: " +
                 parseInt(pool.creatorFeeBasisPoints) / 100 +

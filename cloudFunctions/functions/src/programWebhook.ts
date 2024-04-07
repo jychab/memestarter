@@ -250,6 +250,7 @@ function processClaimRewardsEvent(
       mintClaimed: FieldValue.increment(
         parseInt(claimEventData.mintClaimed, 16)
       ),
+      lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -266,6 +267,7 @@ function processClaimRewardsEvent(
         event: Events.ClaimRewardsEvent,
         eventData: {
           ...claimEventData,
+          lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
           mintClaimed: parseInt(claimEventData.mintClaimed, 16),
         },
         updatedAt: FieldValue.serverTimestamp(),
@@ -283,6 +285,7 @@ function processClaimRewardsEvent(
       event: Events.ClaimRewardsEvent,
       eventData: {
         ...claimEventData,
+        lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
         mintClaimed: parseInt(claimEventData.mintClaimed, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
@@ -306,7 +309,8 @@ function processCheckClaimEvent(
       .doc(checkClaimData.pool),
     {
       mintElligible: parseInt(checkClaimData.mintElligible, 16),
-      lpElligible: parseInt(checkClaimData.lpElligibile, 16),
+      lpElligible: parseInt(checkClaimData.lpElligible, 16),
+      lpElligibleAfterFees: parseInt(checkClaimData.lpElligibleAfterFees, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -323,7 +327,8 @@ function processCheckClaimEvent(
       eventData: {
         ...checkClaimData,
         mintElligible: parseInt(checkClaimData.mintElligible, 16),
-        lpElligible: parseInt(checkClaimData.lpElligibile, 16),
+        lpElligible: parseInt(checkClaimData.lpElligible, 16),
+        lpElligibleAfterFees: parseInt(checkClaimData.lpElligibleAfterFees, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -347,7 +352,6 @@ function processPurchasePresaleEvent(
       .doc(purchaseEventData.pool),
     {
       ...purchaseEventData,
-      liquidityCollected: parseInt(purchaseEventData.liquidityCollected, 16),
       amount: FieldValue.increment(parseInt(purchaseEventData.amount, 16)),
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -356,7 +360,9 @@ function processPurchasePresaleEvent(
   batch.set(
     db.collection("Pool").doc(purchaseEventData.pool),
     {
-      liquidityCollected: parseInt(purchaseEventData.liquidityCollected, 16),
+      liquidityCollected: FieldValue.increment(
+        parseInt(purchaseEventData.amount, 16)
+      ),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -372,7 +378,6 @@ function processPurchasePresaleEvent(
       event: Events.PurchasedPresaleEvent,
       eventData: {
         ...purchaseEventData,
-        liquidityCollected: parseInt(purchaseEventData.liquidityCollected, 16),
         amount: parseInt(purchaseEventData.amount, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
@@ -391,7 +396,7 @@ function processIntializePoolEvent(
 
   batch.set(db.collection("Pool").doc(poolEventData.pool), {
     ...poolEventData,
-    liquidityCollected: 0,
+    decimal: parseInt(poolEventData.decimal, 16),
     presaleTarget: parseInt(poolEventData.presaleTarget, 16),
     presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
     vestedSupply: parseInt(poolEventData.vestedSupply, 16),
@@ -410,6 +415,7 @@ function processIntializePoolEvent(
       event: Events.IntializedPoolEvent,
       eventData: {
         ...poolEventData,
+        decimal: parseInt(poolEventData.decimal, 16),
         presaleTarget: parseInt(poolEventData.presaleTarget, 16),
         presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
         vestedSupply: parseInt(poolEventData.vestedSupply, 16),

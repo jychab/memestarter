@@ -761,6 +761,11 @@ export type SafePresale = {
           index: false;
         },
         {
+          name: "decimal";
+          type: "u8";
+          index: false;
+        },
+        {
           name: "vestingPeriod";
           type: "u64";
           index: false;
@@ -821,7 +826,12 @@ export type SafePresale = {
           index: false;
         },
         {
-          name: "lpElligibile";
+          name: "lpElligible";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "lpElligibleAfterFees";
           type: "u64";
           index: false;
         }
@@ -843,6 +853,11 @@ export type SafePresale = {
         {
           name: "mintClaimed";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "lastClaimedAt";
+          type: "i64";
           index: false;
         },
         {
@@ -1845,6 +1860,11 @@ export const IDL: SafePresale = {
           index: false,
         },
         {
+          name: "decimal",
+          type: "u8",
+          index: false,
+        },
+        {
           name: "vestingPeriod",
           type: "u64",
           index: false,
@@ -1905,7 +1925,12 @@ export const IDL: SafePresale = {
           index: false,
         },
         {
-          name: "lpElligibile",
+          name: "lpElligible",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "lpElligibleAfterFees",
           type: "u64",
           index: false,
         },
@@ -1927,6 +1952,11 @@ export const IDL: SafePresale = {
         {
           name: "mintClaimed",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "lastClaimedAt",
+          type: "i64",
           index: false,
         },
         {

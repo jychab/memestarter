@@ -14,6 +14,7 @@ export interface InitializedPoolEvent {
   authority: string;
   pool: string;
   mint: string;
+  decimal: string;
   presaleTarget: string;
   presaleTimeLimit: string;
   creatorFeeBasisPoints: string;
@@ -27,7 +28,6 @@ export interface PurchasedPresaleEvent {
   amount: string;
   pool: string;
   originalMint: string;
-  liquidityCollected: string;
 }
 
 export interface CheckClaimEvent {
@@ -35,12 +35,14 @@ export interface CheckClaimEvent {
   pool: string;
   originalMint: string;
   mintElligible: string;
-  lpElligibile: string;
+  lpElligible: string;
+  lpElligibleAfterFees: string;
 }
 
 export interface ClaimRewardsEvent {
   payer: string;
   pool: string;
+  lastClaimedAt: string;
   mintClaimed: string;
   originalMint: string;
   originalMintOwner: string;
@@ -101,6 +103,7 @@ export interface Mint {
   lpElligible: number;
   mintClaimed: number;
   mintElligible: number;
+  lpElligibleAfterFees: string;
   updatedAt: number;
   mintMetadata: DAS.GetAssetResponse;
 }

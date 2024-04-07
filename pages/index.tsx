@@ -25,6 +25,13 @@ function Projects() {
     SortCriteria.createdTime
   );
   const [page, setPage] = useState(1);
+  const [timer, setTimer] = useState<number>();
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimer(Date.now()), 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if ((!projects || page * 10 > projects.length) && sortCriteria) {
       const mintedItems = query(
@@ -46,7 +53,7 @@ function Projects() {
               setProjects((prevProject) =>
                 prevProject
                   ? [newData, ...prevProject].sort(
-                      (a, b) => b[sortCriteria] - a[sortCriteria]
+                      (a, b) => b.createdAt.seconds - a.createdAt.seconds
                     )
                   : [newData]
               );
@@ -78,12 +85,12 @@ function Projects() {
   }, [page, sortCriteria]);
 
   return (
-    <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="flex flex-col w-full h-fit max-w-screen-2xl mx-auto gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 p-4">
         {projects &&
           projects.length > 0 &&
           projects.map((project) => (
-            <CardItem pool={project} key={project.pool} />
+            <CardItem pool={project} key={project.pool} timer={timer} />
           ))}
       </div>
 
