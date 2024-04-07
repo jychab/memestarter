@@ -11,7 +11,7 @@ export const SignInBtn: FC = () => {
   const signInDialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (selectedWallet) {
+    if (selectedWallet && select) {
       select(selectedWallet.adapter.name);
       if (connecting) {
         setConectionStatus("Connecting");
@@ -19,7 +19,7 @@ export const SignInBtn: FC = () => {
         setConectionStatus("Connected");
       }
     }
-  }, [selectedWallet, connecting, connected]);
+  }, [selectedWallet, connecting, connected, select]);
 
   useEffect(() => {
     // Function to handle click outside the dialog

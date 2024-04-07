@@ -18,7 +18,6 @@ import {
 import { db } from "../utils/firebase";
 import { TableRow } from "./TableRow";
 import { getMetadata, getStatus } from "../utils/helper";
-import { QuerySnapshot } from "@google-cloud/firestore";
 
 interface InventoryItemProps {
   item: DasApiAsset;

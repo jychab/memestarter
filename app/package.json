@@ -29,7 +29,6 @@
     "react-toastify": "^10.0.5"
   },
   "devDependencies": {
-    "@types/bn.js": "^5.1.0",
     "@types/node": "20.11.17",
     "@types/react": "18.2.55",
     "@types/react-dom": "18.2.19",

@@ -41,7 +41,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
     };
   }, [showDuration]);
   useEffect(() => {
-    if (periodEnum && value && period) {
+    if (periodEnum && value && setPeriod) {
       if (periodEnum === Period.Days) {
         setPeriod(value * 24 * 60 * 60);
       } else if (periodEnum === Period.Hours) {
@@ -50,7 +50,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
         setPeriod(value * (30 * 24 * 60 * 60));
       }
     }
-  }, [periodEnum, value]);
+  }, [periodEnum, value, setPeriod]);
   return (
     <div className="grid grid-cols-2 items-center">
       <label htmlFor="time" className="text-sm font-medium text-white">

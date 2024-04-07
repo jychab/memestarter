@@ -82,7 +82,7 @@ function Projects() {
         ? () => unsubscribe()
         : () => {};
     }
-  }, [page, sortCriteria]);
+  }, [page, sortCriteria, projects]);
 
   return (
     <div className="flex flex-col w-full h-fit max-w-screen-2xl mx-auto gap-4">

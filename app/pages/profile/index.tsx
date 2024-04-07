@@ -62,7 +62,7 @@ function InventoryScreen() {
   }, [publicKey, nft]);
 
   useEffect(() => {
-    if (umi && publicKey && page && showWallet) {
+    if (publicKey && page && showWallet) {
       umi.rpc
         .getAssetsByOwner({
           owner: umi.identity.publicKey,
@@ -208,6 +208,7 @@ function InventoryScreen() {
                         key={item.id}
                         fill={true}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        //@ts-ignore
                         src={item.content!.links!.image! as string}
                         alt={""}
                       />

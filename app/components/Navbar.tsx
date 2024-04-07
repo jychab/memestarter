@@ -2,7 +2,6 @@ import React, { FC } from "react";
 import Link from "next/link";
 import { SignInBtn } from "./buttons/SignInBtn";
 import { UserProfileBtn } from "./buttons/UserProfileBtn";
-import { ClaimDailyBonusBtn } from "./buttons/ClaimDailyBonusBtn";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { CreateProjectBtn } from "./buttons/CreateProjectBtn";
 

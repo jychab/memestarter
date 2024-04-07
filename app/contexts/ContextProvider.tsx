@@ -9,6 +9,7 @@ import {
   NetworkConfigurationProvider,
   useNetworkConfiguration,
 } from "./NetworkConfigurationProvider";
+import React from "react";
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { networkConfiguration } = useNetworkConfiguration();
