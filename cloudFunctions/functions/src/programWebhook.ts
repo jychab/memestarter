@@ -123,6 +123,24 @@ function processWithdrawEvent(
     },
     {merge: true}
   );
+  if (withdrawEvent.originalMintOwner !== withdrawEvent.payer) {
+    batch.set(
+      db
+        .collection("Users")
+        .doc(withdrawEvent.originalMintOwner)
+        .collection("Transactions")
+        .doc(tx.signature),
+      {
+        signature: tx.signature,
+        event: Events.WithdrawEvent,
+        eventData: {
+          ...withdrawEvent,
+          amountWsolWithdrawn: parseInt(withdrawEvent.amountWsolWithdrawn, 16),
+        },
+        updatedAt: FieldValue.serverTimestamp(),
+      }
+    );
+  }
   batch.set(
     db
       .collection("Users")
@@ -213,7 +231,7 @@ function processLaunchAmmEvent(
   batch.set(
     db
       .collection("Users")
-      .doc(launchTokenEventData.authority)
+      .doc(launchTokenEventData.payer)
       .collection("Transactions")
       .doc(tx.signature),
     {
@@ -352,6 +370,18 @@ function processPurchasePresaleEvent(
       .doc(purchaseEventData.pool),
     {
       ...purchaseEventData,
+      amount: FieldValue.increment(parseInt(purchaseEventData.amount, 16)),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  batch.set(
+    db
+      .collection("Pool")
+      .doc(purchaseEventData.pool)
+      .collection("Mint")
+      .doc(purchaseEventData.originalMint),
+    {
       amount: FieldValue.increment(parseInt(purchaseEventData.amount, 16)),
       updatedAt: FieldValue.serverTimestamp(),
     },

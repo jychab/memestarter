@@ -7,7 +7,6 @@ import {
   checkClaimElligibility,
   claim,
   convertSecondsToNearestUnit,
-  getMetadata,
   getStatus,
   separateNumberWithComma,
   withdraw,
@@ -25,16 +24,20 @@ interface TableRowProps {
 }
 
 export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
-  const [status, setStatus] = useState<Status>();
-  const [image, setImage] = useState();
-  const [name, setName] = useState();
   const [loading, setLoading] = useState(false);
   const [loadingLp, setLoadingLp] = useState(false);
+  const [status, setStatus] = useState<Status>();
   const [currentMintElligible, setCurrentMintElligible] = useState<number>();
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
   const { nft } = useLogin();
   const router = useRouter();
+
+  useEffect(() => {
+    if (project) {
+      setStatus(getStatus(project));
+    }
+  }, [project]);
 
   useEffect(() => {
     if (
@@ -60,20 +63,10 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           )
         );
       }
+    } else {
+      setCurrentMintElligible(undefined);
     }
   }, [timer, project]);
-
-  useEffect(() => {
-    if (project) {
-      getMetadata(project as PoolType).then((response) => {
-        if (response) {
-          setImage(response.image);
-          setName(response.name);
-        }
-      });
-      setStatus(getStatus(project));
-    }
-  }, [project]);
 
   const handleMint = async () => {
     if (publicKey && nft && project && signTransaction) {
@@ -158,6 +151,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           {
             poolId: new PublicKey(project.pool),
             signer: publicKey,
+            nftOwner: publicKey,
             nft: new PublicKey(nft.id),
           },
           connection
@@ -179,9 +173,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
 
   return (
     project &&
-    timer &&
-    name &&
-    image && (
+    timer && (
       <tr className="text-[10px] sm:text-xs text-black hover:bg-gray-100">
         <td
           onClick={() => router.push(`/pool/${project.pool}`)}
@@ -193,7 +185,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               className={`rounded object-cover cursor-pointer`}
               fill={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              src={image}
+              src={project.image}
               alt={""}
             />
           </div>
@@ -203,7 +195,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           scope="row"
           className="cursor-pointer p-2"
         >
-          {name}
+          {project.name}
         </td>
         <td scope="row" className="p-2 text-center">
           {project.amount / LAMPORTS_PER_SOL + " Sol"}

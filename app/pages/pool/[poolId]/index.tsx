@@ -20,23 +20,25 @@ import {
   sendTransactions,
   getSignature,
   launchTokenAmm,
-  getMetadata,
 } from "../../../utils/helper";
 import { MarketDetails, PoolType, Status } from "../../../utils/types";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../../utils/firebase";
 import {
-  TxVersion,
-  buildSimpleTransaction,
-  buildTransaction,
-} from "@raydium-io/raydium-sdk";
+  collection,
+  doc,
+  getCountFromServer,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "../../../utils/firebase";
+import { TxVersion, buildSimpleTransaction } from "@raydium-io/raydium-sdk";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { getAccount } from "@solana/spl-token";
+import { User } from "firebase/auth";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
   const { connection } = useConnection();
   const [status, setStatus] = useState<Status>();
+  const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const { publicKey, signTransaction, signMessage } = useWallet();
   const {
     nft,
@@ -47,25 +49,17 @@ export function Pool() {
     sessionKey,
   } = useLogin();
   const [pool, setPool] = useState<PoolType>();
-  const [image, setImage] = useState();
-  const [name, setName] = useState();
-  const [description, setDescription] = useState();
-  const [symbol, setSymbol] = useState();
   const router = useRouter();
   const { poolId } = router.query;
 
   useEffect(() => {
-    if (pool) {
-      getMetadata(pool).then((response) => {
-        if (response) {
-          setName(response.name);
-          setDescription(response.description);
-          setImage(response.image);
-          setSymbol(response.symbol);
-        }
-      });
+    if (poolId) {
+      const coll = collection(db, `Pool/${poolId}/Mint`);
+      getCountFromServer(coll).then((result) =>
+        setUniqueBackers(result.data().count)
+      );
     }
-  }, [pool]);
+  }, [poolId]);
 
   useEffect(() => {
     if (poolId) {
@@ -82,10 +76,111 @@ export function Pool() {
     }
   }, [pool]);
 
+  async function buyPresale(
+    nft: DasApiAsset,
+    pool: PoolType,
+    publicKey: PublicKey,
+    signTransaction: any
+  ) {
+    let ix = [];
+    ix.push(
+      await buyPresaleIx(
+        {
+          amount: LAMPORTS_PER_SOL,
+          nft: new PublicKey(nft.id),
+          poolId: new PublicKey(pool.pool),
+          signer: publicKey,
+        },
+        connection
+      )
+    );
+    await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
+  }
+
+  async function launchToken(
+    pool: PoolType,
+    publicKey: PublicKey,
+    signMessage: any,
+    signTransaction: any,
+    user: User
+  ) {
+    const docRef = await getDoc(
+      doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
+    );
+    let marketId;
+    if (!docRef.exists()) {
+      const { innerTransactions, address } = await createMarket(
+        {
+          signer: publicKey,
+          mint: new PublicKey(pool.mint),
+          decimal: pool.decimal,
+          lotSize: 1,
+          tickSize: Math.max(10 ^ -pool.decimal, 10 ^ -6),
+        },
+        connection
+      );
+      const txs = await buildSimpleTransaction({
+        connection: connection,
+        makeTxVersion: TxVersion.V0,
+        payer: publicKey,
+        innerTransactions,
+      });
+
+      await sendTransactions(
+        connection,
+        txs as VersionedTransaction[],
+        signTransaction
+      );
+      const updateMarket = httpsCallable(getFunctions(), "updateMarketDetails");
+      let sig = await getSignature(
+        user,
+        signedMessage,
+        sessionKey,
+        signMessage,
+        setSignedMessage,
+        setSessionKey
+      );
+      const payload = {
+        signature: sig,
+        pubKey: publicKey.toBase58(),
+        poolId: pool.pool,
+        marketDetails: {
+          marketId: address.marketId.toBase58(),
+          requestQueue: address.requestQueue.toBase58(),
+          eventQueue: address.eventQueue.toBase58(),
+          bids: address.bids.toBase58(),
+          asks: address.asks.toBase58(),
+          baseVault: address.baseVault.toBase58(),
+          quoteVault: address.quoteVault.toBase58(),
+          baseMint: address.baseMint.toBase58(),
+          quoteMint: address.quoteMint.toBase58(),
+        } as MarketDetails,
+      };
+      await updateMarket(payload);
+      marketId = address.marketId.toBase58();
+    } else {
+      marketId = (docRef.data() as MarketDetails).marketId;
+    }
+    let ix = [];
+    ix.push(
+      await launchTokenAmm(
+        {
+          marketId: new PublicKey(marketId),
+          mint: new PublicKey(pool.mint),
+          signer: publicKey,
+          poolId: new PublicKey(pool.pool),
+        },
+        connection
+      )
+    );
+    await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
+  }
+
   const handleClick = async (e: any) => {
     e.preventDefault();
     try {
       if (
+        status &&
         publicKey &&
         user &&
         connection &&
@@ -106,88 +201,17 @@ export function Pool() {
             toast.error("Insufficient SOL. You need at least 3 Sol.");
             return;
           }
-          const docRef = await getDoc(
-            doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
-          );
-          let marketId;
-          if (!docRef.exists()) {
-            const { innerTransactions, address } = await createMarket(
-              {
-                signer: publicKey,
-                mint: new PublicKey(pool.mint),
-                decimal: pool.mintMetadata.token_info.decimals,
-                lotSize: 1,
-                tickSize: Math.max(
-                  10 ^ -pool.mintMetadata.token_info.decimals,
-                  10 ^ -6
-                ),
-              },
-              connection
-            );
-            const txs = await buildSimpleTransaction({
-              connection: connection,
-              makeTxVersion: TxVersion.V0,
-              payer: publicKey,
-              innerTransactions,
-            });
-
-            await sendTransactions(
-              connection,
-              txs as VersionedTransaction[],
-              signTransaction
-            );
-            const updateMarket = httpsCallable(
-              getFunctions(),
-              "updateMarketDetails"
-            );
-            let sig = await getSignature(
-              user,
-              signedMessage,
-              sessionKey,
-              signMessage,
-              setSignedMessage,
-              setSessionKey
-            );
-            const payload = {
-              signature: sig,
-              pubKey: publicKey.toBase58(),
-              poolId: pool.pool,
-              marketDetails: {
-                marketId: address.marketId.toBase58(),
-                requestQueue: address.requestQueue.toBase58(),
-                eventQueue: address.eventQueue.toBase58(),
-                bids: address.bids.toBase58(),
-                asks: address.asks.toBase58(),
-                baseVault: address.baseVault.toBase58(),
-                quoteVault: address.quoteVault.toBase58(),
-                baseMint: address.baseMint.toBase58(),
-                quoteMint: address.quoteMint.toBase58(),
-              } as MarketDetails,
-            };
-            await updateMarket(payload);
-            marketId = address.marketId.toBase58();
-          } else {
-            marketId = (docRef.data() as MarketDetails).marketId;
-          }
-          let ix = [];
-          ix.push(
-            await launchTokenAmm(
-              {
-                marketId: new PublicKey(marketId),
-                mint: new PublicKey(pool.mint),
-                signer: publicKey,
-                poolId: new PublicKey(pool.pool),
-              },
-              connection
-            )
-          );
-          await buildAndSendTransaction(
-            connection,
-            ix,
+          await launchToken(
+            pool,
             publicKey,
-            signTransaction
+            signMessage,
+            signTransaction,
+            user
           );
-        } else if (status === Status.PresaleInProgress) {
+        } else if (
+          status === Status.PresaleInProgress ||
+          status === Status.PresaleTargetMet
+        ) {
           if (!nft) {
             toast.error("Missing Profile...");
             router.push("/profile");
@@ -200,32 +224,12 @@ export function Pool() {
             toast.error("Insufficient SOL. You need at least 1 Sol.");
             return;
           }
-
-          let ix = [];
-          ix.push(
-            await buyPresaleIx(
-              {
-                amount: LAMPORTS_PER_SOL,
-                nft: new PublicKey(nft.id),
-                poolId: new PublicKey(pool.pool),
-                signer: publicKey,
-              },
-              connection
-            )
-          );
-          await buildAndSendTransaction(
-            connection,
-            ix,
-            publicKey,
-            signTransaction
-          );
+          await buyPresale(nft, pool, publicKey, signTransaction);
         }
-
         toast.success("Success!");
         router.push("/");
       }
     } catch (error) {
-      console.log(error);
       toast.error(`${error}`);
     } finally {
       setLoading(false);
@@ -254,25 +258,23 @@ export function Pool() {
   }
 
   return (
-    pool &&
-    image &&
-    name &&
-    symbol && (
+    pool && (
       <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
         <div className="rounded border w-full shadow-sm">
           <ReviewPane
+            uniqueBackers={uniqueBackers}
             decimal={pool.decimal}
             mint={pool.mint}
-            image={image!}
-            name={name!}
-            symbol={symbol!}
+            image={pool.image}
+            name={pool.name}
+            symbol={pool.symbol}
             externalUrl={""}
             totalSupply={pool.totalSupply}
             vestedSupply={pool.vestedSupply}
             vestingPeriod={pool.vestingPeriod}
             presaleTimeLimit={pool.presaleTimeLimit}
             presaleTarget={pool.presaleTarget}
-            description={description}
+            description={pool.description}
             liquidityCollected={pool.liquidityCollected}
             status={status}
           />

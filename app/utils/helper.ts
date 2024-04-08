@@ -547,8 +547,10 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
       purchaseReceipt: purchaseReceipt,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       pool: args.poolId,
-      userWallet: args.signer,
-      userTokenWsol: signerWsolTokenAccount,
+      payer: args.signer,
+      payerTokenWsol: signerWsolTokenAccount,
+      nft: args.nft,
+      nftOwner: args.nftOwner,
       poolTokenWsol: poolWsolTokenAccount,
       wsol: NATIVE_MINT,
       systemProgram: SystemProgram.programId,
@@ -671,19 +673,11 @@ export async function getSignature(
   return sig;
 }
 
-export async function getMetadata(
-  pool: PoolType | string
-): Promise<any | undefined> {
+export async function getMetadata(pool: string): Promise<any | undefined> {
   if (typeof pool === "string") {
     const res = await fetch(pool);
     const data = res.json();
     return data;
-  } else {
-    if (pool.mintMetadata && pool.mintMetadata.content) {
-      const res = await fetch(pool.mintMetadata.content.json_uri);
-      const data = res.json();
-      return data;
-    }
-    return;
   }
+  return;
 }

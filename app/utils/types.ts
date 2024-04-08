@@ -64,6 +64,7 @@ export interface InitializePoolArgs {
 export interface WithdrawArgs {
   poolId: PublicKey;
   nft: PublicKey;
+  nftOwner: PublicKey;
   signer: PublicKey;
 }
 
@@ -122,6 +123,11 @@ export interface PoolType {
   vestingStartedAt: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  name: string;
+  symbol: string;
+  description: string;
+  image: string;
+  valid: boolean;
 }
 
 export interface MintType {

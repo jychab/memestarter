@@ -49,7 +49,7 @@ export interface ClaimRewardsEvent {
 }
 
 export interface LaunchTokenAmmEvent {
-  authority: string;
+  payer: string;
   pool: string;
   amountCoin: string;
   amountPc: string;
@@ -71,7 +71,7 @@ export interface WithdrawEvent {
   pool: string;
   originalMint: string;
   amountWsolWithdrawn: string;
-  wsolMint: string;
+  originalMintOwner: string;
 }
 
 export interface Pool {

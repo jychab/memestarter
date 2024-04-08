@@ -12,7 +12,7 @@ import {
 import useUmi from "../../hooks/useUmi";
 import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
 import { createNft } from "@metaplex-foundation/mpl-token-metadata";
-import { getSignature } from "../../utils/helper";
+import { getMetadata, getSignature } from "../../utils/helper";
 import solanaLogo from "../../public/solanaLogoMark.png";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -58,11 +58,17 @@ function InventoryScreen() {
       const accountInfo = await connection.getAccountInfo(
         new PublicKey(item.id.toString())
       );
-      if (
-        accountInfo &&
-        accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID.toBase58()
-      ) {
-        filteredWalletItems.push(item);
+      try {
+        const metadata = await getMetadata(item.content.json_uri);
+        if (
+          accountInfo &&
+          accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID.toBase58() &&
+          metadata.image !== null
+        ) {
+          filteredWalletItems.push(item);
+        }
+      } catch (e) {
+        console.log(e);
       }
     }
     filteredWalletItems
@@ -90,6 +96,7 @@ function InventoryScreen() {
             sortBy: "recent_action",
             sortDirection: "desc",
           },
+          creatorVerified: true,
           limit: page * 20,
         })
         .then((walletData) => {
@@ -217,18 +224,18 @@ function InventoryScreen() {
               ))}
             </div>
             {walletAssets && walletAssets.length > 20 && (
-              <div className="overflow-hidden flex items-end justify-end">
+              <div className="flex items-end justify-end">
                 <div className="flex items-center">
                   <div className="flex items-center justify-end gap-2 ">
                     <button
                       onClick={() => setPage(Math.max(1, page - 1))}
-                      className="flex items-center justify-center px-2 py-1 text-xs font-medium border  rounded-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
+                      className="flex items-center justify-center px-2 py-1 text-xs font-medium border  rounded-lg text-black border-gray-400 hover:text-blue-600"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setPage(page + 1)}
-                      className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
+                      className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg text-black border-gray-400 hover:text-blue-600"
                     >
                       Next
                     </button>

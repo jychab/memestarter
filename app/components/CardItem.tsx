@@ -3,7 +3,7 @@ import { PoolType } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import solanaLogo from "../public/solanaLogoMark.png";
 import Image from "next/image";
-import { convertSecondsToNearestUnit, getMetadata } from "../utils/helper";
+import { convertSecondsToNearestUnit } from "../utils/helper";
 import Link from "next/link";
 import { Chip } from "./Chip";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -15,28 +15,18 @@ interface CardItemProps {
 
 export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
-  const [image, setImage] = useState();
-  const [name, setName] = useState();
   const { publicKey } = useWallet();
-  const [description, setDescription] = useState();
   useEffect(() => {
     if (pool) {
       const percent = pool.liquidityCollected
         ? (pool.liquidityCollected / pool.presaleTarget) * 100
         : 0;
       setPercentage(percent);
-      getMetadata(pool).then((response) => {
-        if (response) {
-          setName(response.name);
-          setDescription(response.description);
-          setImage(response.image);
-        }
-      });
     }
   }, [pool]);
 
   return (
-    image &&
+    pool &&
     timer && (
       <Link
         className="mx-auto max-w-screen-sm cursor-pointer"
@@ -48,7 +38,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
               className={`rounded object-cover cursor-pointer`}
               fill={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              src={image}
+              src={pool.image}
               alt={""}
             />
             {pool.authority === publicKey?.toBase58() && (
@@ -58,7 +48,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
           <div className="flex flex-col min-h-16 lg:min-h-16 h-fit group-hover:max-h-64 gap-2 overflow-hidden bg-white px-4 py-2 lg:py-4">
             <div className="flex items-center justify-between">
               <h6 className="group-hover:text-gray-900 max-w-20 truncate text-gray-800 text-sm lg:text-base">
-                {name}
+                {pool.name}
               </h6>
               <div className="flex gap-1 items-center group-hover:hidden ">
                 <h6 className="text-black text-xs">
@@ -100,7 +90,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
             </div>
 
             <p className="text-gray-900 text-xs lg:text-sm hidden group-hover:block">
-              {description}
+              {pool.description}
             </p>
             <div className="flex items-center justify-between">
               <div className="flex flex-none items-center gap-1 text-gray-800 focus:text-gray-900 hover:text-gray-800">
@@ -119,7 +109,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                     strokeLinecap="round"
                   />
                 </svg>
-                <span className="text-[10px] lg:text-xs">
+                <span className="text-[10px] lg:text-xs w-24 group-hover:w-1/2 truncate">
                   {`${
                     timer / 1000 > pool.presaleTimeLimit
                       ? "Expired"
@@ -132,7 +122,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                   }`}
                 </span>
               </div>
-              <div className="hidden gap-1 group-hover:flex items-center">
+              <div className="hidden gap-1 group-hover:flex flex-none items-center">
                 <span className="text-[10px] lg:text-xs text-gray-900 ">
                   {`${
                     pool.liquidityCollected

@@ -326,12 +326,7 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "userWallet";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "userTokenWsol";
+          name: "payerTokenWsol";
           isMut: true;
           isSigner: false;
         },
@@ -344,6 +339,21 @@ export type SafePresale = {
           name: "wsol";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "nftOwner";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "nft";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
         },
         {
           name: "systemProgram";
@@ -529,7 +539,7 @@ export type SafePresale = {
             type: "u8";
           },
           {
-            name: "allowPurchase";
+            name: "launched";
             type: "bool";
           },
           {
@@ -582,7 +592,7 @@ export type SafePresale = {
           },
           {
             name: "vestingPeriod";
-            type: "u64";
+            type: "u32";
           },
           {
             name: "vestingStartedAt";
@@ -694,11 +704,11 @@ export type SafePresale = {
           },
           {
             name: "maxPresaleTime";
-            type: "u64";
+            type: "u32";
           },
           {
             name: "vestingPeriod";
-            type: "u64";
+            type: "u32";
           },
           {
             name: "vestedSupply";
@@ -767,7 +777,7 @@ export type SafePresale = {
         },
         {
           name: "vestingPeriod";
-          type: "u64";
+          type: "u32";
           index: false;
         }
       ];
@@ -871,7 +881,7 @@ export type SafePresale = {
       name: "LaunchTokenAmmEvent";
       fields: [
         {
-          name: "authority";
+          name: "payer";
           type: "publicKey";
           index: false;
         },
@@ -897,11 +907,6 @@ export type SafePresale = {
         },
         {
           name: "lpMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "mint";
           type: "publicKey";
           index: false;
         },
@@ -971,7 +976,7 @@ export type SafePresale = {
           index: false;
         },
         {
-          name: "wsolMint";
+          name: "originalMintOwner";
           type: "publicKey";
           index: false;
         }
@@ -987,27 +992,27 @@ export type SafePresale = {
     {
       code: 6001;
       name: "PresaleIsStillOngoing";
-      msg: "Unable to claim as presale is still ongoing";
+      msg: "Presale is still ongoing";
     },
     {
       code: 6002;
-      name: "PresaleHasEnded";
-      msg: "Presale has ended!";
-    },
-    {
-      code: 6003;
-      name: "PresaleTimeLimtExceeded";
-      msg: "Exceeded presale time limit";
-    },
-    {
-      code: 6004;
       name: "PresaleTargetNotMet";
       msg: "Presale target not met!";
     },
     {
-      code: 6005;
+      code: 6003;
       name: "TokenHasLaunched";
       msg: "Token already launched";
+    },
+    {
+      code: 6004;
+      name: "PoolHasExpired";
+      msg: "The pool expired because the creator failed to launch it within the 7 day grace period.";
+    },
+    {
+      code: 6005;
+      name: "WaitingForCreatorToLaunch";
+      msg: "Presale target is met, unable to withdraw. ";
     },
     {
       code: 6006;
@@ -1062,7 +1067,7 @@ export type SafePresale = {
     {
       code: 6016;
       name: "UnauthorizedAtCurrentTime";
-      msg: "Either presale time limit has not ended or Vesting is still in progress";
+      msg: "Either presale or vesting is still ongoing";
     },
     {
       code: 6017;
@@ -1420,12 +1425,7 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "userWallet",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "userTokenWsol",
+          name: "payerTokenWsol",
           isMut: true,
           isSigner: false,
         },
@@ -1438,6 +1438,21 @@ export const IDL: SafePresale = {
           name: "wsol",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "nftOwner",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "nft",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
         },
         {
           name: "systemProgram",
@@ -1623,7 +1638,7 @@ export const IDL: SafePresale = {
             type: "u8",
           },
           {
-            name: "allowPurchase",
+            name: "launched",
             type: "bool",
           },
           {
@@ -1676,7 +1691,7 @@ export const IDL: SafePresale = {
           },
           {
             name: "vestingPeriod",
-            type: "u64",
+            type: "u32",
           },
           {
             name: "vestingStartedAt",
@@ -1788,11 +1803,11 @@ export const IDL: SafePresale = {
           },
           {
             name: "maxPresaleTime",
-            type: "u64",
+            type: "u32",
           },
           {
             name: "vestingPeriod",
-            type: "u64",
+            type: "u32",
           },
           {
             name: "vestedSupply",
@@ -1861,7 +1876,7 @@ export const IDL: SafePresale = {
         },
         {
           name: "vestingPeriod",
-          type: "u64",
+          type: "u32",
           index: false,
         },
       ],
@@ -1965,7 +1980,7 @@ export const IDL: SafePresale = {
       name: "LaunchTokenAmmEvent",
       fields: [
         {
-          name: "authority",
+          name: "payer",
           type: "publicKey",
           index: false,
         },
@@ -1991,11 +2006,6 @@ export const IDL: SafePresale = {
         },
         {
           name: "lpMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "mint",
           type: "publicKey",
           index: false,
         },
@@ -2065,7 +2075,7 @@ export const IDL: SafePresale = {
           index: false,
         },
         {
-          name: "wsolMint",
+          name: "originalMintOwner",
           type: "publicKey",
           index: false,
         },
@@ -2081,27 +2091,27 @@ export const IDL: SafePresale = {
     {
       code: 6001,
       name: "PresaleIsStillOngoing",
-      msg: "Unable to claim as presale is still ongoing",
+      msg: "Presale is still ongoing",
     },
     {
       code: 6002,
-      name: "PresaleHasEnded",
-      msg: "Presale has ended!",
-    },
-    {
-      code: 6003,
-      name: "PresaleTimeLimtExceeded",
-      msg: "Exceeded presale time limit",
-    },
-    {
-      code: 6004,
       name: "PresaleTargetNotMet",
       msg: "Presale target not met!",
     },
     {
-      code: 6005,
+      code: 6003,
       name: "TokenHasLaunched",
       msg: "Token already launched",
+    },
+    {
+      code: 6004,
+      name: "PoolHasExpired",
+      msg: "The pool expired because the creator failed to launch it within the 7 day grace period.",
+    },
+    {
+      code: 6005,
+      name: "WaitingForCreatorToLaunch",
+      msg: "Presale target is met, unable to withdraw. ",
     },
     {
       code: 6006,
@@ -2156,7 +2166,7 @@ export const IDL: SafePresale = {
     {
       code: 6016,
       name: "UnauthorizedAtCurrentTime",
-      msg: "Either presale time limit has not ended or Vesting is still in progress",
+      msg: "Either presale or vesting is still ongoing",
     },
     {
       code: 6017,

@@ -19,7 +19,7 @@ interface ReviewPaneProps {
   vestedSupply: number;
   creatorFees?: number;
   vestingPeriod: number;
-  uniqueWallets?: number;
+  uniqueBackers?: number;
   vestingStartedAt?: number;
   vestingEndingAt?: number;
   liquidityCollected?: number;
@@ -41,7 +41,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   externalUrl,
   creatorFees,
   maxPresaleTime,
-  uniqueWallets = 700,
+  uniqueBackers,
   vestingStartedAt,
   vestingEndingAt,
   liquidityCollected = 0,
@@ -71,7 +71,9 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span>Decimals</span>
           <span className=" text-black">{decimals}</span>
           {mint && <span>Mint Address</span>}
-          {mint && <span className="w-24 truncate text-black">{mint}</span>}
+          {mint && (
+            <span className="w-24 lg:w-full truncate text-black">{mint}</span>
+          )}
         </div>
       </div>
       {status && (
@@ -93,8 +95,8 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
             } Sol funded`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-black">{uniqueWallets}</span>
-            <span className="text-[10px]">{`unqiue wallets`}</span>
+            <span className="text-sm text-black">{uniqueBackers}</span>
+            <span className="text-[10px]">{`unique backers`}</span>
           </div>
           <div className="col-span-3 flex flex-col gap-1">
             <span className="text-sm text-black">{`${

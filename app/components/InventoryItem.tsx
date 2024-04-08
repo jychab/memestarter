@@ -331,47 +331,67 @@ export const InventoryItem: FC<InventoryItemProps> = ({
               projectType === ProjectType.all) &&
               timer &&
               projects && (
-                <FundedTable
-                  projects={projects.filter(
-                    (item) =>
-                      getStatus(item) === Status.PresaleInProgress ||
-                      getStatus(item) === Status.PresaleTargetMet
+                <>
+                  {projectType === ProjectType.all && (
+                    <span>{ProjectType.funded}</span>
                   )}
-                  timer={timer}
-                />
+                  <FundedTable
+                    projects={projects.filter(
+                      (item) =>
+                        getStatus(item) === Status.PresaleInProgress ||
+                        getStatus(item) === Status.PresaleTargetMet
+                    )}
+                    timer={timer}
+                  />
+                </>
               )}
             {(projectType === ProjectType.vesting ||
               projectType === ProjectType.all) &&
               projects &&
               timer && (
-                <VestingTable
-                  projects={projects.filter(
-                    (item) => getStatus(item) === Status.VestingInProgress
+                <>
+                  {projectType === ProjectType.all && (
+                    <span>{ProjectType.vesting}</span>
                   )}
-                  timer={timer}
-                />
+                  <VestingTable
+                    projects={projects.filter(
+                      (item) => getStatus(item) === Status.VestingInProgress
+                    )}
+                    timer={timer}
+                  />
+                </>
               )}
             {(projectType === ProjectType.completed ||
               projectType === ProjectType.all) &&
               projects &&
               timer && (
-                <CompletedTable
-                  projects={projects.filter(
-                    (item) => getStatus(item) === Status.VestingCompleted
+                <>
+                  {projectType === ProjectType.all && (
+                    <span>{ProjectType.completed}</span>
                   )}
-                  timer={timer}
-                />
+                  <CompletedTable
+                    projects={projects.filter(
+                      (item) => getStatus(item) === Status.VestingCompleted
+                    )}
+                    timer={timer}
+                  />
+                </>
               )}
             {(projectType === ProjectType.expired ||
               projectType === ProjectType.all) &&
               projects &&
               timer && (
-                <ExpiredTable
-                  projects={projects.filter(
-                    (item) => getStatus(item) === Status.Expired
+                <>
+                  {projectType === ProjectType.all && (
+                    <span>{ProjectType.expired}</span>
                   )}
-                  timer={timer}
-                />
+                  <ExpiredTable
+                    projects={projects.filter(
+                      (item) => getStatus(item) === Status.Expired
+                    )}
+                    timer={timer}
+                  />
+                </>
               )}
           </div>
         </div>

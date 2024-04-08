@@ -5,6 +5,7 @@ import {
   onSnapshot,
   collectionGroup,
   collection,
+  where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
@@ -36,6 +37,7 @@ function Projects() {
     if ((!projects || page * 10 > projects.length) && sortCriteria) {
       const mintedItems = query(
         collection(db, "Pool"),
+        where("valid", "==", true),
         orderBy(sortCriteria, "desc"),
         limit(page * 10)
       );
