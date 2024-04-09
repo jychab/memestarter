@@ -16,7 +16,7 @@ import {
   sendTransactions,
 } from "../../utils/helper";
 import solanaLogo from "../../public/solanaLogoMark.png";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { toWeb3JsTransaction } from "@metaplex-foundation/umi-web3js-adapters";
@@ -104,8 +104,16 @@ function InventoryScreen() {
 
   const handleMintNft = async () => {
     try {
-      if (publicKey && user && signMessage && signTransaction) {
+      if (publicKey && user && signMessage && signTransaction && connection) {
         setLoading(true);
+        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+        if (
+          !amountOfSolInWallet ||
+          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.5
+        ) {
+          toast.error("Insufficient SOL. You need at least 0.5 Sol.");
+          return;
+        }
         let sig = await getSignature(
           user,
           signedMessage,
