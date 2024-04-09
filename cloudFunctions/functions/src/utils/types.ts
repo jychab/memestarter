@@ -13,6 +13,7 @@ export enum Events {
 export enum Status {
   Launched = "Launched",
   Initialized = "Initialized",
+  Ended = "Ended",
 }
 
 export interface InitializedPoolEvent {

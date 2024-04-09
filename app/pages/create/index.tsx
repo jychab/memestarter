@@ -140,6 +140,10 @@ function CreateCollection() {
         toast.error("Vesting supply cannot be higher than Total supply");
         return;
       }
+      if (presaleTime > 30 * 24 * 60 * 60) {
+        toast.error("Presale duration cannot be longer than a month");
+        return;
+      }
       try {
         setLoading(true);
         toast.info("Uploading Metadata... please wait");
@@ -170,6 +174,7 @@ function CreateCollection() {
         toast.success("Success!");
         router.push("/");
       } catch (error) {
+        console.log(error);
         toast.error(`${error}`);
       } finally {
         reset();

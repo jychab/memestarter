@@ -49,6 +49,7 @@ function Projects() {
       const mintedItems = query(
         collection(db, "Pool"),
         where("valid", "==", true),
+        where("status", "==", "Initialized"),
         orderBy(
           sortCriteria,
           sortCriteria === SortCriteria.presaleTimeLimit ? "asc" : "desc"

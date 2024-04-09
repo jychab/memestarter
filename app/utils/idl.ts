@@ -148,12 +148,12 @@ export type SafePresale = {
       name: "initPool";
       accounts: [
         {
-          name: "pool";
+          name: "rewardMint";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "rewardMint";
+          name: "pool";
           isMut: true;
           isSigner: false;
         },
@@ -702,6 +702,10 @@ export type SafePresale = {
             type: {
               option: "publicKey";
             };
+          },
+          {
+            name: "randomKey";
+            type: "u64";
           }
         ];
       };
@@ -1245,12 +1249,12 @@ export const IDL: SafePresale = {
       name: "initPool",
       accounts: [
         {
-          name: "pool",
+          name: "rewardMint",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "rewardMint",
+          name: "pool",
           isMut: true,
           isSigner: false,
         },
@@ -1799,6 +1803,10 @@ export const IDL: SafePresale = {
             type: {
               option: "publicKey",
             },
+          },
+          {
+            name: "randomKey",
+            type: "u64",
           },
         ],
       },

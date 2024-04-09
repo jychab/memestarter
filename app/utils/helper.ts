@@ -45,9 +45,9 @@ import {
   buildSimpleTransaction,
   publicKey,
 } from "@raydium-io/raydium-sdk";
-import { toast } from "react-toastify";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
 import { User } from "firebase/auth";
+import crypto from "crypto";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const program = (connection: Connection) =>
@@ -182,17 +182,18 @@ export async function initializePoolIx(
   args: InitializePoolArgs,
   connection: Connection
 ) {
-  console.log(args);
-  const [rewardMintPubKey] = PublicKey.findProgramAddressSync(
-    [Buffer.from("mint"), args.signer.toBuffer()],
+  const randomKey = crypto.randomBytes(8);
+  const [rewardMintKey] = PublicKey.findProgramAddressSync(
+    [Buffer.from("mint"), randomKey],
     program(connection).programId
   );
+
   const [poolId] = PublicKey.findProgramAddressSync(
-    [Buffer.from("pool"), args.signer.toBuffer()],
+    [Buffer.from("pool"), rewardMintKey.toBuffer()],
     program(connection).programId
   );
   const rewardMint = {
-    mint: rewardMintPubKey,
+    mint: rewardMintKey,
     name: args.name,
     symbol: args.symbol,
     decimal: args.decimal,
@@ -226,6 +227,7 @@ export async function initializePoolIx(
       vestedSupply: new BN(args.vestedSupply),
       totalSupply: new BN(args.totalSupply),
       delegate: null,
+      randomKey: new BN(randomKey.readBigUInt64LE()),
     })
     .accounts({
       payer: args.signer,
