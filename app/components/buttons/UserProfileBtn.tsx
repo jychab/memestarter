@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLogin } from "../../hooks/useLogin";
 import { useWallet } from "@solana/wallet-adapter-react";
-import placeholder from "../../public/favicon.ico";
+import placeholder from "../../public/logo.png";
 import { useNetworkConfiguration } from "../../contexts/NetworkConfigurationProvider";
 import { useRouter } from "next/router";
 

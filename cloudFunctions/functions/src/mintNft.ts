@@ -1,5 +1,5 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
-import {umi, verifyPubKey} from "./utils";
+import {db, umi, verifyPubKey} from "./utils";
 import {
   createNft,
   findMetadataPda,
@@ -15,12 +15,27 @@ import {transferSol} from "@metaplex-foundation/mpl-toolbox";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {base64} from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import {FieldValue} from "firebase-admin/firestore";
 
 interface MintNft {
   signature: string;
   pubKey: string;
 }
-
+async function uploadMetadata(
+  name: string,
+  description: string,
+  imageUrl: string,
+  externalUrl: string
+) {
+  const uri = await umi.uploader.uploadJson({
+    name: name,
+    symbol: name,
+    description: description,
+    image: imageUrl,
+    external_url: externalUrl,
+  });
+  return uri;
+}
 export default async function mintNft(
   data: MintNft,
   context: CallableContext
@@ -47,12 +62,32 @@ export default async function mintNft(
   const collectionNft = publicKey(
     "Bs1sGga8rTdnwqi9W5f8eEP2neqBQstmv1ehDDDdGsGe"
   );
+
+  const {name, uri} = await db.runTransaction(async (dbTx) => {
+    const details = await dbTx.get(db.collection("Collection").doc("Details"));
+    const index = details.exists ? details.data()!.supply : 0;
+    const name = `#${index + 1}`;
+    const uri = await uploadMetadata(
+      name,
+      "",
+      "https://bafkreieapbefkc5xkr7ncdqegdsl4slmaw4wz3o2r44ksaw5nfujto2daq.ipfs.nftstorage.link/",
+      "www.memestarter.app"
+    );
+    dbTx.set(
+      db.collection("Collection").doc("Details"),
+      {
+        supply: FieldValue.increment(1),
+      },
+      {merge: true}
+    );
+    return {name, uri};
+  });
   const randomNft = generateSigner(umi);
   const transaction = createNft(umi, {
     mint: randomNft,
-    name: "test",
+    name: name,
     tokenOwner: publicKey(data.pubKey),
-    uri: "https://example.com/my-collection.json",
+    uri: uri,
     sellerFeeBasisPoints: percentAmount(3.33, 2),
     collection: {
       verified: false,

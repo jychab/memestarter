@@ -13,7 +13,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
 }) => {
   const showDurationDialogRef = useRef<HTMLDivElement>(null);
   const [showDuration, setShowDuration] = useState(false);
-  const [value, setValue] = useState<number>();
+  const [value, setValue] = useState("");
   const [periodEnum, setPeriodEnum] = useState<Period>(Period.Days);
   useEffect(() => {
     // Function to handle click outside the dialog
@@ -44,11 +44,11 @@ export const DurationPicker: FC<DurationPickerProps> = ({
   useEffect(() => {
     if (value && periodEnum) {
       if (periodEnum === Period.Days) {
-        setPeriod(value * (24 * 60 * 60));
+        setPeriod(Number(value) * (24 * 60 * 60));
       } else if (periodEnum === Period.Hours) {
-        setPeriod(value * (60 * 60));
+        setPeriod(Number(value) * (60 * 60));
       } else {
-        setPeriod(value * (30 * 24 * 60 * 60));
+        setPeriod(Number(value) * (30 * 24 * 60 * 60));
       }
     }
   }, [value, periodEnum]);
@@ -56,11 +56,11 @@ export const DurationPicker: FC<DurationPickerProps> = ({
   useEffect(() => {
     if (periodEnum && period) {
       if (periodEnum === Period.Days) {
-        setValue(period / (24 * 60 * 60));
+        setValue((period / (24 * 60 * 60)).toString());
       } else if (periodEnum === Period.Hours) {
-        setValue(period / (60 * 60));
+        setValue((period / (60 * 60)).toString());
       } else {
-        setValue(period / (30 * 24 * 60 * 60));
+        setValue((period / (30 * 24 * 60 * 60)).toString());
       }
     }
   }, [periodEnum]);
@@ -72,18 +72,11 @@ export const DurationPicker: FC<DurationPickerProps> = ({
       </label>
       <div className="flex">
         <input
-          type="text"
-          inputMode="numeric"
+          type="number"
           id="time"
           className="rounded-none rounded-s-lg w-14 text-center leading-none text-sm p-2 border border-gray-300  text-black"
-          value={!Number.isNaN(value) ? value : ""}
-          onChange={(e) => {
-            if (e.target.value) {
-              setValue(parseInt(e.target.value));
-            } else {
-              setValue(NaN);
-            }
-          }}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           required
         />
         <div className="relative">

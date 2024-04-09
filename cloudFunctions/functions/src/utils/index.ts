@@ -11,6 +11,7 @@ import {Umi, keypairIdentity} from "@metaplex-foundation/umi";
 import {bs58} from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {defineString} from "firebase-functions/params";
 import {onInit} from "firebase-functions/v1";
+import {nftStorageUploader} from "@metaplex-foundation/umi-uploader-nft-storage";
 
 admin.initializeApp();
 
@@ -22,12 +23,18 @@ export const programEventAuthority = defineString("PROGRAM_EVENT_AUTHORITY");
 const programId = defineString("PROGRAM_ID");
 const collectionAuthority = defineString("COLLECTION_AUTHORITY");
 const heliusApiKey = defineString("HELIUS_API_KEY");
+const nftStorageKey = defineString("NFT_STORAGE_KEY");
 const prod = false;
 onInit(() => {
   helius = new Helius(heliusApiKey.value(), prod ? "mainnet-beta" : "devnet");
   umi = createUmi(helius.connection);
   const key = umi.eddsa.createKeypairFromSecretKey(
     bs58.decode(collectionAuthority.value())
+  );
+  umi.use(
+    nftStorageUploader({
+      token: nftStorageKey.value(),
+    })
   );
   umi.use(mplTokenMetadata());
   umi.use(keypairIdentity(key));

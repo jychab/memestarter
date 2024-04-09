@@ -11,7 +11,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
         <title>Meme Starter</title>
         <meta name="description" content="Fund your favourite memes" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/logo.png" />
       </Head>
       <div className="bg-white">
         <Navbar />
