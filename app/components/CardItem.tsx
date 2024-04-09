@@ -84,7 +84,10 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                   />
                 </svg>
                 <h5 className="text-[10px] lg:text-xs ">
-                  {`${convertSecondsToNearestUnit(pool.vestingPeriod)}`}
+                  {`${convertSecondsToNearestUnit(pool.vestingPeriod)
+                    .split(" ")
+                    .slice(0, 2)
+                    .join(" ")}`}
                 </h5>
               </div>
             </div>

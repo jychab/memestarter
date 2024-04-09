@@ -11,11 +11,7 @@ import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import {
-  getIdentifierIx,
-  initializePoolIx,
-  buildAndSendTransaction,
-} from "../../utils/helper";
+import { initializePoolIx, buildAndSendTransaction } from "../../utils/helper";
 import useUmi from "../../hooks/useUmi";
 import { createGenericFileFromBrowserFile } from "@metaplex-foundation/umi";
 import { ReviewPane } from "../../sections/ReviewPane";
@@ -35,10 +31,10 @@ function CreateCollection() {
   const [decimals, setDecimals] = useState<number>(5);
   const [supply, setSupply] = useState<string>("1000000000");
   const [presaleTarget, setPresaleTarget] = useState<string>("50"); //in sol -> need to convert to lamport
-  const [maxPresaleTime, setMaxPresaleTime] = useState<number>(
-    30 * 24 * 60 * 60
+  const [presaleTime, setPresaleTime] = useState<number>(3 * 24 * 60 * 60);
+  const [vestingPeriod, setVestingPeriod] = useState<number>(
+    3 * 30 * 24 * 60 * 60
   );
-  const [vestingPeriod, setVestingPeriod] = useState<number>(30 * 24 * 60 * 60);
   const [vestingSupply, setVestingSupply] = useState<string>("50"); //in percentage -> need to convert to number
   const [creatorFees, setCreatorFees] = useState<string>("5"); //in percentage -> need to convert to basis pts
   const [page, setPage] = useState(1);
@@ -69,8 +65,8 @@ function CreateCollection() {
     setCreatorFees("5");
     setSupply("1000000000");
     setVestingSupply("50");
-    setVestingPeriod(30 * 24 * 60 * 60);
-    setMaxPresaleTime(30 * 24 * 60 * 60);
+    setVestingPeriod(3 * 30 * 24 * 60 * 60);
+    setPresaleTime(30 * 24 * 60 * 60);
     setDecimals(5);
     setPage(1);
   };
@@ -148,33 +144,26 @@ function CreateCollection() {
         setLoading(true);
         toast.info("Uploading Metadata... please wait");
         const uri = await uploadMetadata(picture);
-        const { identifier, identifierId, ixs } = await getIdentifierIx(
-          publicKey,
+        toast.info("Upload Completed.");
+        const ix = await initializePoolIx(
+          {
+            name: name,
+            symbol: symbol,
+            decimal: decimals,
+            uri: uri,
+            creator_fees_basis_points: creatorFeesBasisPts,
+            maxPresaleTime: presaleTime,
+            presaleTarget: presaleTargetLamports,
+            vestingPeriod: vestingPeriod,
+            vestedSupply: vestingSupplyNum,
+            totalSupply: totalSupplyNum,
+            signer: publicKey,
+          },
           connection
-        );
-        ixs.push(
-          await initializePoolIx(
-            {
-              name: name,
-              symbol: symbol,
-              decimal: decimals,
-              uri: uri,
-              creator_fees_basis_points: creatorFeesBasisPts,
-              maxPresaleTime: maxPresaleTime,
-              presaleTarget: presaleTargetLamports,
-              vestingPeriod: vestingPeriod,
-              vestedSupply: vestingSupplyNum,
-              totalSupply: totalSupplyNum,
-              signer: publicKey,
-              identifierId: identifierId,
-              identifier: identifier,
-            },
-            connection
-          )
         );
         await buildAndSendTransaction(
           connection,
-          ixs,
+          [ix],
           publicKey,
           signTransaction
         );
@@ -239,8 +228,8 @@ function CreateCollection() {
               <CustomisePrelaunchSettingsPane
                 presaleTarget={presaleTarget}
                 setPresaleTarget={setPresaleTarget}
-                maxPresaleTime={maxPresaleTime}
-                setMaxPresaleTime={setMaxPresaleTime}
+                presaleTime={presaleTime}
+                setPresaleTime={setPresaleTime}
                 vestingPeriod={vestingPeriod}
                 setVestingPeriod={setVestingPeriod}
                 vestingSupply={vestingSupply}
@@ -251,6 +240,7 @@ function CreateCollection() {
             )}
             {page == 3 && (
               <ReviewPane
+                authority={publicKey.toBase58()}
                 image={tempImageUrl!}
                 name={name}
                 description={description}
@@ -265,7 +255,7 @@ function CreateCollection() {
                 }
                 creatorFees={parseInt(creatorFees.replaceAll("%", "")) * 100}
                 vestingPeriod={vestingPeriod}
-                maxPresaleTime={maxPresaleTime}
+                presaleTime={presaleTime}
                 presaleTarget={
                   parseInt(presaleTarget.replaceAll(" Sol", "")) *
                   LAMPORTS_PER_SOL
@@ -287,7 +277,7 @@ function CreateCollection() {
               >
                 {loading && (
                   <svg
-                    className="inline w-5 h-5 animate-spin text-gray-600 fill-gray-300"
+                    className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
                     viewBox="0 0 100 100"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"

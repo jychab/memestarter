@@ -62,17 +62,16 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
       const unsubscribe = onSnapshot(
         doc(db, `Users/${publicKey.toBase58()}`),
         (doc) => {
+          setNft(undefined);
           if (doc.exists()) {
             const data = doc.data() as { nft: DasApiAsset };
-            umi.rpc.getAsset(pubKey(data.nft.id)).then((data) => {
-              if (data.ownership.owner.toString() === publicKey.toString()) {
-                setNft(data);
-              } else {
-                setNft(undefined);
-              }
-            });
-          } else {
-            setNft(undefined);
+            if (data.nft) {
+              umi.rpc.getAsset(pubKey(data.nft.id)).then((data) => {
+                if (data.ownership.owner.toString() === publicKey.toString()) {
+                  setNft(data);
+                }
+              });
+            }
           }
         }
       );
@@ -94,7 +93,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
         signedMessage,
         setSessionKey,
         sessionKey,
-        setNft,
         nft,
         user,
       }}

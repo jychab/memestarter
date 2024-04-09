@@ -6,6 +6,7 @@ import getCoinData from "./getCoinData";
 import linkAsset from "./linkAsset";
 import unlinkAsset from "./unlinkAsset";
 import updateMarketDetails from "./updateMarketDetails";
+import mintNft from "./mintNft";
 
 exports.programWebhook = onRequest(async (req, res) =>
   cors({origin: true})(req, res, async () => await programWebhook(req, res))
@@ -25,3 +26,5 @@ exports.unlinkAsset = onCall(
 exports.updateMarketDetails = onCall(
   async (data, context) => await updateMarketDetails(data, context)
 );
+
+exports.mintNft = onCall(async (data, context) => await mintNft(data, context));

@@ -82,19 +82,17 @@ export function Pool() {
     publicKey: PublicKey,
     signTransaction: any
   ) {
-    let ix = [];
-    ix.push(
-      await buyPresaleIx(
-        {
-          amount: LAMPORTS_PER_SOL,
-          nft: new PublicKey(nft.id),
-          poolId: new PublicKey(pool.pool),
-          signer: publicKey,
-        },
-        connection
-      )
+    const ix = await buyPresaleIx(
+      {
+        amount: LAMPORTS_PER_SOL,
+        nft: new PublicKey(nft.id),
+        poolId: new PublicKey(pool.pool),
+        signer: publicKey,
+      },
+      connection
     );
-    await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
+
+    await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
   }
 
   async function launchToken(
@@ -230,6 +228,7 @@ export function Pool() {
         router.push("/");
       }
     } catch (error) {
+      console.log(error);
       toast.error(`${error}`);
     } finally {
       setLoading(false);
@@ -262,6 +261,7 @@ export function Pool() {
       <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
         <div className="rounded border w-full shadow-sm">
           <ReviewPane
+            authority={pool.authority}
             uniqueBackers={uniqueBackers}
             decimal={pool.decimal}
             mint={pool.mint}

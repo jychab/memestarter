@@ -23,7 +23,7 @@ enum SortCriteria {
 function Projects() {
   const [projects, setProjects] = useState<PoolType[]>();
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
-    SortCriteria.createdTime
+    SortCriteria.presaleTimeLimit
   );
   const [page, setPage] = useState(1);
   const [timer, setTimer] = useState<number>();
@@ -32,13 +32,27 @@ function Projects() {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
     return () => clearInterval(interval);
   }, []);
-
+  const handleSort = (a: PoolType, b: PoolType) => {
+    if (sortCriteria === SortCriteria.createdTime) {
+      return b.createdAt.seconds - a.createdAt.seconds;
+    } else if (sortCriteria === SortCriteria.liquidity) {
+      return b.liquidityCollected - a.liquidityCollected;
+    } else if (sortCriteria === SortCriteria.presaleTimeLimit) {
+      return a.presaleTimeLimit - b.presaleTimeLimit;
+    } else if (sortCriteria === SortCriteria.vestingPeriod) {
+      return b.vestingPeriod - a.vestingPeriod;
+    }
+    return 0;
+  };
   useEffect(() => {
     if ((!projects || page * 10 > projects.length) && sortCriteria) {
       const mintedItems = query(
         collection(db, "Pool"),
         where("valid", "==", true),
-        orderBy(sortCriteria, "desc"),
+        orderBy(
+          sortCriteria,
+          sortCriteria === SortCriteria.presaleTimeLimit ? "asc" : "desc"
+        ),
         limit(page * 10)
       );
 
@@ -54,9 +68,7 @@ function Projects() {
             ) {
               setProjects((prevProject) =>
                 prevProject
-                  ? [newData, ...prevProject].sort(
-                      (a, b) => b.createdAt.seconds - a.createdAt.seconds
-                    )
+                  ? [newData, ...prevProject].sort((a, b) => handleSort(a, b))
                   : [newData]
               );
             }

@@ -7,7 +7,6 @@ export interface LoginContextState {
   signedMessage: string | null;
   setSessionKey: React.Dispatch<React.SetStateAction<string | null>>;
   sessionKey: string | null;
-  setNft: React.Dispatch<React.SetStateAction<DasApiAsset | undefined>>;
   nft: DasApiAsset | undefined;
   user: User | null;
 }

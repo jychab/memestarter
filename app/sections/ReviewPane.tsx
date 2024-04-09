@@ -6,9 +6,10 @@ import {
   convertSecondsToNearestUnit,
   separateNumberWithComma,
 } from "../utils/helper";
-import solanaLogo from "./../public/solanaLogoMark.png";
+import PresaleDashboard from "./PresaleDashboard";
 
 interface ReviewPaneProps {
+  authority: string;
   image: string;
   name: string;
   symbol: string;
@@ -25,12 +26,13 @@ interface ReviewPaneProps {
   liquidityCollected?: number;
   status?: Status;
   presaleTimeLimit?: number;
-  maxPresaleTime?: number;
+  presaleTime?: number;
   presaleTarget: number;
   description?: string;
 }
 
 export const ReviewPane: FC<ReviewPaneProps> = ({
+  authority,
   image,
   name,
   symbol,
@@ -40,8 +42,8 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   vestingPeriod,
   externalUrl,
   creatorFees,
-  maxPresaleTime,
-  uniqueBackers,
+  presaleTime,
+  uniqueBackers = 0,
   vestingStartedAt,
   vestingEndingAt,
   liquidityCollected = 0,
@@ -53,7 +55,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
 }) => {
   return (
     <div className="flex flex-col text-gray-400 font-medium p-4 rounded gap-8">
-      <div className="flex gap-8">
+      <div className="flex gap-4">
         <div className="relative h-40 w-40 lg:w-60 lg:h-60">
           <Image
             className={`rounded object-cover cursor-pointer`}
@@ -70,136 +72,80 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="text-black">{symbol}</span>
           <span>Decimals</span>
           <span className=" text-black">{decimals}</span>
+          <span>Creator</span>
+          <span className="w-24 lg:w-64 truncate text-black">{authority}</span>
           {mint && <span>Mint Address</span>}
           {mint && (
-            <span className="w-24 lg:w-full truncate text-black">{mint}</span>
+            <span className="w-24 lg:w-64 truncate text-black">{mint}</span>
           )}
         </div>
       </div>
-      {status && (
-        <div className="grid grid-cols-10 items-end justify-center gap-4">
-          <div className="col-span-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-black">
-                {`${liquidityCollected / LAMPORTS_PER_SOL}`}
-              </span>
-              <Image
-                width={16}
-                height={16}
-                src={solanaLogo}
-                alt={"solana logo"}
-              />
-            </div>
-            <span className="text-[10px]">{`of ${
-              presaleTarget / LAMPORTS_PER_SOL
-            } Sol funded`}</span>
-          </div>
-          <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-black">{uniqueBackers}</span>
-            <span className="text-[10px]">{`unique backers`}</span>
-          </div>
-          <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-black">{`${
-              convertSecondsToNearestUnit(
-                presaleTimeLimit - Date.now() / 1000
-              ).split(" ")[0]
-            }`}</span>
-            <span className="text-[10px]">{`${
-              convertSecondsToNearestUnit(
-                presaleTimeLimit - Date.now() / 1000
-              ).split(" ")[1]
-            } to go`}</span>
-          </div>
-          <div className="col-span-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-black">
-                {`${separateNumberWithComma(
-                  (totalSupply / 10 ** decimals).toString()
-                )} ${symbol}`}
-              </span>
-            </div>
-            <span className="text-[10px]">{`total supply`}</span>
-          </div>
-          <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-black">
-              {((vestedSupply / totalSupply) * 100).toString() + "%"}
-            </span>
-            <span className="text-[10px]">{`vested supply`}</span>
-          </div>
-          <div className="col-span-3 flex flex-col gap-1">
-            <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
-              vestingPeriod
-            )}`}</span>
-            <span className="text-[10px]">{`vesting period`}</span>
-          </div>
-        </div>
+      {(status == Status.PresaleInProgress ||
+        status == Status.PresaleTargetMet) && (
+        <PresaleDashboard
+          uniqueBackers={uniqueBackers}
+          symbol={symbol}
+          decimal={decimals}
+          totalSupply={totalSupply}
+          vestedSupply={vestedSupply}
+          vestingPeriod={vestingPeriod}
+          liquidityCollected={liquidityCollected}
+          presaleTimeLimit={presaleTimeLimit}
+          presaleTarget={presaleTarget}
+        />
       )}
-      <div className="grid grid-cols-6 items-center gap-4 text-xs">
-        {!status && description && (
-          <span className="col-span-2 sm:col-span-1">Description</span>
-        )}
-        {!status && description && (
-          <span className="col-span-4 sm:col-span-5 text-black">
-            {description}
-          </span>
-        )}
-        {!status && externalUrl && (
-          <span className="col-span-2 sm:col-span-1">External Url</span>
-        )}
-        {!status && externalUrl && (
-          <span className="col-span-4 sm:col-span-5 text-black">
-            {externalUrl}
-          </span>
-        )}
-        {!status && (
+      {!status && (
+        <div className="grid grid-cols-6 items-center gap-4 text-xs">
+          {description && (
+            <span className="col-span-2 sm:col-span-1">Description</span>
+          )}
+          {description && (
+            <span className="col-span-4 sm:col-span-5 text-black">
+              {description}
+            </span>
+          )}
+          {externalUrl && (
+            <span className="col-span-2 sm:col-span-1">External Url</span>
+          )}
+          {externalUrl && (
+            <span className="col-span-4 sm:col-span-5 text-black">
+              {externalUrl}
+            </span>
+          )}
           <span className="col-span-2 sm:col-span-1">Total Supply</span>
-        )}
-        {!status && (
           <span className="col-span-4 sm:col-span-5 text-black">
             {separateNumberWithComma(totalSupply.toString()) + ` ${symbol}`}
           </span>
-        )}
-        {!status && (
           <span className="col-span-2 sm:col-span-1">Vested Supply</span>
-        )}
-        {!status && (
           <span className="col-span-4 sm:col-span-2 text-black">
             {((vestedSupply / totalSupply) * 100).toString() + "%"}
           </span>
-        )}
-        {!status && (
           <span className="col-span-2 sm:col-span-1">Vesting Period</span>
-        )}
-        {!status && (
           <span className="col-span-4 sm:col-span-2 text-black">
             {convertSecondsToNearestUnit(vestingPeriod)}
           </span>
-        )}
-        {!status && (
           <span className="col-span-2 sm:col-span-1">Presale Target</span>
-        )}
-        {!status && (
           <span className="col-span-4 sm:col-span-2 text-black">
             {presaleTarget / LAMPORTS_PER_SOL + ` Sol`}
           </span>
-        )}
-        {maxPresaleTime && (
-          <span className="col-span-2 sm:col-span-1">Max Presale Duration</span>
-        )}
-        {maxPresaleTime && (
-          <span className="col-span-4 sm:col-span-2 text-black">
-            {convertSecondsToNearestUnit(maxPresaleTime)}
-          </span>
-        )}
-        {creatorFees && (
-          <span className="col-span-2 sm:col-span-1">Creator Fees</span>
-        )}
-        {creatorFees && (
-          <span className="col-span-4 sm:col-span-5 text-black">
-            {creatorFees / 100 + "%"}
-          </span>
-        )}
-      </div>
+          {presaleTime && (
+            <span className="col-span-2 sm:col-span-1">Presale Duration</span>
+          )}
+          {presaleTime && (
+            <span className="col-span-4 sm:col-span-2 text-black">
+              {convertSecondsToNearestUnit(presaleTime)}
+            </span>
+          )}
+          {creatorFees && (
+            <span className="col-span-2 sm:col-span-1">Creator Fees</span>
+          )}
+          {creatorFees && (
+            <span className="col-span-4 sm:col-span-5 text-black">
+              {creatorFees / 100 + "%"}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };

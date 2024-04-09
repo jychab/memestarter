@@ -12,7 +12,7 @@ import {
   withdraw,
   withdrawLp,
 } from "../utils/helper";
-import { PoolType, Status } from "../utils/types";
+import { Status } from "../utils/types";
 import { Project } from "./InventoryItem";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
@@ -300,7 +300,9 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           <div className="flex flex-col gap-2">
             {(status === Status.PresaleInProgress ||
               status === Status.PresaleTargetMet) && <span>{status}</span>}
-            {(status === Status.VestingInProgress ||
+            {((nft &&
+              nft.id === project.originalMint &&
+              status === Status.VestingInProgress) ||
               status === Status.VestingCompleted) && (
               <button
                 onClick={handleMint}
@@ -335,7 +337,9 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                 </span>
               </button>
             )}
-            {status === Status.VestingCompleted &&
+            {nft &&
+              nft.id === project.originalMint &&
+              status === Status.VestingCompleted &&
               project.lpClaimed !== project.lpElligibleAfterFees && (
                 <button
                   onClick={handleLp}
@@ -361,7 +365,9 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                   <span>{"Claim LP"}</span>
                 </button>
               )}
-            {status === Status.Expired &&
+            {nft &&
+              nft.id === project.originalMint &&
+              status === Status.Expired &&
               project.amountWsolWithdrawn !== project.amount && (
                 <button
                   onClick={handleExpired}

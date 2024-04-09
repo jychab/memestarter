@@ -14,7 +14,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
   const showDurationDialogRef = useRef<HTMLDivElement>(null);
   const [showDuration, setShowDuration] = useState(false);
   const [value, setValue] = useState<number>();
-  const [periodEnum, setPeriodEnum] = useState<Period>(Period.Hours);
+  const [periodEnum, setPeriodEnum] = useState<Period>(Period.Days);
   useEffect(() => {
     // Function to handle click outside the dialog
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,7 +66,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
   }, [periodEnum]);
 
   return (
-    <div className="grid grid-cols-2 items-center">
+    <div className="grid grid-cols-2 gap-4 items-center">
       <label htmlFor="time" className="text-sm font-medium text-gray-400">
         {title}
       </label>
@@ -90,12 +90,12 @@ export const DurationPicker: FC<DurationPickerProps> = ({
           <button
             id="dropdown-duration-button"
             onClick={() => setShowDuration(!showDuration)}
-            className="relative border-s-0 flex-shrink-0 z-10 w-24 inline-flex items-center py-2 px-2 pr-4 justify-center text-sm font-medium text-center border rounded-e-lg focus:outline-none text-black border-gray-300"
+            className="relative border-s-0 flex-shrink-0 z-10 w-20 inline-flex items-center justify-evenly p-2 text-sm font-medium text-center border rounded-e-lg focus:outline-none text-black border-gray-300"
             type="button"
           >
             {periodEnum}
             <svg
-              className="w-2.5 h-2.5 ms-2.5"
+              className="w-2.5 h-2.5 ms-1"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

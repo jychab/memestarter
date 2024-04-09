@@ -10,84 +10,76 @@ import {
   DasApiAssetList,
 } from "@metaplex-foundation/digital-asset-standard-api";
 import useUmi from "../../hooks/useUmi";
-import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
-import { createNft } from "@metaplex-foundation/mpl-token-metadata";
-import { getMetadata, getSignature } from "../../utils/helper";
+import {
+  getMetadata,
+  getSignature,
+  sendTransactions,
+} from "../../utils/helper";
 import solanaLogo from "../../public/solanaLogoMark.png";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-interface Request {
-  signature: string;
-  pubKey: string;
-  nft: DasApiAsset;
-}
+import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import { toWeb3JsTransaction } from "@metaplex-foundation/umi-web3js-adapters";
+import { publicKey as PubKey } from "@metaplex-foundation/umi";
+import { useRouter } from "next/router";
 
 function InventoryScreen() {
   const {
     user,
     nft,
-    setNft,
     setSessionKey,
     sessionKey,
     setSignedMessage,
     signedMessage,
   } = useLogin();
-  const { publicKey, signMessage } = useWallet();
+  const { publicKey, signMessage, signTransaction } = useWallet();
   const { connection } = useConnection();
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [showWallet, setShowWallet] = useState(false);
+  const router = useRouter();
   const [walletAssets, setWalletAssets] = useState<DasApiAsset[]>(
     Array(20).fill(undefined)
   );
   const [selectedItem, setSelectedItem] = useState<DasApiAsset>();
   const umi = useUmi();
 
-  function isItemCurrentlyEquipped(item: DasApiAsset | undefined) {
-    return nft && item && item.id === nft.id;
-  }
-
   async function loadAssets(
     walletData: DasApiAssetList,
     connection: Connection
   ) {
-    let temp: DasApiAsset[] = Array(20).fill(undefined);
-    const filteredWalletItems = [];
-    for (let item of walletData.items) {
-      const accountInfo = await connection.getAccountInfo(
-        new PublicKey(item.id.toString())
-      );
+    setWalletAssets(Array(20).fill(undefined));
+    let index = 0;
+    for (const item of walletData.items) {
       try {
-        const metadata = await getMetadata(item.content.json_uri);
+        const [accountInfo, metadata] = await Promise.all([
+          connection.getAccountInfo(new PublicKey(item.id.toString())),
+          getMetadata(item.content.json_uri),
+        ]);
+
         if (
           accountInfo &&
           accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID.toBase58() &&
-          metadata.image !== null
+          metadata.image !== null &&
+          index >= (page - 1) * 20 &&
+          index < page * 20
         ) {
-          filteredWalletItems.push(item);
+          const temp = [...walletAssets];
+          temp[index] = item;
+          setWalletAssets(temp);
+          index++;
         }
       } catch (e) {
         console.log(e);
       }
     }
-    filteredWalletItems
-      .filter((_, index) => index >= (page - 1) * 20 && index < page * 20)
-      .forEach((item, index) => {
-        temp[index] = item;
-      });
-    setWalletAssets(temp);
   }
   useEffect(() => {
-    if (publicKey && !nft) {
-      setShowWallet(true);
-    } else if (nft) {
-      setShowWallet(false);
+    if (publicKey && nft) {
+      router.push(`/mint/${nft.id}`);
     }
   }, [publicKey, nft]);
 
   useEffect(() => {
-    if (publicKey && page && showWallet) {
+    if (publicKey && page && !nft) {
       umi.rpc
         .searchAssets({
           owner: umi.identity.publicKey,
@@ -103,31 +95,11 @@ function InventoryScreen() {
           loadAssets(walletData, connection);
         });
     }
-  }, [publicKey, page, showWallet]);
+  }, [publicKey, page, nft]);
 
   const handleMintNft = async () => {
     try {
-      const randomNft = generateSigner(umi);
-      await createNft(umi, {
-        mint: randomNft,
-        authority: umi.identity,
-        name: "MEME",
-        uri: "https://qgp7lco5ylyitscysc2c7clhpxipw6sexpc2eij7g5rq3pnkcx2q.arweave.net/gZ_1id3C8InIWJC0L4lnfdD7ekS7xaIhPzdjDb2qFfU",
-        sellerFeeBasisPoints: percentAmount(9.99, 2), // 9.99%
-      }).sendAndConfirm(umi);
-      const data = await umi.rpc.getAsset(randomNft.publicKey);
-      await handleLinkage(data);
-      setNft(data);
-      toast.success("Success");
-    } catch (error) {
-      toast.error(`${error}`);
-    }
-  };
-
-  const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
-    if (publicKey && user && signMessage && selectedItem) {
-      try {
-        setLoading(true);
+      if (publicKey && user && signMessage && signTransaction) {
         let sig = await getSignature(
           user,
           signedMessage,
@@ -136,45 +108,38 @@ function InventoryScreen() {
           setSignedMessage,
           setSessionKey
         );
-        const payload: Request = {
+        const payload = {
           signature: sig,
           pubKey: publicKey.toBase58(),
-          nft: selectedItem,
         };
-        if (isItemCurrentlyEquipped(selectedItem) || nft) {
-          const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
-          await unlinkAsset(payload);
-        } else {
-          const linkAsset = httpsCallable(getFunctions(), "linkAsset");
-          await linkAsset(payload);
-        }
-      } catch (error) {
-        toast.error(`${error}`);
-      } finally {
-        setLoading(false);
-        setSelectedItem(undefined);
+        const mintNft = httpsCallable(getFunctions(), "mintNft");
+        const { tx, mint } = (await mintNft(payload)).data as {
+          tx: string;
+          mint: string;
+        };
+        const transactionBuffer = base64.decode(tx as string);
+        const transaction = toWeb3JsTransaction(
+          umi.transactions.deserialize(transactionBuffer)
+        );
+        toast.info("Minting...");
+        await sendTransactions(connection, [transaction], signTransaction);
+        toast.info("Linking...");
+        const asset = await umi.rpc.getAsset(PubKey(mint));
+        const linkAsset = httpsCallable(getFunctions(), "linkAsset");
+        await linkAsset({ ...payload, nft: asset });
+        toast.success("Success");
       }
+    } catch (error) {
+      toast.error(`${error}`);
     }
   };
+
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">
       {!publicKey ? (
         <span className="text-black">You need to sign in first.</span>
       ) : selectedItem ? (
-        <InventoryItem
-          loading={loading}
-          actionText={isItemCurrentlyEquipped(selectedItem) ? "Unlink" : "Link"}
-          item={selectedItem}
-          setSelectedItem={setSelectedItem}
-          handleSubmit={handleLinkage}
-        />
-      ) : nft ? (
-        <InventoryItem
-          loading={loading}
-          actionText={"Unlink"}
-          item={nft}
-          handleSubmit={handleLinkage}
-        />
+        <InventoryItem item={selectedItem} setSelectedItem={setSelectedItem} />
       ) : (
         <div className="flex flex-col items-center justify-center text-black text-center p-8 gap-4 h-full">
           <span>You need to link a digital asset to your profile.</span>
@@ -185,7 +150,7 @@ function InventoryScreen() {
             className=" rounded p-2 hover:text-blue-700 border border-gray-400 text-sm"
           >
             <div className="flex items-center gap-1">
-              <span>Mint one for 0.1</span>
+              <span>Mint for 0.5</span>
               <Image
                 width={16}
                 height={16}
@@ -196,7 +161,7 @@ function InventoryScreen() {
           </button>
         </div>
       )}
-      {showWallet && publicKey && (
+      {!nft && publicKey && (
         <div className="animate-fade-up flex flex-col max-w-screen-md gap-4">
           <div className="flex items-center justify-between text-gray-400 uppercase text-xs sm:text-sm">
             <span>WALLET</span>

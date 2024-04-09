@@ -10,7 +10,13 @@ export enum Events {
   WithdrawEvent = "WithdrawEvent",
 }
 
+export enum Status {
+  Launched = "Launched",
+  Initialized = "Initialized",
+}
+
 export interface InitializedPoolEvent {
+  delegate: string;
   authority: string;
   pool: string;
   mint: string;
@@ -55,7 +61,6 @@ export interface LaunchTokenAmmEvent {
   amountPc: string;
   amountLpReceived: string;
   lpMint: string;
-  mint: string;
   vestingStartedAt: string;
   vestingEndingAt: string;
 }

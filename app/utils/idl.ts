@@ -102,6 +102,11 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "nftMetadata";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "rewardMint";
           isMut: true;
           isSigner: false;
@@ -140,27 +145,6 @@ export type SafePresale = {
       args: [];
     },
     {
-      name: "initIdentifier";
-      accounts: [
-        {
-          name: "identifier";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "payer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
       name: "initPool";
       accounts: [
         {
@@ -180,11 +164,6 @@ export type SafePresale = {
         },
         {
           name: "poolRewardMintAta";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "identifier";
           isMut: true;
           isSigner: false;
         },
@@ -351,6 +330,11 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "nftMetadata";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -430,6 +414,11 @@ export type SafePresale = {
           isMut: true;
           isSigner: true;
           docs: ["Pays to mint the position"];
+        },
+        {
+          name: "poolAuthority";
+          isMut: true;
+          isSigner: false;
         },
         {
           name: "userTokenCoin";
@@ -543,8 +532,10 @@ export type SafePresale = {
             type: "bool";
           },
           {
-            name: "identifier";
-            type: "u64";
+            name: "delegate";
+            type: {
+              option: "publicKey";
+            };
           },
           {
             name: "authority";
@@ -605,22 +596,6 @@ export type SafePresale = {
             type: {
               option: "i64";
             };
-          }
-        ];
-      };
-    },
-    {
-      name: "identifier";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "bump";
-            type: "u8";
-          },
-          {
-            name: "count";
-            type: "u64";
           }
         ];
       };
@@ -721,6 +696,12 @@ export type SafePresale = {
           {
             name: "creatorFeeBasisPoints";
             type: "u16";
+          },
+          {
+            name: "delegate";
+            type: {
+              option: "publicKey";
+            };
           }
         ];
       };
@@ -730,6 +711,13 @@ export type SafePresale = {
     {
       name: "InitializedPoolEvent";
       fields: [
+        {
+          name: "delegate";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
         {
           name: "authority";
           type: "publicKey";
@@ -996,103 +984,113 @@ export type SafePresale = {
     },
     {
       code: 6002;
+      name: "PresaleHasEnded";
+      msg: "Presale has ended";
+    },
+    {
+      code: 6003;
       name: "PresaleTargetNotMet";
       msg: "Presale target not met!";
     },
     {
-      code: 6003;
+      code: 6004;
       name: "TokenHasLaunched";
       msg: "Token already launched";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "PoolHasExpired";
       msg: "The pool expired because the creator failed to launch it within the 7 day grace period.";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "WaitingForCreatorToLaunch";
       msg: "Presale target is met, unable to withdraw. ";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "ConversionFailure";
       msg: "Conversion to u64 failed with an overflow or underflow";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "IntegerOverflow";
       msg: "Integer Overflow Error";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "InvalidNegativeValue";
       msg: "Number cannot be negative";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "MintNotAllowedInPool";
       msg: "Mint not allowed in this pool";
     },
     {
-      code: 6010;
+      code: 6011;
       name: "InvalidMintMetadataOwner";
       msg: "Mint metadata is owned by the incorrect program";
     },
     {
-      code: 6011;
+      code: 6012;
       name: "InvalidMintMetadata";
       msg: "Invalid mint metadata";
     },
     {
-      code: 6012;
+      code: 6013;
       name: "MintNotAllowed";
       msg: "Invalid Mint";
     },
     {
-      code: 6013;
+      code: 6014;
       name: "InvalidPool";
       msg: "Invalid pool to claim";
     },
     {
-      code: 6014;
+      code: 6015;
       name: "InvalidRewardMint";
       msg: "Invalid reward mint";
     },
     {
-      code: 6015;
+      code: 6016;
       name: "MaximumAmountClaimed";
       msg: "Nothing left to claim";
     },
     {
-      code: 6016;
+      code: 6017;
       name: "UnauthorizedAtCurrentTime";
       msg: "Either presale or vesting is still ongoing";
     },
     {
-      code: 6017;
+      code: 6018;
       name: "VestingSupplyLargerThanTotalSupply";
       msg: "Vesting Supply larget than total supply";
     },
     {
-      code: 6018;
+      code: 6019;
       name: "CreatorBasisPointsExceedMaximumAmount";
       msg: "Creator Fees basis points exceed 10000";
     },
     {
-      code: 6019;
+      code: 6020;
       name: "AmountPurchasedIsZero";
       msg: "Purchase Amount cannot be zero";
     },
     {
-      code: 6020;
+      code: 6021;
       name: "CheckClaimFirstBeforeClaiming";
       msg: "Check Claim Amount first before claiming";
     },
     {
-      code: 6021;
+      code: 6022;
       name: "ClaimedAlreadyChecked";
       msg: "Claim Amount is already updated";
+    },
+    {
+      code: 6023;
+      name: "InvalidSigner";
+      msg: "Signer must be owner of nft";
     }
   ];
 };
@@ -1201,6 +1199,11 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "nftMetadata",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "rewardMint",
           isMut: true,
           isSigner: false,
@@ -1239,27 +1242,6 @@ export const IDL: SafePresale = {
       args: [],
     },
     {
-      name: "initIdentifier",
-      accounts: [
-        {
-          name: "identifier",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "payer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "initPool",
       accounts: [
         {
@@ -1279,11 +1261,6 @@ export const IDL: SafePresale = {
         },
         {
           name: "poolRewardMintAta",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "identifier",
           isMut: true,
           isSigner: false,
         },
@@ -1450,6 +1427,11 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "nftMetadata",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -1529,6 +1511,11 @@ export const IDL: SafePresale = {
           isMut: true,
           isSigner: true,
           docs: ["Pays to mint the position"],
+        },
+        {
+          name: "poolAuthority",
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "userTokenCoin",
@@ -1642,8 +1629,10 @@ export const IDL: SafePresale = {
             type: "bool",
           },
           {
-            name: "identifier",
-            type: "u64",
+            name: "delegate",
+            type: {
+              option: "publicKey",
+            },
           },
           {
             name: "authority",
@@ -1704,22 +1693,6 @@ export const IDL: SafePresale = {
             type: {
               option: "i64",
             },
-          },
-        ],
-      },
-    },
-    {
-      name: "identifier",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "bump",
-            type: "u8",
-          },
-          {
-            name: "count",
-            type: "u64",
           },
         ],
       },
@@ -1821,6 +1794,12 @@ export const IDL: SafePresale = {
             name: "creatorFeeBasisPoints",
             type: "u16",
           },
+          {
+            name: "delegate",
+            type: {
+              option: "publicKey",
+            },
+          },
         ],
       },
     },
@@ -1829,6 +1808,13 @@ export const IDL: SafePresale = {
     {
       name: "InitializedPoolEvent",
       fields: [
+        {
+          name: "delegate",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
         {
           name: "authority",
           type: "publicKey",
@@ -2095,103 +2081,113 @@ export const IDL: SafePresale = {
     },
     {
       code: 6002,
+      name: "PresaleHasEnded",
+      msg: "Presale has ended",
+    },
+    {
+      code: 6003,
       name: "PresaleTargetNotMet",
       msg: "Presale target not met!",
     },
     {
-      code: 6003,
+      code: 6004,
       name: "TokenHasLaunched",
       msg: "Token already launched",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "PoolHasExpired",
       msg: "The pool expired because the creator failed to launch it within the 7 day grace period.",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "WaitingForCreatorToLaunch",
       msg: "Presale target is met, unable to withdraw. ",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "ConversionFailure",
       msg: "Conversion to u64 failed with an overflow or underflow",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "IntegerOverflow",
       msg: "Integer Overflow Error",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "InvalidNegativeValue",
       msg: "Number cannot be negative",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "MintNotAllowedInPool",
       msg: "Mint not allowed in this pool",
     },
     {
-      code: 6010,
+      code: 6011,
       name: "InvalidMintMetadataOwner",
       msg: "Mint metadata is owned by the incorrect program",
     },
     {
-      code: 6011,
+      code: 6012,
       name: "InvalidMintMetadata",
       msg: "Invalid mint metadata",
     },
     {
-      code: 6012,
+      code: 6013,
       name: "MintNotAllowed",
       msg: "Invalid Mint",
     },
     {
-      code: 6013,
+      code: 6014,
       name: "InvalidPool",
       msg: "Invalid pool to claim",
     },
     {
-      code: 6014,
+      code: 6015,
       name: "InvalidRewardMint",
       msg: "Invalid reward mint",
     },
     {
-      code: 6015,
+      code: 6016,
       name: "MaximumAmountClaimed",
       msg: "Nothing left to claim",
     },
     {
-      code: 6016,
+      code: 6017,
       name: "UnauthorizedAtCurrentTime",
       msg: "Either presale or vesting is still ongoing",
     },
     {
-      code: 6017,
+      code: 6018,
       name: "VestingSupplyLargerThanTotalSupply",
       msg: "Vesting Supply larget than total supply",
     },
     {
-      code: 6018,
+      code: 6019,
       name: "CreatorBasisPointsExceedMaximumAmount",
       msg: "Creator Fees basis points exceed 10000",
     },
     {
-      code: 6019,
+      code: 6020,
       name: "AmountPurchasedIsZero",
       msg: "Purchase Amount cannot be zero",
     },
     {
-      code: 6020,
+      code: 6021,
       name: "CheckClaimFirstBeforeClaiming",
       msg: "Check Claim Amount first before claiming",
     },
     {
-      code: 6021,
+      code: 6022,
       name: "ClaimedAlreadyChecked",
       msg: "Claim Amount is already updated",
+    },
+    {
+      code: 6023,
+      name: "InvalidSigner",
+      msg: "Signer must be owner of nft",
     },
   ],
 };

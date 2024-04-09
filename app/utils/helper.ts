@@ -48,6 +48,7 @@ import {
 import { toast } from "react-toastify";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
 import { User } from "firebase/auth";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const program = (connection: Connection) =>
   new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
@@ -177,52 +178,17 @@ export async function getSimulationUnits(
   return simulation.value.unitsConsumed;
 }
 
-export async function getIdentifierIx(
-  signer: PublicKey,
-  connection: Connection
-): Promise<{
-  identifierId: PublicKey;
-  identifier: BN;
-  ixs: TransactionInstruction[];
-}> {
-  const [identifierId] = PublicKey.findProgramAddressSync(
-    [Buffer.from("identifier")],
-    program(connection).programId
-  );
-  const identifierData = await program(
-    connection
-  ).account.identifier.fetchNullable(identifierId);
-
-  const identifier = identifierData !== null ? identifierData.count : new BN(1);
-
-  let ixs = [];
-  if (!identifierData) {
-    ixs.push(
-      await program(connection)
-        .methods.initIdentifier()
-        .accounts({
-          identifier: identifierId,
-          payer: signer,
-          systemProgram: SystemProgram.programId,
-        })
-        .instruction()
-    );
-  }
-  return { identifierId: identifierId, identifier: identifier, ixs: ixs };
-}
-
 export async function initializePoolIx(
   args: InitializePoolArgs,
   connection: Connection
 ) {
   console.log(args);
-  const identifier = new BN(args.identifier);
   const [rewardMintPubKey] = PublicKey.findProgramAddressSync(
-    [Buffer.from("mint"), identifier.toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("mint"), args.signer.toBuffer()],
     program(connection).programId
   );
   const [poolId] = PublicKey.findProgramAddressSync(
-    [Buffer.from("pool"), identifier.toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("pool"), args.signer.toBuffer()],
     program(connection).programId
   );
   const rewardMint = {
@@ -254,17 +220,17 @@ export async function initializePoolIx(
       decimals: rewardMint.decimal,
       uri: rewardMint.uri,
       presaleTarget: new BN(args.presaleTarget),
-      maxPresaleTime: new BN(args.maxPresaleTime),
+      maxPresaleTime: args.maxPresaleTime,
       creatorFeeBasisPoints: args.creator_fees_basis_points,
-      vestingPeriod: new BN(args.vestingPeriod),
+      vestingPeriod: args.vestingPeriod,
       vestedSupply: new BN(args.vestedSupply),
       totalSupply: new BN(args.totalSupply),
+      delegate: null,
     })
     .accounts({
       payer: args.signer,
       pool: poolId,
       rewardMint: rewardMint.mint,
-      identifier: args.identifierId,
       rewardMintMetadata: rewardMintMetadata,
       poolRewardMintAta: poolAndMintRewardAta,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -567,9 +533,17 @@ export function getStatus(pool: PoolType) {
     return Status.VestingInProgress;
   } else if (
     pool.presaleTimeLimit &&
-    Date.now() / 1000 > pool.presaleTimeLimit
+    ((Date.now() / 1000 > pool.presaleTimeLimit &&
+      pool.liquidityCollected < pool.presaleTarget) ||
+      Date.now() / 1000 > pool.presaleTimeLimit + 7 * 24 * 60 * 60)
   ) {
     return Status.Expired;
+  } else if (
+    pool.presaleTimeLimit &&
+    Date.now() / 1000 > pool.presaleTimeLimit &&
+    pool.liquidityCollected >= pool.presaleTarget
+  ) {
+    return Status.ReadyToLaunch;
   } else if (pool.liquidityCollected >= pool.presaleTarget) {
     return Status.PresaleTargetMet;
   } else if (pool.presaleTimeLimit) {

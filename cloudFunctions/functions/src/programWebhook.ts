@@ -9,6 +9,7 @@ import {
   InitializedPoolEvent,
   LaunchTokenAmmEvent,
   PurchasedPresaleEvent,
+  Status,
   WithdrawEvent,
   WithdrawLpTokenEvent,
 } from "./utils/types";
@@ -40,7 +41,7 @@ export default async function programWebhook(req: Request, res: Response) {
             ix.innerInstructions.find(
               (item) =>
                 item.accounts.length === 1 &&
-                item.accounts.includes(programEventAuthority) &&
+                item.accounts.includes(programEventAuthority.value()) &&
                 item.programId === program.programId.toBase58()
             ) !== undefined
           );
@@ -49,7 +50,7 @@ export default async function programWebhook(req: Request, res: Response) {
           const innerIx = ix.innerInstructions.find(
             (item) =>
               item.accounts.length === 1 &&
-              item.accounts.includes(programEventAuthority) &&
+              item.accounts.includes(programEventAuthority.value()) &&
               item.programId === program.programId.toBase58()
           );
           return innerIx?.data;
@@ -219,6 +220,7 @@ function processLaunchAmmEvent(
     db.collection("Pool").doc(launchTokenEventData.pool),
     {
       ...launchTokenEventData,
+      status: Status.Launched,
       amountCoin: parseInt(launchTokenEventData.amountCoin, 16),
       amountPc: parseInt(launchTokenEventData.amountPc, 16),
       amountLpReceived: parseInt(launchTokenEventData.amountLpReceived, 16),
@@ -426,12 +428,14 @@ function processIntializePoolEvent(
 
   batch.set(db.collection("Pool").doc(poolEventData.pool), {
     ...poolEventData,
+    status: Status.Initialized,
+    liquidityCollected: 0,
     decimal: parseInt(poolEventData.decimal, 16),
     presaleTarget: parseInt(poolEventData.presaleTarget, 16),
     presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
     vestedSupply: parseInt(poolEventData.vestedSupply, 16),
     totalSupply: parseInt(poolEventData.totalSupply, 16),
-    vestingPeriod: parseInt(poolEventData.vestingPeriod, 16),
+    vestingPeriod: parseInt(poolEventData.vestingPeriod),
     createdAt: FieldValue.serverTimestamp(),
   });
   batch.set(
@@ -450,7 +454,7 @@ function processIntializePoolEvent(
         presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
         vestedSupply: parseInt(poolEventData.vestedSupply, 16),
         totalSupply: parseInt(poolEventData.totalSupply, 16),
-        vestingPeriod: parseInt(poolEventData.vestingPeriod, 16),
+        vestingPeriod: parseInt(poolEventData.vestingPeriod),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }

@@ -13,19 +13,20 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { getMetadata, getStatus } from "../utils/helper";
+import { getMetadata, getSignature, getStatus } from "../utils/helper";
 import { FundedTable } from "./tables/FundedTable";
 import { VestingTable } from "./tables/VestingTable";
 import { CompletedTable } from "./tables/CompletedTable";
 import { ExpiredTable } from "./tables/ExpiredTable";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useLogin } from "../hooks/useLogin";
+import { httpsCallable, getFunctions } from "firebase/functions";
+import { toast } from "react-toastify";
 
 interface InventoryItemProps {
   item: DasApiAsset;
   collectionItem?: DasApiAsset;
-  loading?: boolean;
   setSelectedItem?: (item: any) => void;
-  handleSubmit?: (item: any) => void;
-  actionText?: string;
 }
 
 enum ProjectType {
@@ -41,10 +42,7 @@ export interface Project extends MintType, PoolType {}
 export const InventoryItem: FC<InventoryItemProps> = ({
   item,
   collectionItem,
-  loading,
   setSelectedItem,
-  handleSubmit,
-  actionText,
 }) => {
   const [projects, setProjects] = useState<Project[]>();
   const [image, setImage] = useState();
@@ -54,9 +52,24 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   const [projectType, setProjectType] = useState<ProjectType>(ProjectType.all);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  const { publicKey, signMessage } = useWallet();
+  const {
+    user,
+    signedMessage,
+    sessionKey,
+    setSignedMessage,
+    setSessionKey,
+    nft,
+  } = useLogin();
   const [timer, setTimer] = useState<number>();
 
+  function isItemCurrentlyEquipped(
+    nft: DasApiAsset | undefined,
+    item: DasApiAsset | undefined
+  ) {
+    return nft && item && item.id === nft.id;
+  }
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
     return () => clearInterval(interval);
@@ -80,22 +93,32 @@ export const InventoryItem: FC<InventoryItemProps> = ({
   }
   useEffect(() => {
     if (item) {
-      getMetadata(item.content.json_uri).then((response) => {
-        if (response) {
-          setImage(response.image);
-          setName(response.name);
-        }
-      });
+      getMetadata(item.content.json_uri)
+        .then((response) => {
+          if (response) {
+            setImage(response.image);
+            setName(response.name);
+          }
+        })
+        .catch(() => {
+          setImage(undefined);
+          setName(undefined);
+        });
     }
   }, [item]);
   useEffect(() => {
     if (collectionItem) {
-      getMetadata(collectionItem.content.json_uri).then((response) => {
-        if (response) {
-          setCollectionImage(response.image);
-          setCollectionName(response.name);
-        }
-      });
+      getMetadata(collectionItem.content.json_uri)
+        .then((response) => {
+          if (response) {
+            setCollectionImage(response.image);
+            setCollectionName(response.name);
+          }
+        })
+        .catch(() => {
+          setCollectionImage(undefined);
+          setCollectionName(undefined);
+        });
     }
   }, [collectionItem]);
 
@@ -139,6 +162,41 @@ export const InventoryItem: FC<InventoryItemProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [show]);
+
+  const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
+    if (publicKey && user && signMessage && selectedItem) {
+      try {
+        setLoading(true);
+        let sig = await getSignature(
+          user,
+          signedMessage,
+          sessionKey,
+          signMessage,
+          setSignedMessage,
+          setSessionKey
+        );
+        const payload = {
+          signature: sig,
+          pubKey: publicKey.toBase58(),
+          nft: selectedItem,
+        };
+        if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
+          const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
+          await unlinkAsset(payload);
+        } else {
+          const linkAsset = httpsCallable(getFunctions(), "linkAsset");
+          await linkAsset(payload);
+        }
+      } catch (error) {
+        toast.error(`${error}`);
+      } finally {
+        setLoading(false);
+        if (setSelectedItem) {
+          setSelectedItem(undefined);
+        }
+      }
+    }
+  };
 
   return (
     image &&
@@ -189,15 +247,19 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 </div>
               </div>
             )}
-            {handleSubmit && (
+            {item.ownership.owner === publicKey?.toBase58() && (
               <button
-                onClick={() => handleSubmit(item)}
+                onClick={() => handleLinkage(item)}
                 className={`flex items-center gap-1 rounded ${
-                  actionText === "Link" ? "bg-blue-700" : "bg-red-700"
+                  !isItemCurrentlyEquipped(nft, item)
+                    ? "bg-blue-700"
+                    : "bg-red-700"
                 } px-2 py-1 text-blue-200`}
               >
-                <span className="text-[10px] sm:text-xs">{actionText}</span>
-                {actionText === "Link" && !loading && (
+                <span className="text-[10px] sm:text-xs">
+                  {isItemCurrentlyEquipped(nft, item) ? "Unlink" : "Link"}
+                </span>
+                {!isItemCurrentlyEquipped(nft, item) && !loading && (
                   <svg
                     className="w-4 h-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -216,7 +278,7 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                     />
                   </svg>
                 )}
-                {actionText === "Unlink" && !loading && (
+                {isItemCurrentlyEquipped(nft, item) && !loading && (
                   <svg
                     className="w-4 h-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -268,19 +330,19 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                 alt={""}
               />
             </div>
-            <div className="flex flex-col w-3/4 overflow-hidden gap-2">
-              <div className="flex flex-col">
-                <span className="text-[10px] sm:text-xs uppercase text-gray-400">
+            <div className="flex flex-col w-1/2 lg:w-3/4 gap-2">
+              <div className="flex flex-col w-full">
+                <span className="text-[10px] sm:text-xs text-gray-400">
                   Name
                 </span>
                 <span className="text-xs">{name}</span>
               </div>
-              <div className="flex gap-2">
-                <div className="flex flex-col">
-                  <span className="text-[10px] sm:text-xs uppercase text-gray-400">
+              <div className="flex gap-2 w-full">
+                <div className="flex flex-col w-full">
+                  <span className="text-[10px] sm:text-xs text-gray-400">
                     Mint
                   </span>
-                  <span className="text-xs max-w-36 truncate">{item.id}</span>
+                  <span className="text-xs truncate">{item.id}</span>
                 </div>
               </div>
             </div>
@@ -339,7 +401,8 @@ export const InventoryItem: FC<InventoryItemProps> = ({
                     projects={projects.filter(
                       (item) =>
                         getStatus(item) === Status.PresaleInProgress ||
-                        getStatus(item) === Status.PresaleTargetMet
+                        getStatus(item) === Status.PresaleTargetMet ||
+                        getStatus(item) === Status.ReadyToLaunch
                     )}
                     timer={timer}
                   />

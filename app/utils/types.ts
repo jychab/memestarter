@@ -24,6 +24,7 @@ export enum Status {
   VestingCompleted = "Vesting Completed",
   PresaleInProgress = "Presale In Progress",
   Expired = "Expired",
+  ReadyToLaunch = "ReadyToLaunch",
 }
 export interface LaunchTokenAmmArgs {
   marketId: PublicKey;
@@ -57,8 +58,6 @@ export interface InitializePoolArgs {
   vestedSupply: number;
   totalSupply: number;
   signer: PublicKey;
-  identifierId: PublicKey;
-  identifier: BN;
 }
 
 export interface WithdrawArgs {
@@ -141,7 +140,6 @@ export interface MintType {
   lpElligibleAfterFees: number;
   mintElligible: number;
   updatedAt: Timestamp;
-  mintMetadata: DAS.GetAssetResponse;
 }
 
 export interface Transaction {
