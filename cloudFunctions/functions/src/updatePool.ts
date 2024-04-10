@@ -1,10 +1,9 @@
-import {db, helius} from "./utils/index";
-import {QueryDocumentSnapshot} from "firebase-functions/v1/firestore";
-import {Pool} from "./utils/types";
-import {EventContext} from "firebase-functions/v1";
+import { db, helius } from "./utils/index";
+import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
+import { Pool } from "./utils/types";
+import { EventContext } from "firebase-functions/v1";
 import axios from "axios";
-import {getFunctions} from "firebase-admin/functions";
-import {GoogleAuth} from "google-auth-library";
+import { addToQueue } from "./utils/helper";
 
 export default async function updatePool(
   snapshot: QueryDocumentSnapshot,
@@ -13,18 +12,17 @@ export default async function updatePool(
   }>
 ): Promise<void> {
   const data = snapshot.data() as Pool;
-  const queue = getFunctions().taskQueue("updatePoolStatus");
-  const uri = await getFunctionUrl("updatePoolStatus");
-  await queue.enqueue(
-    {
-      poolId: context.params.poolId,
-    },
-    {
-      scheduleTime: new Date(data.presaleTimeLimit * 1000),
-      uri: uri,
-    }
-  );
-  const metadata = await helius.rpc.getAsset({id: data.mint});
+
+  let inQueue = false;
+  let presaleDuration = data.presaleTimeLimit - Date.now() / 1000;
+  //add to queue if presale is within a day
+  if (presaleDuration <= 24 * 60 * 60 && presaleDuration > 0) {
+    await addToQueue(context.params.poolId, data.presaleTimeLimit);
+    inQueue = true;
+  }
+
+  //update metadata
+  const metadata = await helius.rpc.getAsset({ id: data.mint });
   let valid = true;
   let name;
   let description;
@@ -56,33 +54,8 @@ export default async function updatePool(
       description: description,
       valid: valid,
       mintMetadata: metadata,
+      inQueue: inQueue,
     },
-    {merge: true}
+    { merge: true }
   );
-}
-
-/**
- * Get the URL of a given v2 cloud function.
- *
- * @param {string} name the function's name
- * @param {string} location the function's location
- * @return {Promise<string>} The URL of the function
- */
-async function getFunctionUrl(name: string, location = "us-central1") {
-  const auth = new GoogleAuth({
-    scopes: "https://www.googleapis.com/auth/cloud-platform",
-  });
-
-  const projectId = await auth.getProjectId();
-  const url =
-    "https://cloudfunctions.googleapis.com/v2beta/" +
-    `projects/${projectId}/locations/${location}/functions/${name}`;
-
-  const client = await auth.getClient();
-  const res = await client.request({url});
-  const uri = (res.data as any).serviceConfig?.uri;
-  if (!uri) {
-    throw new Error(`Unable to retreive uri for function at ${url}`);
-  }
-  return uri;
 }
