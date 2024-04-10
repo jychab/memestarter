@@ -1,5 +1,5 @@
-import { getFunctions } from "firebase-admin/functions";
-import { GoogleAuth } from "google-auth-library";
+import {getFunctions} from "firebase-admin/functions";
+import {GoogleAuth} from "google-auth-library";
 
 export async function addToQueue(poolId: string, presaleTimeLimit: number) {
   const queue = getFunctions().taskQueue("updatePoolStatus");
@@ -33,7 +33,7 @@ async function getFunctionUrl(name: string, location = "us-central1") {
     `projects/${projectId}/locations/${location}/functions/${name}`;
 
   const client = await auth.getClient();
-  const res = await client.request({ url });
+  const res = await client.request({url});
   const uri = (res.data as any).serviceConfig?.uri;
   if (!uri) {
     throw new Error(`Unable to retreive uri for function at ${url}`);

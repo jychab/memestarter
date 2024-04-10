@@ -1,19 +1,19 @@
-import { onCall, onRequest } from "firebase-functions/v1/https";
+import {onCall, onRequest} from "firebase-functions/v1/https";
 import programWebhook from "./programWebhook";
 import cors = require("cors");
-import { firestore } from "firebase-functions/v1";
+import {firestore} from "firebase-functions/v1";
 import updatePool from "./updatePool";
 import linkAsset from "./linkAsset";
 import unlinkAsset from "./unlinkAsset";
 import updateMarketDetails from "./updateMarketDetails";
 import mintNft from "./mintNft";
-import { onTaskDispatched } from "firebase-functions/v2/tasks";
-import { onSchedule } from "firebase-functions/v2/scheduler";
-import { updatePoolStatus } from "./updatePoolStatus";
-import { enQueue } from "./enQueue";
+import {onTaskDispatched} from "firebase-functions/v2/tasks";
+import {onSchedule} from "firebase-functions/v2/scheduler";
+import {updatePoolStatus} from "./updatePoolStatus";
+import {enQueue} from "./enQueue";
 
 exports.programWebhook = onRequest(async (req, res) =>
-  cors({ origin: true })(req, res, async () => await programWebhook(req, res))
+  cors({origin: true})(req, res, async () => await programWebhook(req, res))
 );
 exports.updatePool = firestore
   .document("Pool/{poolId}")
