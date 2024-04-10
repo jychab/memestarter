@@ -8,6 +8,7 @@ export async function enQueue() {
   // Fetch all user details.
   const candidates = await db
     .collection("Pool")
+    .where("valid", "==", true)
     .where("inQueue", "==", false)
     .where("presaleTimeLimit", ">", currentTime)
     .where("presaleTimeLimit", "<=", currentTime + 24 * 60 * 60)

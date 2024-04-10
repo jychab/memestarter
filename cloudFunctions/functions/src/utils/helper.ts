@@ -22,7 +22,10 @@ export async function addToQueue(poolId: string, presaleTimeLimit: number) {
  * @param {string} location the function's location
  * @return {Promise<string>} The URL of the function
  */
-async function getFunctionUrl(name: string, location = "us-central1") {
+async function getFunctionUrl(
+  name: string,
+  location = "us-central1"
+): Promise<string> {
   const auth = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
   });

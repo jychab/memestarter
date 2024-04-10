@@ -13,14 +13,6 @@ export default async function updatePool(
 ): Promise<void> {
   const data = snapshot.data() as Pool;
 
-  let inQueue = false;
-  const presaleDuration = data.presaleTimeLimit - Date.now() / 1000;
-  // add to queue if presale is within a day
-  if (presaleDuration <= 24 * 60 * 60 && presaleDuration > 0) {
-    await addToQueue(context.params.poolId, data.presaleTimeLimit);
-    inQueue = true;
-  }
-
   // update metadata
   const metadata = await helius.rpc.getAsset({id: data.mint});
   let valid = true;
@@ -45,6 +37,14 @@ export default async function updatePool(
     }
   } else {
     valid = false;
+  }
+
+  let inQueue = false;
+  const presaleDuration = data.presaleTimeLimit - Date.now() / 1000;
+  // add to queue if presale is within a day
+  if (presaleDuration <= 24 * 60 * 60 && presaleDuration > 0 && valid) {
+    await addToQueue(context.params.poolId, data.presaleTimeLimit);
+    inQueue = true;
   }
   await db.collection("Pool").doc(context.params.poolId).set(
     {
