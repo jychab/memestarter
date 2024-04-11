@@ -16,7 +16,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       <div className="bg-white">
         <Navbar />
         <main className="flex text-white justify-center p-6 w-full min-h-screen">
-          <ToastContainer position="bottom-left" theme="dark" />
+          <ToastContainer position="bottom-left" theme="light" />
           {children}
         </main>
       </div>
