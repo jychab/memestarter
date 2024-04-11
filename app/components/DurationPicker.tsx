@@ -51,7 +51,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
         setPeriod(Number(value) * (30 * 24 * 60 * 60));
       }
     }
-  }, [value, periodEnum]);
+  }, [value, periodEnum, setPeriod]);
 
   useEffect(() => {
     if (periodEnum && period) {
@@ -74,7 +74,7 @@ export const DurationPicker: FC<DurationPickerProps> = ({
         <input
           type="number"
           id="time"
-          className="rounded-none rounded-s-lg w-14 text-center leading-none text-sm p-2 border border-gray-300  text-black"
+          className="rounded-none rounded-s-lg w-14 text-center leading-none text-sm p-2 border border-gray-300 text-black"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           required

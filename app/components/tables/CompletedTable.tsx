@@ -22,7 +22,7 @@ export const CompletedTable: FC<CompletedTableProps> = ({
             </th>
 
             <th scope="col" className="w-24 text-center p-2">
-              Funded
+              Funded By You
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Mint Elligible (Unvested)

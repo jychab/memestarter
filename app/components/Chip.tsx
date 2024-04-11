@@ -2,27 +2,22 @@ import React, { FC } from "react";
 
 export interface AttributeProps {
   k: string;
-  v: string;
   bgColor?: string;
   textColor?: string;
   dismiss?: () => void;
 }
 export const Chip: FC<AttributeProps> = ({
   k,
-  v,
   textColor = "bg-blue-500",
   bgColor = "bg-blue-700",
   dismiss,
 }) => (
   <div
-    className={`flex absolute right-2 top-2 lg:right-4 lg:top-4 items-center gap-2 max-w-28 w-fit overflow-hidden py-1 px-2 text-xs ${bgColor} rounded  ${textColor}`}
+    className={`flex items-center gap-2 max-w-28 w-fit overflow-hidden py-1 px-2 text-xs ${bgColor} rounded  ${textColor}`}
   >
     <div className="flex flex-col flex-1 min-w-0">
       <span className="text-ellipsis overflow-hidden whitespace-nowrap">
         {k}
-      </span>
-      <span className="text-ellipsis overflow-hidden whitespace-nowrap">
-        {v}
       </span>
     </div>
 

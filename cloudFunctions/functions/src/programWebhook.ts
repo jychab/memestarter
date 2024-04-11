@@ -5,6 +5,7 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   CheckClaimEvent,
   ClaimRewardsEvent,
+  CreatePurchaseAuthorisationEvent,
   Events,
   InitializedPoolEvent,
   LaunchTokenAmmEvent,
@@ -23,7 +24,7 @@ export default async function programWebhook(req: Request, res: Response) {
     log(JSON.stringify(req.body));
     const batch = db.batch();
     const data = req.body as any[];
-    data.forEach(async (tx) => {
+    data.forEach((tx) => {
       const instructions = tx.instructions as {
         accounts: string[];
         data: string;
@@ -34,7 +35,7 @@ export default async function programWebhook(req: Request, res: Response) {
         }[];
         programId: string;
       }[];
-      const emittedData = instructions
+      instructions
         .filter((ix) => {
           return (
             ix.programId === program.programId.toBase58() &&
@@ -54,41 +55,46 @@ export default async function programWebhook(req: Request, res: Response) {
               item.programId === program.programId.toBase58()
           );
           return innerIx?.data;
-        })[0];
-      if (emittedData) {
-        const ixData = anchor.utils.bytes.bs58.decode(emittedData);
-        const eventData = anchor.utils.bytes.base64.encode(ixData.slice(8));
-        const event = program.coder.events.decode(eventData);
-        if (!event) {
-          return;
-        }
-        console.log(JSON.parse(JSON.stringify(event.data)));
-        switch (event.name) {
-        case program.idl.events[0].name: // InitializedPoolEvent
-          processIntializePoolEvent(event, batch, tx);
-          break;
-        case program.idl.events[1].name: // PurchasePresaleEvent
-          processPurchasePresaleEvent(event, batch, tx);
-          break;
-        case program.idl.events[2].name: // CheckClaimEvent
-          processCheckClaimEvent(event, batch, tx);
-          break;
-        case program.idl.events[3].name: // ClaimRewardsEvent
-          processClaimRewardsEvent(event, batch, tx);
-          break;
-        case program.idl.events[4].name: // LaunchTokenAmmEvent
-          processLaunchAmmEvent(event, batch, tx);
-          break;
-        case program.idl.events[5].name: // WithdrawLpEvent
-          processWithdrawLpEvent(event, batch, tx);
-          break;
-        case program.idl.events[6].name: // WithdrawEvent
-          processWithdrawEvent(event, batch, tx);
-          break;
-        default:
-          break;
-        }
-      }
+        })
+        .forEach((emittedData) => {
+          if (!emittedData) {
+            return;
+          }
+          const ixData = anchor.utils.bytes.bs58.decode(emittedData);
+          const eventData = anchor.utils.bytes.base64.encode(ixData.slice(8));
+          const event = program.coder.events.decode(eventData);
+          if (!event) {
+            return;
+          }
+          switch (event.name) {
+          case program.idl.events[0].name: // InitializedPoolEvent
+            processIntializePoolEvent(event, batch, tx);
+            break;
+          case program.idl.events[1].name: // CreatePurchaseAuthorisationEvent
+            processCreatePurchaseAuthorisationEvent(event, batch, tx);
+            break;
+          case program.idl.events[2].name: // PurchasePresaleEvent
+            processPurchasePresaleEvent(event, batch, tx);
+            break;
+          case program.idl.events[3].name: // CheckClaimEvent
+            processCheckClaimEvent(event, batch, tx);
+            break;
+          case program.idl.events[4].name: // ClaimRewardsEvent
+            processClaimRewardsEvent(event, batch, tx);
+            break;
+          case program.idl.events[5].name: // LaunchTokenAmmEvent
+            processLaunchAmmEvent(event, batch, tx);
+            break;
+          case program.idl.events[6].name: // WithdrawLpEvent
+            processWithdrawLpEvent(event, batch, tx);
+            break;
+          case program.idl.events[7].name: // WithdrawEvent
+            processWithdrawEvent(event, batch, tx);
+            break;
+          default:
+            break;
+          }
+        });
     });
 
     await batch.commit();
@@ -417,6 +423,39 @@ function processPurchasePresaleEvent(
   );
 }
 
+function processCreatePurchaseAuthorisationEvent(
+  event: anchor.Event<IdlEvent, Record<string, string>>,
+  batch: FirebaseFirestore.WriteBatch,
+  tx: any
+) {
+  const purchaseAuthorisationData = JSON.parse(
+    JSON.stringify(event.data)
+  ) as CreatePurchaseAuthorisationEvent;
+  batch.set(
+    db.collection("Pool").doc(purchaseAuthorisationData.pool),
+    {
+      collectionsRequired: FieldValue.arrayUnion(
+        purchaseAuthorisationData.collectionMint
+      ),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  batch.set(
+    db
+      .collection("Users")
+      .doc(purchaseAuthorisationData.payer)
+      .collection("Transactions")
+      .doc(tx.signature),
+    {
+      signature: tx.signature,
+      event: Events.CheckClaimEvent,
+      eventData: purchaseAuthorisationData,
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+  );
+}
+
 function processIntializePoolEvent(
   event: anchor.Event<IdlEvent, Record<string, string>>,
   batch: FirebaseFirestore.WriteBatch,
@@ -436,6 +475,10 @@ function processIntializePoolEvent(
     vestedSupply: parseInt(poolEventData.vestedSupply, 16),
     totalSupply: parseInt(poolEventData.totalSupply, 16),
     vestingPeriod: parseInt(poolEventData.vestingPeriod),
+    maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?
+      parseInt(poolEventData.maxAmountPerPurchase, 16) :
+      null,
+    collectionsRequired: poolEventData.requiresCollection ? [] : null,
     createdAt: FieldValue.serverTimestamp(),
   });
   batch.set(
@@ -455,6 +498,9 @@ function processIntializePoolEvent(
         vestedSupply: parseInt(poolEventData.vestedSupply, 16),
         totalSupply: parseInt(poolEventData.totalSupply, 16),
         vestingPeriod: parseInt(poolEventData.vestingPeriod),
+        maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?
+          parseInt(poolEventData.maxAmountPerPurchase, 16) :
+          null,
       },
       updatedAt: FieldValue.serverTimestamp(),
     }

@@ -11,6 +11,7 @@ import {
 } from "./enums";
 import { Timestamp } from "firebase/firestore";
 import { BN } from "@coral-xyz/anchor";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -43,6 +44,7 @@ export interface CreateMarketArgs {
 export interface BuyPresaleArgs {
   amount: number;
   nft: PublicKey;
+  nftCollection: PublicKey;
   poolId: PublicKey;
   signer: PublicKey;
 }
@@ -52,12 +54,20 @@ export interface InitializePoolArgs {
   decimal: number;
   uri: string;
   creator_fees_basis_points: number;
-  maxPresaleTime: number;
+  presaleDuration: number;
   presaleTarget: number;
   vestingPeriod: number;
   vestedSupply: number;
   totalSupply: number;
   signer: PublicKey;
+  maxAmountPerPurchase: number | null;
+  requiresCollection: boolean;
+}
+
+export interface CreatePurchaseAuthorisationRecordArgs {
+  collectionMint: PublicKey;
+  signer: PublicKey;
+  poolId: PublicKey;
 }
 
 export interface WithdrawArgs {
@@ -99,6 +109,13 @@ export interface MarketDetails {
   baseMint: string;
   quoteMint: string;
 }
+
+export interface CollectionDetails {
+  name: string;
+  image: string;
+  mintAddress: string;
+}
+
 export interface PoolType {
   decimal: number;
   mintMetadata: DAS.GetAssetResponse;
@@ -127,6 +144,8 @@ export interface PoolType {
   description: string;
   image: string;
   valid: boolean;
+  maxAmountPerPurchase: number;
+  collectionsRequired: CollectionDetails[] | null;
 }
 
 export interface MintType {

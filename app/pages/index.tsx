@@ -11,7 +11,6 @@ import React, { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { PoolType } from "../utils/types";
 import CardItem from "../components/CardItem";
-import { CreateProjectBtn } from "../components/buttons/CreateProjectBtn";
 
 enum SortCriteria {
   liquidity = "liquidityCollected",
@@ -97,7 +96,7 @@ function Projects() {
         ? () => unsubscribe()
         : () => {};
     }
-  }, [page, sortCriteria, projects]);
+  }, [page, sortCriteria, projects, handleSort]);
 
   return (
     <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">

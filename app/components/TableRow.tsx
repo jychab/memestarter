@@ -204,7 +204,10 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           status === Status.PresaleTargetMet ||
           status === Status.Expired) && (
           <td scope="row" className="p-2 text-center">
-            {project.liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
+            {(project.liquidityCollected -
+              (project.amountWsolWithdrawn ? project.amountWsolWithdrawn : 0)) /
+              LAMPORTS_PER_SOL +
+              " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||

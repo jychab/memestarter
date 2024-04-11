@@ -1,12 +1,13 @@
 import React, { FC } from "react";
 import Image from "next/image";
-import { Status } from "../utils/types";
+import { CollectionDetails, Status } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
   convertSecondsToNearestUnit,
   separateNumberWithComma,
 } from "../utils/helper";
 import PresaleDashboard from "./PresaleDashboard";
+import { Chip } from "../components/Chip";
 
 interface ReviewPaneProps {
   authority: string;
@@ -29,6 +30,8 @@ interface ReviewPaneProps {
   presaleTime?: number;
   presaleTarget: number;
   description?: string;
+  maxAmountPerPurchase?: number;
+  collectionsRequired?: CollectionDetails[] | null;
 }
 
 export const ReviewPane: FC<ReviewPaneProps> = ({
@@ -52,9 +55,11 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   status,
   decimal: decimals,
   description,
+  collectionsRequired,
+  maxAmountPerPurchase,
 }) => {
   return (
-    <div className="flex flex-col text-gray-400 font-medium p-4 rounded gap-8">
+    <div className="flex flex-col text-gray-400 font-medium rounded gap-8">
       <div className="flex gap-4">
         <div className="relative h-40 w-40 lg:w-60 lg:h-60">
           <Image
@@ -83,6 +88,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
       {(status == Status.PresaleInProgress ||
         status == Status.PresaleTargetMet) && (
         <PresaleDashboard
+          collectionsRequired={collectionsRequired}
           uniqueBackers={uniqueBackers}
           symbol={symbol}
           decimal={decimals}
@@ -113,9 +119,17 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
             </span>
           )}
           <span className="col-span-2 sm:col-span-1">Total Supply</span>
-          <span className="col-span-4 sm:col-span-5 text-black">
+          <span className="col-span-4 sm:col-span-2 text-black">
             {separateNumberWithComma(totalSupply.toString()) + ` ${symbol}`}
           </span>
+          {creatorFees && (
+            <span className="col-span-2 sm:col-span-1">Creator Fees</span>
+          )}
+          {creatorFees && (
+            <span className="col-span-4 sm:col-span-2 text-black">
+              {creatorFees / 100 + "%"}
+            </span>
+          )}
           <span className="col-span-2 sm:col-span-1">Vested Supply</span>
           <span className="col-span-4 sm:col-span-2 text-black">
             {((vestedSupply / totalSupply) * 100).toString() + "%"}
@@ -136,13 +150,31 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
               {convertSecondsToNearestUnit(presaleTime)}
             </span>
           )}
-          {creatorFees && (
-            <span className="col-span-2 sm:col-span-1">Creator Fees</span>
-          )}
-          {creatorFees && (
-            <span className="col-span-4 sm:col-span-5 text-black">
-              {creatorFees / 100 + "%"}
+          {maxAmountPerPurchase && (
+            <span className="col-span-2 sm:col-span-1">
+              Max Allowed Per Purchase
             </span>
+          )}
+          {maxAmountPerPurchase && (
+            <span className="col-span-4 sm:col-span-5 text-black">
+              {maxAmountPerPurchase / LAMPORTS_PER_SOL + " Sol"}
+            </span>
+          )}
+          {collectionsRequired && collectionsRequired.length > 0 && (
+            <span className="col-span-2 sm:col-span-1">
+              Whitelisted Collections
+            </span>
+          )}
+          {collectionsRequired && collectionsRequired.length > 0 && (
+            <div className="col-span-4 sm:col-span-5 flex gap-2 flex-wrap">
+              {collectionsRequired.map((collection) => (
+                <Chip
+                  key={collection.mintAddress}
+                  k={collection.name}
+                  textColor="text-white"
+                />
+              ))}
+            </div>
           )}
         </div>
       )}

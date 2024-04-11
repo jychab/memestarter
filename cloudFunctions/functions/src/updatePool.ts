@@ -39,6 +39,17 @@ export default async function updatePool(
     valid = false;
   }
 
+  let collectionsRequired = data.collectionsRequired;
+  // Update Collection Details
+  if (collectionsRequired) {
+    collectionsRequired = await Promise.all(
+      data.collectionsRequired.map(async (item) => {
+        const ref = await db.collection("CollectionDetails").doc(item).get();
+        return ref.data();
+      })
+    );
+  }
+
   let inQueue = false;
   const presaleDuration = data.presaleTimeLimit - Date.now() / 1000;
   // add to queue if presale is within a day
@@ -46,16 +57,20 @@ export default async function updatePool(
     await addToQueue(context.params.poolId, data.presaleTimeLimit);
     inQueue = true;
   }
-  await db.collection("Pool").doc(context.params.poolId).set(
-    {
-      name: name,
-      symbol: symbol,
-      image: image,
-      description: description,
-      valid: valid,
-      mintMetadata: metadata,
-      inQueue: inQueue,
-    },
-    {merge: true}
-  );
+  await db
+    .collection("Pool")
+    .doc(context.params.poolId)
+    .set(
+      {
+        name: name,
+        symbol: symbol,
+        image: image,
+        description: description,
+        valid: valid,
+        mintMetadata: metadata,
+        inQueue: inQueue,
+        collectionsRequired: collectionsRequired ? collectionsRequired : null,
+      },
+      {merge: true}
+    );
 }

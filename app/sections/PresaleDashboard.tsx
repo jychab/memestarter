@@ -6,6 +6,8 @@ import {
   convertSecondsToNearestUnit,
   separateNumberWithComma,
 } from "../utils/helper";
+import { CollectionDetails } from "../utils/types";
+import { Chip } from "../components/Chip";
 
 interface PresaleDashboardProps {
   symbol: string;
@@ -17,6 +19,7 @@ interface PresaleDashboardProps {
   liquidityCollected: number;
   presaleTimeLimit: number;
   presaleTarget: number;
+  collectionsRequired?: CollectionDetails[] | null;
 }
 
 export const PresaleDashboard: FC<PresaleDashboardProps> = ({
@@ -29,9 +32,28 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   symbol,
   vestedSupply,
   vestingPeriod,
+  collectionsRequired,
 }) => {
   return (
     <div className="grid grid-cols-10 items-end justify-center gap-4">
+      {collectionsRequired && (
+        <div className="col-span-10">
+          <div className="flex-col flex gap-2 bg-gray-100 rounded p-2">
+            <span className="text-[10px] sm:text-xs font-medium">
+              Whitelisted Collections:
+            </span>
+            <div className="flex flex-wrap gap-2 ">
+              {collectionsRequired.map((item) => (
+                <Chip
+                  key={item.mintAddress}
+                  k={item.name}
+                  textColor="text-gray-100"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="col-span-4 flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">

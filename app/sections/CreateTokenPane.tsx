@@ -36,7 +36,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
   setSupply,
 }) => {
   return (
-    <div className="animate-fade-right flex flex-col p-4 lg:flex-row gap-4">
+    <div className="animate-fade-right flex flex-col lg:flex-row gap-4">
       <div className="flex w-40 h-40 lg:w-60 lg:h-60 items-center justify-center">
         <label
           htmlFor="dropzone-file"

@@ -18,10 +18,10 @@ export const FundedTable: FC<FundedTableProps> = ({ projects, timer }) => {
               Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Funded
+              Funded By You
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Liquidity
+              Total Funds In Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Presale Target

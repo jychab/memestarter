@@ -28,6 +28,14 @@ export interface InitializedPoolEvent {
   vestedSupply: string;
   totalSupply: string;
   vestingPeriod: string;
+  maxAmountPerPurchase: string | null;
+  requiresCollection: string;
+}
+
+export interface CreatePurchaseAuthorisationEvent {
+  payer: string;
+  collectionMint: string;
+  pool: string;
 }
 
 export interface PurchasedPresaleEvent {
@@ -100,6 +108,7 @@ export interface Pool {
   vestingStartedAt: number;
   createdAt: number;
   updatedAt: number;
+  collectionsRequired: any[];
 }
 
 export interface Mint {

@@ -20,8 +20,14 @@ import {
   sendTransactions,
   getSignature,
   launchTokenAmm,
+  getCollectionMintAddress,
 } from "../../../utils/helper";
-import { MarketDetails, PoolType, Status } from "../../../utils/types";
+import {
+  MarketDetails,
+  MintType,
+  PoolType,
+  Status,
+} from "../../../utils/types";
 import {
   collection,
   doc,
@@ -33,12 +39,16 @@ import { TxVersion, buildSimpleTransaction } from "@raydium-io/raydium-sdk";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { User } from "firebase/auth";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
+import { MainBtn } from "../../../components/buttons/MainBtn";
+import Link from "next/link";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
   const { connection } = useConnection();
   const [status, setStatus] = useState<Status>();
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
+  const [mint, setMint] = useState<MintType>();
+  const [amountToPurchase, setAmountToPurchase] = useState<string>("");
   const { publicKey, signTransaction, signMessage } = useWallet();
   const {
     nft,
@@ -53,13 +63,15 @@ export function Pool() {
   const { poolId } = router.query;
 
   useEffect(() => {
-    if (poolId) {
-      const coll = collection(db, `Pool/${poolId}/Mint`);
-      getCountFromServer(coll).then((result) =>
-        setUniqueBackers(result.data().count)
-      );
+    if (nft && pool) {
+      getDoc(doc(db, `Mint/${nft.id}/Pool/${pool.pool}`)).then((doc) => {
+        if (doc.exists()) {
+          const data = doc.data() as MintType;
+          setMint(data);
+        }
+      });
     }
-  }, [poolId]);
+  }, [nft, pool]);
 
   useEffect(() => {
     if (poolId) {
@@ -68,6 +80,10 @@ export function Pool() {
           setPool(doc.data() as PoolType);
         }
       });
+      const coll = collection(db, `Pool/${poolId}/Mint`);
+      getCountFromServer(coll).then((result) =>
+        setUniqueBackers(result.data().count)
+      );
     }
   }, [poolId]);
   useEffect(() => {
@@ -77,15 +93,22 @@ export function Pool() {
   }, [pool]);
 
   async function buyPresale(
+    amount: number,
     nft: DasApiAsset,
     pool: PoolType,
     publicKey: PublicKey,
     signTransaction: any
   ) {
+    const nftCollection = getCollectionMintAddress(nft);
+    if (!nftCollection) {
+      throw Error("NFT has no collection");
+    }
+    console.log(amount);
     const ix = await buyPresaleIx(
       {
-        amount: LAMPORTS_PER_SOL,
+        amount: amount,
         nft: new PublicKey(nft.id),
+        nftCollection: new PublicKey(nftCollection),
         poolId: new PublicKey(pool.pool),
         signer: publicKey,
       },
@@ -174,8 +197,7 @@ export function Pool() {
     await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
   }
 
-  const handleClick = async (e: any) => {
-    e.preventDefault();
+  const launch = async () => {
     try {
       if (
         status &&
@@ -189,41 +211,14 @@ export function Pool() {
         setLoading(true);
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (
-          status === Status.PresaleTargetMet &&
-          pool.authority === publicKey.toBase58()
+          !amountOfSolInWallet ||
+          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3
         ) {
-          if (
-            !amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3
-          ) {
-            toast.error("Insufficient SOL. You need at least 3 Sol.");
-            return;
-          }
-          await launchToken(
-            pool,
-            publicKey,
-            signMessage,
-            signTransaction,
-            user
-          );
-        } else if (
-          status === Status.PresaleInProgress ||
-          status === Status.PresaleTargetMet
-        ) {
-          if (!nft) {
-            toast.error("Missing Profile...");
-            router.push("/profile");
-            return;
-          }
-          if (
-            !amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL
-          ) {
-            toast.error("Insufficient SOL. You need at least 1 Sol.");
-            return;
-          }
-          await buyPresale(nft, pool, publicKey, signTransaction);
+          toast.error("Insufficient SOL. You need at least 3 Sol.");
+          return;
         }
+        await launchToken(pool, publicKey, signMessage, signTransaction, user);
+
         toast.success("Success!");
         router.push("/");
       }
@@ -235,32 +230,151 @@ export function Pool() {
     }
   };
 
-  function getColorfromStatus(status: Status | undefined, pool: PoolType) {
+  const buy = async () => {
+    try {
+      if (
+        status &&
+        publicKey &&
+        user &&
+        connection &&
+        pool &&
+        amountToPurchase &&
+        signMessage &&
+        signTransaction
+      ) {
+        setLoading(true);
+        if (!nft) {
+          toast.error("Missing Profile...");
+          router.push("/profile");
+          return;
+        }
+        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+        if (
+          !amountOfSolInWallet ||
+          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL
+        ) {
+          toast.error(
+            `Insufficient SOL. You need at least ${amountToPurchase} Sol.`
+          );
+          return;
+        }
+        await buyPresale(
+          parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
+          nft,
+          pool,
+          publicKey,
+          signTransaction
+        );
+        toast.success("Success!");
+        router.push("/");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(`${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function getButton(
+    status: Status,
+    pool: PoolType,
+    nft: DasApiAsset | undefined,
+    loading: boolean
+  ) {
+    if (!nft) {
+      return (
+        <div className="flex items-center justify-center">
+          <Link
+            href={"/profile"}
+            className="text-gray-100 bg-gray-700 hover:bg-gray-800 text-sm sm:text-base rounded p-2"
+          >
+            {"Missing Profile!"}
+          </Link>
+        </div>
+      );
+    }
     if (
       status === Status.PresaleInProgress ||
-      (status === Status.PresaleTargetMet &&
-        pool.authority !== publicKey?.toBase58())
+      status === Status.PresaleTargetMet
     ) {
-      return "text-green-100 bg-green-700 hover:bg-green-800";
-    } else if (
-      status === Status.PresaleTargetMet &&
-      pool.authority === publicKey?.toBase58()
-    ) {
-      return "text-red-100 bg-red-700 hover:bg-red-800";
-    } else if (status === Status.VestingInProgress) {
-      return "text-yellow-100 bg-yellow-700 hover:bg-yellow-800";
+      if (
+        pool.collectionsRequired === null ||
+        (pool.collectionsRequired &&
+          pool.collectionsRequired.find(
+            (item) => item.mintAddress === getCollectionMintAddress(nft)
+          ) !== undefined)
+      ) {
+        return (
+          <MainBtn
+            handleClick={buy}
+            color={"text-green-100 bg-green-700 hover:bg-green-800"}
+            loading={loading}
+            disabled={false}
+            amount={mint?.amount}
+            maxAllowedPerPurchase={pool.maxAmountPerPurchase}
+            amountToPurchase={amountToPurchase}
+            setAmountToPurchase={setAmountToPurchase}
+            text={loading ? "" : "Fund"}
+            creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+          />
+        );
+      }
+      return (
+        <MainBtn
+          color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
+          text={"Not part of whitelisted collection"}
+        />
+      );
     } else if (status === Status.Expired) {
-      return "text-gray-100 bg-gray-700 hover:bg-gray-800";
-    } else {
-      return "text-blue-100 bg-blue-700 hover:bg-blue-800";
+      return (
+        <MainBtn
+          color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
+          text={"Expired"}
+        />
+      );
+    } else if (status === Status.VestingCompleted) {
+      return (
+        <MainBtn
+          color={"text-blue-100 bg-blue-700 hover:bg-blue-800"}
+          text={"Vesting Completed"}
+        />
+      );
+    } else if (status === Status.VestingInProgress) {
+      return (
+        <MainBtn
+          color={"text-yellow-100 bg-yellow-700 hover:bg-yellow-800"}
+          text={"Vesting In Progress"}
+        />
+      );
+    } else if (status === Status.ReadyToLaunch) {
+      if (publicKey?.toBase58() === pool.authority) {
+        return (
+          <MainBtn
+            handleClick={launch}
+            loading={loading}
+            disabled={false}
+            color={"text-red-100 bg-red-700 hover:bg-red-800"}
+            text={loading ? "" : "Launch"}
+          />
+        );
+      } else {
+        return (
+          <MainBtn
+            color={"text-red-100 bg-red-700 hover:bg-red-800"}
+            text={"Awaiting Creator To Launch"}
+          />
+        );
+      }
     }
   }
 
   return (
     pool && (
       <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
-        <div className="rounded border w-full shadow-sm">
+        <div className="flex flex-col gap-8 rounded border w-full shadow-sm p-4">
           <ReviewPane
+            collectionsRequired={pool.collectionsRequired}
             authority={pool.authority}
             uniqueBackers={uniqueBackers}
             decimal={pool.decimal}
@@ -278,63 +392,8 @@ export function Pool() {
             liquidityCollected={pool.liquidityCollected}
             status={status}
           />
-          <div className="flex flex-col pb-4 items-center">
-            <button
-              onClick={handleClick}
-              className={`${getColorfromStatus(
-                status,
-                pool
-              )} flex items-center justify-center rounded max-w-64 gap-1 px-4 py-1`}
-              disabled={
-                !(
-                  status === Status.PresaleInProgress ||
-                  status === Status.PresaleTargetMet
-                )
-              }
-            >
-              {loading && (
-                <svg
-                  className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                    fill="currentFill"
-                  />
-                </svg>
-              )}
-              {(status === Status.PresaleInProgress ||
-                (status === Status.PresaleTargetMet &&
-                  pool.authority !== publicKey?.toBase58())) && (
-                <span>{loading ? "Funding..." : "Fund for 1 SOL"}</span>
-              )}
-              {status === Status.Expired && <span>{"Expired"}</span>}
-              {status === Status.VestingCompleted && (
-                <span>{"Vesting Completed"}</span>
-              )}
-              {status === Status.VestingInProgress && (
-                <span>{"Vesting in Progress"}</span>
-              )}
-              {status === Status.PresaleTargetMet &&
-                pool.authority === publicKey?.toBase58() && (
-                  <span>{loading ? "Launching..." : "Launch Token"}</span>
-                )}
-            </button>
-            <span
-              hidden={status !== Status.PresaleInProgress}
-              className="text-[10px] text-gray-400"
-            >
-              {"Creator Fees: " +
-                parseInt(pool.creatorFeeBasisPoints) / 100 +
-                "%"}
-            </span>
-          </div>
+
+          {status && getButton(status, pool, nft, loading)}
         </div>
       </div>
     )

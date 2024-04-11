@@ -9,6 +9,7 @@ import {
   CheckClaimElligbilityArgs,
   ClaimArgs,
   CreateMarketArgs,
+  CreatePurchaseAuthorisationRecordArgs,
   DAS,
   InitializePoolArgs,
   LaunchTokenAmmArgs,
@@ -27,11 +28,8 @@ import {
   ComputeBudgetProgram,
   VersionedTransaction,
   TransactionMessage,
-  Keypair,
   SystemProgram,
   Transaction,
-  sendAndConfirmTransaction,
-  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { BN, Program } from "@coral-xyz/anchor";
 import {
@@ -42,8 +40,6 @@ import {
   SYSTEM_PROGRAM_ID,
   TxVersion,
   WSOL,
-  buildSimpleTransaction,
-  publicKey,
 } from "@raydium-io/raydium-sdk";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
 import { User } from "firebase/auth";
@@ -58,7 +54,7 @@ export const program = (connection: Connection) =>
  * @return {string | undefined} The collection mint address if found, otherwise undefined.
  */
 export function getCollectionMintAddress(
-  item: DAS.GetAssetResponse
+  item: DAS.GetAssetResponse | DasApiAsset
 ): string | undefined {
   if (item.grouping) {
     const group = item.grouping?.find(
@@ -93,18 +89,7 @@ export async function buildAndSendTransaction(
     transaction: T
   ) => Promise<T>
 ) {
-  const [microLamports, units, recentBlockhash] = await Promise.all([
-    100,
-    getSimulationUnits(connection, ixs, publicKey, []),
-    connection.getLatestBlockhash(),
-  ]);
-  ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
-  if (units) {
-    // probably should add some margin of error to units
-    ixs.unshift(
-      ComputeBudgetProgram.setComputeUnitLimit({ units: units * 1.1 })
-    );
-  }
+  const recentBlockhash = await connection.getLatestBlockhash();
   let tx = new VersionedTransaction(
     new TransactionMessage({
       instructions: ixs,
@@ -149,45 +134,26 @@ export async function sendTransactions(
   }
 }
 
-export async function getSimulationUnits(
-  connection: Connection,
-  instructions: TransactionInstruction[],
-  payer: PublicKey,
-  lookupTables: AddressLookupTableAccount[]
-): Promise<number | undefined> {
-  const testInstructions = [
-    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
-    ...instructions,
-  ];
+function generateRandomU64() {
+  // Generate two 32-bit integers
+  const upper = Math.floor(Math.random() * 0x100000000); // 2^32
+  const lower = Math.floor(Math.random() * 0x100000000); // 2^32
 
-  const testVersionedTxn = new VersionedTransaction(
-    new TransactionMessage({
-      instructions: testInstructions,
-      payerKey: payer,
-      recentBlockhash: PublicKey.default.toString(),
-    }).compileToV0Message(lookupTables)
-  );
+  // Combine them to form a 64-bit integer
+  const u64 = (upper << 32) | lower;
 
-  const simulation = await connection.simulateTransaction(testVersionedTxn, {
-    replaceRecentBlockhash: true,
-    sigVerify: false,
-  });
-  if (simulation.value.err) {
-    return undefined;
-  }
-  return simulation.value.unitsConsumed;
+  return u64;
 }
 
 export async function initializePoolIx(
   args: InitializePoolArgs,
   connection: Connection
 ) {
-  const randomKey = crypto.randomBytes(8);
+  const randomKey = generateRandomU64();
   const [rewardMintKey] = PublicKey.findProgramAddressSync(
-    [Buffer.from("mint"), randomKey],
+    [Buffer.from("mint"), new BN(randomKey).toArrayLike(Buffer, "le", 8)],
     program(connection).programId
   );
-
   const [poolId] = PublicKey.findProgramAddressSync(
     [Buffer.from("pool"), rewardMintKey.toBuffer()],
     program(connection).programId
@@ -199,6 +165,7 @@ export async function initializePoolIx(
     decimal: args.decimal,
     uri: args.uri,
   };
+
   const [rewardMintMetadata] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("metadata"),
@@ -214,30 +181,60 @@ export async function initializePoolIx(
     true
   );
 
+  return {
+    instruction: await program(connection)
+      .methods.initPool({
+        name: rewardMint.name,
+        symbol: rewardMint.symbol,
+        decimals: rewardMint.decimal,
+        uri: rewardMint.uri,
+        presaleDuration: args.presaleDuration,
+        presaleTarget: new BN(args.presaleTarget),
+        creatorFeeBasisPoints: args.creator_fees_basis_points,
+        vestingPeriod: args.vestingPeriod,
+        vestedSupply: new BN(args.vestedSupply),
+        totalSupply: new BN(args.totalSupply),
+        randomKey: new BN(randomKey),
+        maxAmountPerPurchase: args.maxAmountPerPurchase
+          ? new BN(args.maxAmountPerPurchase)
+          : null,
+        delegate: null,
+        requiresCollection: args.requiresCollection,
+      })
+      .accounts({
+        payer: args.signer,
+        pool: poolId,
+        rewardMint: rewardMint.mint,
+        rewardMintMetadata: rewardMintMetadata,
+        poolRewardMintAta: poolAndMintRewardAta,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        mplTokenProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+    poolId: poolId,
+  };
+}
+
+export async function createPurchaseAuthorisationIx(
+  args: CreatePurchaseAuthorisationRecordArgs,
+  connection: Connection
+) {
+  const [purchaseAuthorisationRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("authorisation"),
+      args.poolId.toBuffer(),
+      args.collectionMint.toBuffer(),
+    ],
+    program(connection).programId
+  );
   return await program(connection)
-    .methods.initPool({
-      name: rewardMint.name,
-      symbol: rewardMint.symbol,
-      decimals: rewardMint.decimal,
-      uri: rewardMint.uri,
-      presaleTarget: new BN(args.presaleTarget),
-      maxPresaleTime: args.maxPresaleTime,
-      creatorFeeBasisPoints: args.creator_fees_basis_points,
-      vestingPeriod: args.vestingPeriod,
-      vestedSupply: new BN(args.vestedSupply),
-      totalSupply: new BN(args.totalSupply),
-      delegate: null,
-      randomKey: new BN(randomKey.readBigUInt64LE()),
-    })
+    .methods.createPurchaseAuthorisation(args.collectionMint)
     .accounts({
       payer: args.signer,
-      pool: poolId,
-      rewardMint: rewardMint.mint,
-      rewardMintMetadata: rewardMintMetadata,
-      poolRewardMintAta: poolAndMintRewardAta,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      mplTokenProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+      pool: args.poolId,
+      purchaseAuthorisationRecord: purchaseAuthorisationRecord,
       systemProgram: SystemProgram.programId,
     })
     .instruction();
@@ -256,16 +253,42 @@ export async function buyPresaleIx(
     args.poolId,
     true
   );
+  const [nftMetadata] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      args.nft.toBuffer(),
+    ],
+    MPL_TOKEN_METADATA_PROGRAM_ID
+  );
+  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
+    args.nft,
+    args.signer,
+    true
+  );
 
+  let purchaseAuthorisationRecord = null;
   const poolData = await program(connection).account.pool.fetchNullable(
     args.poolId
   );
   if (poolData === null) {
     throw Error("Pool does not exist!");
+  } else if (poolData.requiresCollection) {
+    [purchaseAuthorisationRecord] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("authorisation"),
+        args.poolId.toBuffer(),
+        args.nftCollection.toBuffer(),
+      ],
+      program(connection).programId
+    );
   }
   return await program(connection)
     .methods.buyPresale(new BN(args.amount))
     .accounts({
+      purchaseAuthorisationRecord: purchaseAuthorisationRecord,
+      nftMetadata: nftMetadata,
+      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       wsolMint: NATIVE_MINT,
       poolWsolTokenAccount: poolAndWSOLATA,
@@ -427,12 +450,20 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     args.nftOwner,
     true
   );
+  const [nftMetadata] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      args.nft.toBuffer(),
+    ],
+    MPL_TOKEN_METADATA_PROGRAM_ID
+  );
   return await program(connection)
     .methods.claimRewards()
     .accounts({
+      nftMetadata: nftMetadata,
       purchaseReceipt: purchaseReceipt,
       pool: args.poolId,
-      nft: args.nft,
       nftOwner: args.nftOwner,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       rewardMint: args.mint,
@@ -508,16 +539,24 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
     args.poolId,
     true
   );
+  const [nftMetadata] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      args.nft.toBuffer(),
+    ],
+    MPL_TOKEN_METADATA_PROGRAM_ID
+  );
 
   return await program(connection)
     .methods.withdraw()
     .accounts({
+      nftMetadata: nftMetadata,
       purchaseReceipt: purchaseReceipt,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       pool: args.poolId,
       payer: args.signer,
       payerTokenWsol: signerWsolTokenAccount,
-      nft: args.nft,
       nftOwner: args.nftOwner,
       poolTokenWsol: poolWsolTokenAccount,
       wsol: NATIVE_MINT,

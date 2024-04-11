@@ -81,7 +81,7 @@ function InventoryScreen() {
     if (publicKey && nft) {
       router.push(`/mint/${nft.id}`);
     }
-  }, [publicKey, nft]);
+  }, [publicKey, nft, router]);
 
   useEffect(() => {
     if (publicKey && page && !nft) {
@@ -100,7 +100,15 @@ function InventoryScreen() {
           loadAssets(walletData, connection);
         });
     }
-  }, [publicKey, page, nft]);
+  }, [
+    publicKey,
+    page,
+    nft,
+    connection,
+    loadAssets,
+    umi.identity.publicKey,
+    umi.rpc,
+  ]);
 
   const handleMintNft = async () => {
     try {

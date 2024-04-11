@@ -21,6 +21,11 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "nftOwnerNftTokenAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "wsolMint";
           isMut: false;
           isSigner: false;
@@ -29,6 +34,17 @@ export type SafePresale = {
           name: "nft";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "nftMetadata";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "purchaseAuthorisationRecord";
+          isMut: false;
+          isSigner: false;
+          isOptional: true;
         },
         {
           name: "payer";
@@ -93,11 +109,6 @@ export type SafePresale = {
         },
         {
           name: "nftOwner";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "nft";
           isMut: false;
           isSigner: false;
         },
@@ -213,6 +224,47 @@ export type SafePresale = {
       ];
     },
     {
+      name: "createPurchaseAuthorisation";
+      accounts: [
+        {
+          name: "purchaseAuthorisationRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "pool";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "collectionMint";
+          type: "publicKey";
+        }
+      ];
+    },
+    {
       name: "withdrawLpToken";
       accounts: [
         {
@@ -322,11 +374,6 @@ export type SafePresale = {
         {
           name: "nftOwner";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "nft";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -528,6 +575,10 @@ export type SafePresale = {
             type: "u8";
           },
           {
+            name: "requiresCollection";
+            type: "bool";
+          },
+          {
             name: "launched";
             type: "bool";
           },
@@ -560,6 +611,12 @@ export type SafePresale = {
           {
             name: "liquidityCollected";
             type: "u64";
+          },
+          {
+            name: "maxAmountPerPurchase";
+            type: {
+              option: "u64";
+            };
           },
           {
             name: "creatorFeeBasisPoints";
@@ -596,6 +653,26 @@ export type SafePresale = {
             type: {
               option: "i64";
             };
+          }
+        ];
+      };
+    },
+    {
+      name: "purchaseAuthorisationRecord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pool";
+            type: "publicKey";
+          },
+          {
+            name: "collectionMint";
+            type: "publicKey";
+          },
+          {
+            name: "bump";
+            type: "u8";
           }
         ];
       };
@@ -678,12 +755,18 @@ export type SafePresale = {
             type: "u64";
           },
           {
-            name: "maxPresaleTime";
+            name: "presaleDuration";
             type: "u32";
           },
           {
             name: "vestingPeriod";
             type: "u32";
+          },
+          {
+            name: "maxAmountPerPurchase";
+            type: {
+              option: "u64";
+            };
           },
           {
             name: "vestedSupply";
@@ -706,6 +789,10 @@ export type SafePresale = {
           {
             name: "randomKey";
             type: "u64";
+          },
+          {
+            name: "requiresCollection";
+            type: "bool";
           }
         ];
       };
@@ -770,6 +857,38 @@ export type SafePresale = {
         {
           name: "vestingPeriod";
           type: "u32";
+          index: false;
+        },
+        {
+          name: "maxAmountPerPurchase";
+          type: {
+            option: "u64";
+          };
+          index: false;
+        },
+        {
+          name: "requiresCollection";
+          type: "bool";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "CreatePurchaseAuthorisationEvent";
+      fields: [
+        {
+          name: "payer";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "collectionMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "pool";
+          type: "publicKey";
           index: false;
         }
       ];
@@ -1078,23 +1197,38 @@ export type SafePresale = {
     },
     {
       code: 6020;
-      name: "AmountPurchasedIsZero";
-      msg: "Purchase Amount cannot be zero";
+      name: "NumberCannotBeZero";
+      msg: "The value needs to be higher than zero.";
     },
     {
       code: 6021;
+      name: "AmountPurchaseExceeded";
+      msg: "Purchase Amount cannot be exceed allowable amount!";
+    },
+    {
+      code: 6022;
       name: "CheckClaimFirstBeforeClaiming";
       msg: "Check Claim Amount first before claiming";
     },
     {
-      code: 6022;
+      code: 6023;
       name: "ClaimedAlreadyChecked";
       msg: "Claim Amount is already updated";
     },
     {
-      code: 6023;
+      code: 6024;
       name: "InvalidSigner";
       msg: "Signer must be owner of nft";
+    },
+    {
+      code: 6025;
+      name: "PurchaseAuthorisationRecordMissing";
+      msg: "Purchase authorisation record is missing!";
+    },
+    {
+      code: 6026;
+      name: "UnauthorisedCollection";
+      msg: "Collection is not authorised!";
     }
   ];
 };
@@ -1122,6 +1256,11 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "nftOwnerNftTokenAccount",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "wsolMint",
           isMut: false,
           isSigner: false,
@@ -1130,6 +1269,17 @@ export const IDL: SafePresale = {
           name: "nft",
           isMut: false,
           isSigner: false,
+        },
+        {
+          name: "nftMetadata",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "purchaseAuthorisationRecord",
+          isMut: false,
+          isSigner: false,
+          isOptional: true,
         },
         {
           name: "payer",
@@ -1194,11 +1344,6 @@ export const IDL: SafePresale = {
         },
         {
           name: "nftOwner",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "nft",
           isMut: false,
           isSigner: false,
         },
@@ -1314,6 +1459,47 @@ export const IDL: SafePresale = {
       ],
     },
     {
+      name: "createPurchaseAuthorisation",
+      accounts: [
+        {
+          name: "purchaseAuthorisationRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "pool",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "collectionMint",
+          type: "publicKey",
+        },
+      ],
+    },
+    {
       name: "withdrawLpToken",
       accounts: [
         {
@@ -1423,11 +1609,6 @@ export const IDL: SafePresale = {
         {
           name: "nftOwner",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "nft",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -1629,6 +1810,10 @@ export const IDL: SafePresale = {
             type: "u8",
           },
           {
+            name: "requiresCollection",
+            type: "bool",
+          },
+          {
             name: "launched",
             type: "bool",
           },
@@ -1661,6 +1846,12 @@ export const IDL: SafePresale = {
           {
             name: "liquidityCollected",
             type: "u64",
+          },
+          {
+            name: "maxAmountPerPurchase",
+            type: {
+              option: "u64",
+            },
           },
           {
             name: "creatorFeeBasisPoints",
@@ -1697,6 +1888,26 @@ export const IDL: SafePresale = {
             type: {
               option: "i64",
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "purchaseAuthorisationRecord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pool",
+            type: "publicKey",
+          },
+          {
+            name: "collectionMint",
+            type: "publicKey",
+          },
+          {
+            name: "bump",
+            type: "u8",
           },
         ],
       },
@@ -1779,12 +1990,18 @@ export const IDL: SafePresale = {
             type: "u64",
           },
           {
-            name: "maxPresaleTime",
+            name: "presaleDuration",
             type: "u32",
           },
           {
             name: "vestingPeriod",
             type: "u32",
+          },
+          {
+            name: "maxAmountPerPurchase",
+            type: {
+              option: "u64",
+            },
           },
           {
             name: "vestedSupply",
@@ -1807,6 +2024,10 @@ export const IDL: SafePresale = {
           {
             name: "randomKey",
             type: "u64",
+          },
+          {
+            name: "requiresCollection",
+            type: "bool",
           },
         ],
       },
@@ -1871,6 +2092,38 @@ export const IDL: SafePresale = {
         {
           name: "vestingPeriod",
           type: "u32",
+          index: false,
+        },
+        {
+          name: "maxAmountPerPurchase",
+          type: {
+            option: "u64",
+          },
+          index: false,
+        },
+        {
+          name: "requiresCollection",
+          type: "bool",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "CreatePurchaseAuthorisationEvent",
+      fields: [
+        {
+          name: "payer",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "collectionMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "pool",
+          type: "publicKey",
           index: false,
         },
       ],
@@ -2179,23 +2432,38 @@ export const IDL: SafePresale = {
     },
     {
       code: 6020,
-      name: "AmountPurchasedIsZero",
-      msg: "Purchase Amount cannot be zero",
+      name: "NumberCannotBeZero",
+      msg: "The value needs to be higher than zero.",
     },
     {
       code: 6021,
+      name: "AmountPurchaseExceeded",
+      msg: "Purchase Amount cannot be exceed allowable amount!",
+    },
+    {
+      code: 6022,
       name: "CheckClaimFirstBeforeClaiming",
       msg: "Check Claim Amount first before claiming",
     },
     {
-      code: 6022,
+      code: 6023,
       name: "ClaimedAlreadyChecked",
       msg: "Claim Amount is already updated",
     },
     {
-      code: 6023,
+      code: 6024,
       name: "InvalidSigner",
       msg: "Signer must be owner of nft",
+    },
+    {
+      code: 6025,
+      name: "PurchaseAuthorisationRecordMissing",
+      msg: "Purchase authorisation record is missing!",
+    },
+    {
+      code: 6026,
+      name: "UnauthorisedCollection",
+      msg: "Collection is not authorised!",
     },
   ],
 };

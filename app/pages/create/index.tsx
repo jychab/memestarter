@@ -10,36 +10,50 @@ import { toast } from "react-toastify";
 import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { initializePoolIx, buildAndSendTransaction } from "../../utils/helper";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  initializePoolIx,
+  buildAndSendTransaction,
+  createPurchaseAuthorisationIx,
+} from "../../utils/helper";
 import useUmi from "../../hooks/useUmi";
 import { createGenericFileFromBrowserFile } from "@metaplex-foundation/umi";
 import { ReviewPane } from "../../sections/ReviewPane";
+import { CollectionDetails } from "../../utils/types";
 
 function CreateCollection() {
   const { user } = useLogin();
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
+  const umi = useUmi();
+  const router = useRouter();
 
-  const [externalUrl, setExternalUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+
   const [name, setName] = useState<string>("");
   const [symbol, setSymbol] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [picture, setPicture] = useState<File | null>(null);
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const [decimals, setDecimals] = useState<number>(5);
   const [supply, setSupply] = useState<string>("1000000000");
-  const [presaleTarget, setPresaleTarget] = useState<string>("50"); //in sol -> need to convert to lamport
-  const [presaleTime, setPresaleTime] = useState<number>(3 * 24 * 60 * 60);
+  const [description, setDescription] = useState<string>("");
+  const [externalUrl, setExternalUrl] = useState<string>("");
+
+  const [picture, setPicture] = useState<File | null>(null);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+
   const [vestingPeriod, setVestingPeriod] = useState<number>(
     3 * 30 * 24 * 60 * 60
   );
-  const [vestingSupply, setVestingSupply] = useState<string>("50"); //in percentage -> need to convert to number
+  const [vestingSupply, setVestingSupply] = useState<string>("20"); //in percentage -> need to convert to number
+  const [presaleDuration, setPresaleDuration] = useState<number>(
+    3 * 24 * 60 * 60
+  );
+  const [presaleTarget, setPresaleTarget] = useState<string>("50"); //in sol -> need to convert to lamport
+  const [maxAmountPerPurchase, setMaxAmountPerPurchase] = useState<string>("");
+  const [collectionsRequired, setCollectionsRequired] = useState<
+    CollectionDetails[]
+  >([]);
   const [creatorFees, setCreatorFees] = useState<string>("5"); //in percentage -> need to convert to basis pts
-  const [page, setPage] = useState(1);
-  const umi = useUmi();
-  const router = useRouter();
 
   async function uploadMetadata(picture: File) {
     const image = await createGenericFileFromBrowserFile(picture);
@@ -64,9 +78,12 @@ function CreateCollection() {
     setExternalUrl("");
     setCreatorFees("5");
     setSupply("1000000000");
-    setVestingSupply("50");
+    setVestingSupply("20");
     setVestingPeriod(3 * 30 * 24 * 60 * 60);
-    setPresaleTime(30 * 24 * 60 * 60);
+    setPresaleDuration(30 * 24 * 60 * 60);
+    setPresaleTarget("50");
+    setMaxAmountPerPurchase("");
+    setCollectionsRequired([]);
     setDecimals(5);
     setPage(1);
   };
@@ -110,8 +127,7 @@ function CreateCollection() {
 
       const creatorFeesBasisPts =
         parseInt(creatorFees.replaceAll("%", "")) * 100;
-      const presaleTargetLamports =
-        parseInt(presaleTarget.replaceAll(" Sol", "")) * LAMPORTS_PER_SOL;
+      const presaleTargetLamports = parseInt(presaleTarget) * LAMPORTS_PER_SOL;
       const totalSupplyNum = parseInt(supply.replaceAll(",", ""));
       const vestingSupplyNum =
         (parseInt(vestingSupply.replaceAll(",", "")) / 100) * totalSupplyNum;
@@ -140,7 +156,7 @@ function CreateCollection() {
         toast.error("Vesting supply cannot be higher than Total supply");
         return;
       }
-      if (presaleTime > 30 * 24 * 60 * 60) {
+      if (presaleDuration > 30 * 24 * 60 * 60) {
         toast.error("Presale duration cannot be longer than a month");
         return;
       }
@@ -149,25 +165,49 @@ function CreateCollection() {
         toast.info("Uploading Metadata... please wait");
         const uri = await uploadMetadata(picture);
         toast.info("Upload Completed.");
-        const ix = await initializePoolIx(
+        const requiresCollection = collectionsRequired.length != 0;
+        let ix = [];
+        const { instruction, poolId } = await initializePoolIx(
           {
             name: name,
             symbol: symbol,
             decimal: decimals,
             uri: uri,
             creator_fees_basis_points: creatorFeesBasisPts,
-            maxPresaleTime: presaleTime,
+            presaleDuration: presaleDuration,
             presaleTarget: presaleTargetLamports,
             vestingPeriod: vestingPeriod,
             vestedSupply: vestingSupplyNum,
             totalSupply: totalSupplyNum,
             signer: publicKey,
+            maxAmountPerPurchase:
+              maxAmountPerPurchase != ""
+                ? parseInt(maxAmountPerPurchase) * LAMPORTS_PER_SOL
+                : null,
+            requiresCollection: requiresCollection,
           },
           connection
         );
+        ix.push(instruction);
+        if (requiresCollection) {
+          ix = ix.concat(
+            await Promise.all(
+              collectionsRequired.map((collection) =>
+                createPurchaseAuthorisationIx(
+                  {
+                    collectionMint: new PublicKey(collection.mintAddress),
+                    signer: publicKey,
+                    poolId: poolId,
+                  },
+                  connection
+                )
+              )
+            )
+          );
+        }
         await buildAndSendTransaction(
           connection,
-          [ix],
+          ix,
           publicKey,
           signTransaction
         );
@@ -184,10 +224,10 @@ function CreateCollection() {
   return (
     publicKey && (
       <div className="mx-auto w-full lg:max-w-3xl">
-        <div className="p-4 relative shadow-md sm:rounded-lg overflow-hidden">
-          <form onSubmit={handleSubmit}>
+        <div className="relative shadow-md sm:rounded-lg overflow-hidden">
+          <form onSubmit={handleSubmit} className="flex flex-col p-4 gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg text-black ml-4">
+              <h2 className="text-lg text-black">
                 {page === 1 && (
                   <p>
                     Step 1 of 3:
@@ -231,10 +271,14 @@ function CreateCollection() {
             )}
             {page == 2 && (
               <CustomisePrelaunchSettingsPane
+                collectionsRequired={collectionsRequired}
+                setCollectionsRequired={setCollectionsRequired}
+                maxAmountPerPurchase={maxAmountPerPurchase}
+                setMaxAmountPerPurchase={setMaxAmountPerPurchase}
                 presaleTarget={presaleTarget}
                 setPresaleTarget={setPresaleTarget}
-                presaleTime={presaleTime}
-                setPresaleTime={setPresaleTime}
+                presaleDuration={presaleDuration}
+                setPresaleDuration={setPresaleDuration}
                 vestingPeriod={vestingPeriod}
                 setVestingPeriod={setVestingPeriod}
                 vestingSupply={vestingSupply}
@@ -245,6 +289,12 @@ function CreateCollection() {
             )}
             {page == 3 && (
               <ReviewPane
+                collectionsRequired={collectionsRequired}
+                maxAmountPerPurchase={
+                  maxAmountPerPurchase
+                    ? parseInt(maxAmountPerPurchase) * LAMPORTS_PER_SOL
+                    : undefined
+                }
                 authority={publicKey.toBase58()}
                 image={tempImageUrl!}
                 name={name}
@@ -260,11 +310,8 @@ function CreateCollection() {
                 }
                 creatorFees={parseInt(creatorFees.replaceAll("%", "")) * 100}
                 vestingPeriod={vestingPeriod}
-                presaleTime={presaleTime}
-                presaleTarget={
-                  parseInt(presaleTarget.replaceAll(" Sol", "")) *
-                  LAMPORTS_PER_SOL
-                }
+                presaleTime={presaleDuration}
+                presaleTarget={parseInt(presaleTarget) * LAMPORTS_PER_SOL}
               />
             )}
             <div className="flex gap-4 p-4 items-end justify-end">
