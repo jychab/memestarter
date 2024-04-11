@@ -51,32 +51,44 @@ function InventoryScreen() {
     walletData: DasApiAssetList,
     connection: Connection
   ) {
-    setWalletAssets(Array(20).fill(undefined));
-    let index = 0;
-    for (const item of walletData.items) {
-      try {
-        const [accountInfo, metadata] = await Promise.all([
-          connection.getAccountInfo(new PublicKey(item.id.toString())),
-          getMetadata(item.content.json_uri),
-        ]);
+    setWalletAssets(Array(20).fill(undefined)); // Assuming setWalletAssets is a state update function
 
-        if (
-          accountInfo &&
-          accountInfo.owner.toBase58() === TOKEN_PROGRAM_ID.toBase58() &&
-          metadata.image !== null &&
-          index >= (page - 1) * 20 &&
-          index < page * 20
-        ) {
-          const temp = [...walletAssets];
-          temp[index] = { ...item, image: metadata.image };
-          setWalletAssets(temp);
-          index++;
+    const promises = walletData.items
+      .slice((page - 1) * 20, page * 20)
+      .map(async (item) => {
+        try {
+          const [accountInfo, metadata] = await Promise.all([
+            connection.getAccountInfo(new PublicKey(item.id.toString())),
+            getMetadata(item.content.json_uri),
+          ]);
+
+          if (
+            accountInfo &&
+            accountInfo.owner.equals(TOKEN_PROGRAM_ID) &&
+            metadata.image !== null
+          ) {
+            return { ...item, image: metadata.image };
+          }
+        } catch (e) {
+          console.log(e);
         }
-      } catch (e) {
-        console.log(e);
+        return null;
+      });
+
+    const results = await Promise.all(promises);
+
+    let index = 0;
+    // Update walletAssets with non-null results
+    const temp = [...walletAssets];
+    results.forEach((result, i) => {
+      if (result !== null) {
+        temp[index] = result;
+        index++;
       }
-    }
+    });
+    setWalletAssets(temp);
   }
+
   useEffect(() => {
     if (publicKey && nft) {
       router.push(`/mint/${nft.id}`);
