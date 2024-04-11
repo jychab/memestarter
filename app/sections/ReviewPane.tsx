@@ -4,7 +4,7 @@ import { CollectionDetails, Status } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
   convertSecondsToNearestUnit,
-  separateNumberWithComma,
+  formatLargeNumber,
 } from "../utils/helper";
 import PresaleDashboard from "./PresaleDashboard";
 import { Chip } from "../components/Chip";
@@ -120,7 +120,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           )}
           <span className="col-span-2 sm:col-span-1">Total Supply</span>
           <span className="col-span-4 sm:col-span-2 text-black">
-            {separateNumberWithComma(totalSupply.toString()) + ` ${symbol}`}
+            {formatLargeNumber(totalSupply) + ` ${symbol}`}
           </span>
           {creatorFees && (
             <span className="col-span-2 sm:col-span-1">Creator Fees</span>

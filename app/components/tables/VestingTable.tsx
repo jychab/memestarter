@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { Project } from "../InventoryItem";
+import { Project } from "../../sections/MintDashboard";
 import { TableRow } from "../TableRow";
 
 interface VestingTableProps {

@@ -281,6 +281,16 @@ function processClaimRewardsEvent(
     },
     {merge: true}
   );
+  batch.set(
+    db.collection("Pool").doc(claimEventData.pool),
+    {
+      totalClaimed: FieldValue.increment(
+        parseInt(claimEventData.mintClaimed, 16)
+      ),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
   if (claimEventData.originalMintOwner !== claimEventData.payer) {
     batch.set(
       db

@@ -10,8 +10,6 @@ import {
   UseMethods,
 } from "./enums";
 import { Timestamp } from "firebase/firestore";
-import { BN } from "@coral-xyz/anchor";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -31,6 +29,7 @@ export interface LaunchTokenAmmArgs {
   marketId: PublicKey;
   mint: PublicKey;
   signer: PublicKey;
+  poolAuthority: PublicKey;
   poolId: PublicKey;
 }
 
@@ -127,6 +126,7 @@ export interface PoolType {
   authority: string;
   creatorFeeBasisPoints: string;
   liquidityCollected: number;
+  totalClaimed: number;
   lpMint: string;
   mint: string;
   pool: string;

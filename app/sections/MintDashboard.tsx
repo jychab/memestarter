@@ -14,10 +14,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { getMetadata, getSignature, getStatus } from "../utils/helper";
-import { FundedTable } from "./tables/FundedTable";
-import { VestingTable } from "./tables/VestingTable";
-import { CompletedTable } from "./tables/CompletedTable";
-import { ExpiredTable } from "./tables/ExpiredTable";
+import { FundedTable } from "../components/tables/FundedTable";
+import { VestingTable } from "../components/tables/VestingTable";
+import { CompletedTable } from "../components/tables/CompletedTable";
+import { ExpiredTable } from "../components/tables/ExpiredTable";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
 import { httpsCallable, getFunctions } from "firebase/functions";
@@ -28,7 +28,6 @@ interface InventoryItemProps {
   collectionItem?: DasApiAsset;
   setSelectedItem?: (item: any) => void;
 }
-
 enum ProjectType {
   all = "All",
   funded = "Funded",
@@ -36,10 +35,9 @@ enum ProjectType {
   completed = "Completed",
   expired = "Expired",
 }
-
 export interface Project extends MintType, PoolType {}
 
-export const InventoryItem: FC<InventoryItemProps> = ({
+export const MintDashboard: FC<InventoryItemProps> = ({
   item,
   collectionItem,
   setSelectedItem,

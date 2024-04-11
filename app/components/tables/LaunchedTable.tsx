@@ -1,16 +1,13 @@
 import React, { FC } from "react";
-import { Project } from "../../sections/MintDashboard";
-import { TableRow } from "../TableRow";
+import { PoolType } from "../../utils/types";
+import { CreatorTableRow } from "../CreatorTableRow";
 
-interface CompletedTableProps {
-  projects: Project[];
+interface LaunchedTableProps {
+  pool: PoolType[];
   timer: number;
 }
 
-export const CompletedTable: FC<CompletedTableProps> = ({
-  projects,
-  timer,
-}) => {
+export const LaunchedTable: FC<LaunchedTableProps> = ({ pool, timer }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left rtl:text-right border border-gray-300">
@@ -20,35 +17,37 @@ export const CompletedTable: FC<CompletedTableProps> = ({
             <th scope="col" className="w-auto p-2">
               Project
             </th>
-
             <th scope="col" className="w-24 text-center p-2">
-              Funded By You
+              Your Earnings
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Elligible (Unvested)
+              Total Supply
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Claimed
+              Circulating Supply
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Lp Elligible (Unvested)
+              Locked
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Lp Claimed
+              Unlocked
+            </th>
+            <th scope="col" className="w-24 text-center p-2">
+              Vesting End
             </th>
             <th scope="col" className="w-24 text-center p-2" />
           </tr>
         </thead>
         <tbody>
-          {projects.length === 0 && (
+          {pool.length === 0 && (
             <tr>
               <td className="p-2 text-xs" colSpan={6}>
                 <span>No projects found.</span>
               </td>
             </tr>
           )}
-          {projects.map((project, index) => (
-            <TableRow key={index} project={project} timer={timer} />
+          {pool.map((mypool, index) => (
+            <CreatorTableRow key={index} pool={mypool} timer={timer} />
           ))}
         </tbody>
       </table>

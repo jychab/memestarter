@@ -478,22 +478,12 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "userTokenLp";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "poolTokenCoin";
           isMut: true;
           isSigner: false;
         },
         {
           name: "poolTokenPc";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "poolTokenLp";
           isMut: true;
           isSigner: false;
         },
@@ -529,11 +519,6 @@ export type SafePresale = {
         {
           name: "ammPcMint";
           isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "ammLpMint";
-          isMut: true;
           isSigner: false;
         },
         {
@@ -1713,22 +1698,12 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "userTokenLp",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "poolTokenCoin",
           isMut: true,
           isSigner: false,
         },
         {
           name: "poolTokenPc",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "poolTokenLp",
           isMut: true,
           isSigner: false,
         },
@@ -1764,11 +1739,6 @@ export const IDL: SafePresale = {
         {
           name: "ammPcMint",
           isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammLpMint",
-          isMut: true,
           isSigner: false,
         },
         {

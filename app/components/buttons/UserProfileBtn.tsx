@@ -80,7 +80,18 @@ export const UserProfileBtn: FC = () => {
               }}
               className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
-              Profile
+              My Profile
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                router.push("/myprojects");
+                setExpand(false);
+              }}
+              className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
+            >
+              My Projects
             </button>
           </li>
           {/* <li>

@@ -43,7 +43,6 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
 import { User } from "firebase/auth";
-import crypto from "crypto";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const program = (connection: Connection) =>
@@ -81,6 +80,35 @@ export function getAttributes(
   }
 }
 
+export async function getSimulationUnits(
+  connection: Connection,
+  instructions: TransactionInstruction[],
+  payer: PublicKey,
+  lookupTables: AddressLookupTableAccount[]
+): Promise<number | undefined> {
+  const testInstructions = [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+    ...instructions,
+  ];
+
+  const testVersionedTxn = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message(lookupTables)
+  );
+
+  const simulation = await connection.simulateTransaction(testVersionedTxn, {
+    replaceRecentBlockhash: true,
+    sigVerify: false,
+  });
+  if (simulation.value.err) {
+    return undefined;
+  }
+  return simulation.value.unitsConsumed;
+}
+
 export async function buildAndSendTransaction(
   connection: Connection,
   ixs: TransactionInstruction[],
@@ -89,7 +117,19 @@ export async function buildAndSendTransaction(
     transaction: T
   ) => Promise<T>
 ) {
-  const recentBlockhash = await connection.getLatestBlockhash();
+  const [microLamports, units, recentBlockhash] = await Promise.all([
+    100,
+    getSimulationUnits(connection, ixs, publicKey, []),
+    connection.getLatestBlockhash(),
+  ]);
+  ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
+  if (units) {
+    // probably should add some margin of error to units
+    console.log(units);
+    ixs.unshift(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: units * 1.1 })
+    );
+  }
   let tx = new VersionedTransaction(
     new TransactionMessage({
       instructions: ixs,
@@ -111,26 +151,21 @@ export async function buildAndSendTransaction(
 export async function sendTransactions(
   connection: Connection,
   txs: VersionedTransaction[],
-  signTransaction: <T extends VersionedTransaction>(
-    transaction: T
-  ) => Promise<T>
+  signAllTransactions: <T extends VersionedTransaction | Transaction>(
+    transactions: T[]
+  ) => Promise<T[]>
 ) {
   const recentBlockhash = await connection.getLatestBlockhash();
-  for (let tx of txs) {
-    const simulation = await connection.simulateTransaction(tx);
-    if (simulation.value.err) {
-      throw new Error(JSON.stringify(simulation.value.err));
-    } else {
-      const signedTx = await signTransaction(tx);
-      const txId = await connection.sendTransaction(
-        signedTx as VersionedTransaction
-      );
-      await connection.confirmTransaction({
-        signature: txId,
-        blockhash: recentBlockhash.blockhash,
-        lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
-      });
-    }
+  const signedTxs = await signAllTransactions(txs);
+  for (let signedTx of signedTxs) {
+    const txId = await connection.sendTransaction(
+      signedTx as VersionedTransaction
+    );
+    await connection.confirmTransaction({
+      signature: txId,
+      blockhash: recentBlockhash.blockhash,
+      lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
+    });
   }
 }
 
@@ -340,8 +375,20 @@ export async function launchTokenAmm(
     programId: DEVNET_PROGRAM_ID.AmmV4,
     marketProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET,
   });
-
+  const userTokenLp = getAssociatedTokenAddressSync(
+    poolInfo.lpMint,
+    args.signer,
+    true
+  );
+  const poolTokenLp = getAssociatedTokenAddressSync(
+    poolInfo.lpMint,
+    args.poolId,
+    true
+  );
   const remainingAccounts = [
+    { pubkey: poolInfo.lpMint, isSigner: false, isWritable: true },
+    { pubkey: userTokenLp, isSigner: false, isWritable: true },
+    { pubkey: poolTokenLp, isSigner: false, isWritable: true },
     { pubkey: poolInfo.id, isSigner: false, isWritable: true },
     { pubkey: poolInfo.authority, isSigner: false, isWritable: false },
     {
@@ -372,11 +419,6 @@ export async function launchTokenAmm(
     args.signer,
     true
   );
-  const userTokenLp = getAssociatedTokenAddressSync(
-    poolInfo.lpMint,
-    args.signer,
-    true
-  );
   const poolTokenCoin = getAssociatedTokenAddressSync(
     poolInfo.baseMint,
     args.poolId,
@@ -387,29 +429,23 @@ export async function launchTokenAmm(
     args.poolId,
     true
   );
-  const poolTokenLp = getAssociatedTokenAddressSync(
-    poolInfo.lpMint,
-    args.poolId,
-    true
-  );
+
   return await program(connection)
     .methods.launchTokenAmm(poolInfo.nonce, new BN(Date.now()))
     .accounts({
       pool: args.poolId,
       userWallet: args.signer,
+      poolAuthority: args.poolAuthority,
       userTokenCoin: userTokenCoin,
       userTokenPc: userTokenPc,
-      userTokenLp: userTokenLp,
       poolTokenCoin: poolTokenCoin,
       poolTokenPc: poolTokenPc,
-      poolTokenLp: poolTokenLp,
       rent: RENT_PROGRAM_ID,
       systemProgram: SYSTEM_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       ammCoinMint: poolInfo.baseMint,
       ammPcMint: poolInfo.quoteMint,
-      ammLpMint: poolInfo.lpMint,
       raydiumAmmProgram: DEVNET_PROGRAM_ID.AmmV4,
     })
     .remainingAccounts(remainingAccounts)
@@ -666,6 +702,20 @@ export function convertSecondsToNearestUnit(seconds: number) {
         : ""
     }`;
   }
+}
+
+export function formatLargeNumber(number: number) {
+  const suffixes = ["", "K", "M", "B", "T"];
+  if (number === 0) {
+    return "0";
+  }
+  let magnitude = 0;
+  while (Math.abs(number) >= 1000) {
+    magnitude++;
+    number /= 1000.0;
+  }
+  const formattedNumber = number.toFixed(2) + suffixes[magnitude];
+  return formattedNumber;
 }
 
 export async function getSignature(

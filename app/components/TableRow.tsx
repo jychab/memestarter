@@ -7,13 +7,13 @@ import {
   checkClaimElligibility,
   claim,
   convertSecondsToNearestUnit,
+  formatLargeNumber,
   getStatus,
-  separateNumberWithComma,
   withdraw,
   withdrawLp,
 } from "../utils/helper";
 import { Status } from "../utils/types";
-import { Project } from "./InventoryItem";
+import { Project } from "../sections/MintDashboard";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
 import { toast } from "react-toastify";
@@ -53,14 +53,12 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         setCurrentMintElligible(0);
       } else {
         setCurrentMintElligible(
-          Math.round(
-            ((timer / 1000 -
-              (project.lastClaimedAt
-                ? project.lastClaimedAt
-                : project.vestingStartedAt)) *
-              project.mintElligible) /
-              (project.vestingPeriod * 10 ** project.decimal)
-          )
+          ((timer / 1000 -
+            (project.lastClaimedAt
+              ? project.lastClaimedAt
+              : project.vestingStartedAt)) *
+            project.mintElligible) /
+            (project.vestingPeriod * 10 ** project.decimal)
         );
       }
     } else {
@@ -202,59 +200,57 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         </td>
         {(status === Status.PresaleInProgress ||
           status === Status.PresaleTargetMet ||
+          status === Status.ReadyToLaunch ||
           status === Status.Expired) && (
           <td scope="row" className="p-2 text-center">
-            {(project.liquidityCollected -
-              (project.amountWsolWithdrawn ? project.amountWsolWithdrawn : 0)) /
-              LAMPORTS_PER_SOL +
-              " Sol"}
+            {project.liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
+          status === Status.ReadyToLaunch ||
           status === Status.PresaleTargetMet) && (
           <td scope="row" className="p-2 text-center">
             {project.presaleTarget / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
+          status === Status.ReadyToLaunch ||
           status === Status.PresaleTargetMet) && (
           <td className="p-2 text-center">
-            {convertSecondsToNearestUnit(
-              project.presaleTimeLimit - Date.now() / 1000
-            )
-              .split(" ")
-              .slice(0, 2)
-              .join(" ")}
+            {project.presaleTimeLimit - timer / 1000 > 0
+              ? convertSecondsToNearestUnit(
+                  project.presaleTimeLimit - timer / 1000
+                )
+                  .split(" ")
+                  .slice(0, 2)
+                  .join(" ")
+              : "Ended"}
           </td>
         )}
         {(status === Status.VestingInProgress ||
+          status === Status.ReadyToLaunch ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
             {currentMintElligible
-              ? separateNumberWithComma(currentMintElligible.toString())
+              ? formatLargeNumber(currentMintElligible)
               : currentMintElligible === 0
               ? "Fully Claimed"
               : ""}
           </td>
         )}
         {(status === Status.VestingCompleted ||
+          status === Status.ReadyToLaunch ||
           status === Status.VestingInProgress) && (
           <td className="p-2 text-center">
             {project.mintClaimed
-              ? separateNumberWithComma(
-                  Math.round(
-                    project.mintClaimed / 10 ** project.decimal
-                  ).toString()
-                )
+              ? formatLargeNumber(project.mintClaimed / 10 ** project.decimal)
               : ""}
           </td>
         )}
         {status === Status.VestingInProgress && (
           <td className="p-2 text-center">
             {project.mintElligible
-              ? separateNumberWithComma(
-                  (project.mintElligible / 10 ** project.decimal).toString()
-                )
+              ? formatLargeNumber(project.mintElligible / 10 ** project.decimal)
               : ""}
           </td>
         )}
@@ -273,10 +269,8 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
             {project.lpElligibleAfterFees -
               (project.lpClaimed ? project.lpClaimed : 0) >
             0
-              ? separateNumberWithComma(
-                  Math.round(
-                    project.lpElligibleAfterFees / 10 ** project.decimal
-                  ).toString()
+              ? formatLargeNumber(
+                  project.lpElligibleAfterFees / 10 ** project.decimal
                 )
               : "Fully Claimed"}
           </td>
@@ -284,12 +278,16 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {status === Status.VestingCompleted && (
           <td className="p-2 text-center">
             {project.lpClaimed
-              ? separateNumberWithComma(
-                  Math.round(
-                    project.lpClaimed / 10 ** project.decimal
-                  ).toString()
-                )
+              ? formatLargeNumber(project.lpClaimed / 10 ** project.decimal)
               : ""}
+          </td>
+        )}
+        {status === Status.Expired && (
+          <td scope="row" className="p-2 text-center">
+            {(project.liquidityCollected -
+              (project.amountWsolWithdrawn ? project.amountWsolWithdrawn : 0)) /
+              LAMPORTS_PER_SOL +
+              " Sol"}
           </td>
         )}
         {status === Status.Expired && (
@@ -302,6 +300,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         <td className="p-2 text-center">
           <div className="flex flex-col gap-2">
             {(status === Status.PresaleInProgress ||
+              status === Status.ReadyToLaunch ||
               status === Status.PresaleTargetMet) && <span>{status}</span>}
             {((nft &&
               nft.id === project.originalMint &&

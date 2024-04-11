@@ -4,7 +4,7 @@ import Image from "next/image";
 import solanaLogo from "./../public/solanaLogoMark.png";
 import {
   convertSecondsToNearestUnit,
-  separateNumberWithComma,
+  formatLargeNumber,
 } from "../utils/helper";
 import { CollectionDetails } from "../utils/types";
 import { Chip } from "../components/Chip";
@@ -84,9 +84,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
       <div className="col-span-4 flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">
-            {`${separateNumberWithComma(
-              (totalSupply / 10 ** decimal).toString()
-            )} ${symbol}`}
+            {`${formatLargeNumber(totalSupply / 10 ** decimal)} ${symbol}`}
           </span>
         </div>
         <span className="text-[10px]">{`total supply`}</span>

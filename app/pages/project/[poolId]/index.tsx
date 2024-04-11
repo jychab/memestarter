@@ -49,7 +49,8 @@ export function Pool() {
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const [mint, setMint] = useState<MintType>();
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
-  const { publicKey, signTransaction, signMessage } = useWallet();
+  const { publicKey, signTransaction, signMessage, signAllTransactions } =
+    useWallet();
   const {
     nft,
     user,
@@ -118,85 +119,6 @@ export function Pool() {
     await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
   }
 
-  async function launchToken(
-    pool: PoolType,
-    publicKey: PublicKey,
-    signMessage: any,
-    signTransaction: any,
-    user: User
-  ) {
-    const docRef = await getDoc(
-      doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
-    );
-    let marketId;
-    if (!docRef.exists()) {
-      const { innerTransactions, address } = await createMarket(
-        {
-          signer: publicKey,
-          mint: new PublicKey(pool.mint),
-          decimal: pool.decimal,
-          lotSize: 1,
-          tickSize: Math.max(10 ^ -pool.decimal, 10 ^ -6),
-        },
-        connection
-      );
-      const txs = await buildSimpleTransaction({
-        connection: connection,
-        makeTxVersion: TxVersion.V0,
-        payer: publicKey,
-        innerTransactions,
-      });
-
-      await sendTransactions(
-        connection,
-        txs as VersionedTransaction[],
-        signTransaction
-      );
-      const updateMarket = httpsCallable(getFunctions(), "updateMarketDetails");
-      let sig = await getSignature(
-        user,
-        signedMessage,
-        sessionKey,
-        signMessage,
-        setSignedMessage,
-        setSessionKey
-      );
-      const payload = {
-        signature: sig,
-        pubKey: publicKey.toBase58(),
-        poolId: pool.pool,
-        marketDetails: {
-          marketId: address.marketId.toBase58(),
-          requestQueue: address.requestQueue.toBase58(),
-          eventQueue: address.eventQueue.toBase58(),
-          bids: address.bids.toBase58(),
-          asks: address.asks.toBase58(),
-          baseVault: address.baseVault.toBase58(),
-          quoteVault: address.quoteVault.toBase58(),
-          baseMint: address.baseMint.toBase58(),
-          quoteMint: address.quoteMint.toBase58(),
-        } as MarketDetails,
-      };
-      await updateMarket(payload);
-      marketId = address.marketId.toBase58();
-    } else {
-      marketId = (docRef.data() as MarketDetails).marketId;
-    }
-    let ix = [];
-    ix.push(
-      await launchTokenAmm(
-        {
-          marketId: new PublicKey(marketId),
-          mint: new PublicKey(pool.mint),
-          signer: publicKey,
-          poolId: new PublicKey(pool.pool),
-        },
-        connection
-      )
-    );
-    await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
-  }
-
   const launch = async () => {
     try {
       if (
@@ -206,21 +128,105 @@ export function Pool() {
         connection &&
         pool &&
         signMessage &&
-        signTransaction
+        signTransaction &&
+        signAllTransactions
       ) {
         setLoading(true);
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+        const docRef = await getDoc(
+          doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
+        );
+        let marketId;
         if (
-          !amountOfSolInWallet ||
-          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3
+          (!amountOfSolInWallet ||
+            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
+          !docRef.exists()
         ) {
           toast.error("Insufficient SOL. You need at least 3 Sol.");
           return;
+        } else if (
+          (!amountOfSolInWallet ||
+            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
+          docRef.exists()
+        ) {
+          toast.error("Insufficient SOL. You need at least 0.2 Sol.");
+          return;
         }
-        await launchToken(pool, publicKey, signMessage, signTransaction, user);
-
+        if (!docRef.exists()) {
+          const { innerTransactions, address } = await createMarket(
+            {
+              signer: publicKey,
+              mint: new PublicKey(pool.mint),
+              decimal: pool.decimal,
+              lotSize: 1,
+              tickSize: Math.max(10 ^ -pool.decimal, 10 ^ -6),
+            },
+            connection
+          );
+          const txs = await buildSimpleTransaction({
+            connection: connection,
+            makeTxVersion: TxVersion.V0,
+            payer: publicKey,
+            innerTransactions,
+          });
+          await sendTransactions(
+            connection,
+            txs as VersionedTransaction[],
+            signAllTransactions
+          );
+          const updateMarket = httpsCallable(
+            getFunctions(),
+            "updateMarketDetails"
+          );
+          let sig = await getSignature(
+            user,
+            signedMessage,
+            sessionKey,
+            signMessage,
+            setSignedMessage,
+            setSessionKey
+          );
+          const payload = {
+            signature: sig,
+            pubKey: publicKey.toBase58(),
+            poolId: pool.pool,
+            marketDetails: {
+              marketId: address.marketId.toBase58(),
+              requestQueue: address.requestQueue.toBase58(),
+              eventQueue: address.eventQueue.toBase58(),
+              bids: address.bids.toBase58(),
+              asks: address.asks.toBase58(),
+              baseVault: address.baseVault.toBase58(),
+              quoteVault: address.quoteVault.toBase58(),
+              baseMint: address.baseMint.toBase58(),
+              quoteMint: address.quoteMint.toBase58(),
+            } as MarketDetails,
+          };
+          await updateMarket(payload);
+          marketId = address.marketId.toBase58();
+        } else {
+          marketId = (docRef.data() as MarketDetails).marketId;
+        }
+        let ix = [];
+        ix.push(
+          await launchTokenAmm(
+            {
+              marketId: new PublicKey(marketId),
+              mint: new PublicKey(pool.mint),
+              signer: publicKey,
+              poolAuthority: new PublicKey(pool.authority),
+              poolId: new PublicKey(pool.pool),
+            },
+            connection
+          )
+        );
+        await buildAndSendTransaction(
+          connection,
+          ix,
+          publicKey,
+          signTransaction
+        );
         toast.success("Success!");
-        router.push("/");
       }
     } catch (error) {
       console.log(error);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { InventoryItem } from "../../components/InventoryItem";
+import { MintDashboard } from "../../sections/MintDashboard";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useLogin } from "../../hooks/useLogin";
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ import {
 } from "@metaplex-foundation/digital-asset-standard-api";
 import useUmi from "../../hooks/useUmi";
 import {
+  getCollectionMintAddress,
   getMetadata,
   getSignature,
   sendTransactions,
@@ -36,7 +37,7 @@ function InventoryScreen() {
     setSignedMessage,
     signedMessage,
   } = useLogin();
-  const { publicKey, signMessage, signTransaction } = useWallet();
+  const { publicKey, signMessage, signAllTransactions } = useWallet();
   const { connection } = useConnection();
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -57,12 +58,13 @@ function InventoryScreen() {
       .slice((page - 1) * 20, page * 20)
       .map(async (item) => {
         try {
-          const [accountInfo, metadata] = await Promise.all([
+          const [accountInfo, metadata, collectionMint] = await Promise.all([
             connection.getAccountInfo(new PublicKey(item.id.toString())),
             getMetadata(item.content.json_uri),
+            getCollectionMintAddress(item),
           ]);
-
           if (
+            collectionMint &&
             accountInfo &&
             accountInfo.owner.equals(TOKEN_PROGRAM_ID) &&
             metadata.image !== null
@@ -116,7 +118,13 @@ function InventoryScreen() {
 
   const handleMintNft = async () => {
     try {
-      if (publicKey && user && signMessage && signTransaction && connection) {
+      if (
+        publicKey &&
+        user &&
+        signMessage &&
+        signAllTransactions &&
+        connection
+      ) {
         setLoading(true);
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (
@@ -148,7 +156,7 @@ function InventoryScreen() {
         const transaction = toWeb3JsTransaction(
           umi.transactions.deserialize(transactionBuffer)
         );
-        await sendTransactions(connection, [transaction], signTransaction);
+        await sendTransactions(connection, [transaction], signAllTransactions);
         toast.info("Linking...");
         const asset = await umi.rpc.getAsset(PubKey(mint));
         const linkAsset = httpsCallable(getFunctions(), "linkAsset");
@@ -167,7 +175,7 @@ function InventoryScreen() {
       {!publicKey ? (
         <span className="text-black">You need to sign in first.</span>
       ) : selectedItem ? (
-        <InventoryItem item={selectedItem} setSelectedItem={setSelectedItem} />
+        <MintDashboard item={selectedItem} setSelectedItem={setSelectedItem} />
       ) : (
         <div className="flex flex-col items-center justify-center text-black text-center p-8 gap-4 h-full">
           <span>You need to link a digital asset to your profile.</span>
