@@ -176,7 +176,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
     timer && (
       <tr className="text-[10px] sm:text-xs text-black hover:bg-gray-100">
         <td
-          onClick={() => router.push(`/pool/${project.pool}`)}
+          onClick={() => router.push(`/project/${project.pool}`)}
           scope="row"
           className="cursor-pointer hidden sm:table-cell p-2"
         >
@@ -191,7 +191,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           </div>
         </td>
         <td
-          onClick={() => router.push(`/pool/${project.pool}`)}
+          onClick={() => router.push(`/project/${project.pool}`)}
           scope="row"
           className="cursor-pointer p-2"
         >

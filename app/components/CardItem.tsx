@@ -30,7 +30,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
     timer && (
       <Link
         className="mx-auto max-w-screen-sm cursor-pointer"
-        href={`pool/${pool.pool}`}
+        href={`project/${pool.pool}`}
       >
         <div className="group cursor overflow-hidden rounded shadow-xl duration-200 hover:-translate-y-4">
           <div className="relative w-40 h-40 lg:w-60 lg:h-60 overflow-hidden">
