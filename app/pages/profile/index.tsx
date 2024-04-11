@@ -100,15 +100,7 @@ function InventoryScreen() {
           loadAssets(walletData, connection);
         });
     }
-  }, [
-    publicKey,
-    page,
-    nft,
-    connection,
-    loadAssets,
-    umi.identity.publicKey,
-    umi.rpc,
-  ]);
+  }, [publicKey, page, nft, connection]);
 
   const handleMintNft = async () => {
     try {

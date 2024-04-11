@@ -17,7 +17,7 @@ export default function Mint() {
         .getAsset(publicKey(mintId as string))
         .then((response) => setItem(response));
     }
-  }, [mintId, umi.rpc]);
+  }, [mintId]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">

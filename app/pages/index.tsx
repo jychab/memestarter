@@ -96,7 +96,7 @@ function Projects() {
         ? () => unsubscribe()
         : () => {};
     }
-  }, [page, sortCriteria, projects, handleSort]);
+  }, [page, sortCriteria, projects]);
 
   return (
     <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
