@@ -1,9 +1,9 @@
 import React, { FC, useEffect, useState } from "react";
-import { PoolType } from "../utils/types";
+import { PoolType, Status } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import solanaLogo from "../public/solanaLogoMark.png";
 import Image from "next/image";
-import { convertSecondsToNearestUnit } from "../utils/helper";
+import { convertSecondsToNearestUnit, getStatus } from "../utils/helper";
 import Link from "next/link";
 import { Chip } from "./Chip";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -15,13 +15,16 @@ interface CardItemProps {
 
 export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
+  const [status, setStatus] = useState<Status>();
   const { publicKey } = useWallet();
+
   useEffect(() => {
     if (pool) {
       const percent = pool.liquidityCollected
         ? (pool.liquidityCollected / pool.presaleTarget) * 100
         : 0;
       setPercentage(percent);
+      setStatus(getStatus(pool));
     }
   }, [pool]);
 
@@ -99,31 +102,37 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
             </p>
             <div className="flex items-center justify-between">
               <div className="flex flex-none items-center gap-1 text-gray-800 focus:text-gray-900 hover:text-gray-800">
-                <svg
-                  className="h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16px"
-                  height="16px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle cx="12" cy="12" r="8.5" stroke="currentColor" />
-                  <path
-                    d="M16.5 12H12.25C12.1119 12 12 11.8881 12 11.75V8.5"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="text-[10px] lg:text-xs w-24 group-hover:w-1/2 truncate">
+                {(status === Status.PresaleInProgress ||
+                  status === Status.PresaleTargetMet ||
+                  status === Status.ReadyToLaunch) && (
+                  <svg
+                    className="h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16px"
+                    height="16px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle cx="12" cy="12" r="8.5" stroke="currentColor" />
+                    <path
+                      d="M16.5 12H12.25C12.1119 12 12 11.8881 12 11.75V8.5"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
+                <span className="text-[10px] lg:text-xs w-full group-hover:max-w-32 truncate">
                   {`${
-                    timer / 1000 > pool.presaleTimeLimit
-                      ? "Expired"
-                      : convertSecondsToNearestUnit(
+                    status === Status.PresaleInProgress ||
+                    status === Status.PresaleTargetMet ||
+                    status === Status.ReadyToLaunch
+                      ? convertSecondsToNearestUnit(
                           pool.presaleTimeLimit - timer / 1000
                         )
                           .split(" ")
                           .slice(0, 2)
                           .join(" ") + " left"
+                      : status
                   }`}
                 </span>
               </div>

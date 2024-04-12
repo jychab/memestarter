@@ -137,8 +137,8 @@ export interface PoolType {
   vestingEndingAt: number;
   vestingPeriod: number;
   vestingStartedAt: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Timestamp | number | null;
+  updatedAt: Timestamp | number | null;
   name: string;
   symbol: string;
   description: string;
@@ -158,13 +158,13 @@ export interface MintType {
   mintClaimed: number;
   lpElligibleAfterFees: number;
   mintElligible: number;
-  updatedAt: Timestamp;
+  updatedAt: Timestamp | number | null;
 }
 
 export interface Transaction {
   event: string;
   signature: string;
-  updatedAt: Timestamp;
+  updatedAt: Timestamp | number | null;
 }
 
 export declare namespace DAS {

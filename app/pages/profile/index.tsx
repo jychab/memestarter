@@ -29,7 +29,7 @@ interface CustomAsset extends DasApiAsset {
   image: string;
 }
 
-function InventoryScreen() {
+function Profile() {
   const {
     user,
     nft,
@@ -272,4 +272,4 @@ function InventoryScreen() {
   );
 }
 
-export default InventoryScreen;
+export default Profile;
