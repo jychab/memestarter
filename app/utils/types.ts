@@ -15,7 +15,7 @@ export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );
 export const PROGRAM_ID = new PublicKey(
-  "8caweP2SL16aUW55my9muRgp5xvfQh2qepYNtB3SFDjx"
+  "memep6GYetMx84qtBgB9p1rncn81HMmZZa1UoxauYGt"
 );
 export enum Status {
   PresaleTargetMet = "Presale Target Met",
@@ -96,6 +96,8 @@ export interface CheckClaimElligbilityArgs {
   poolId: PublicKey;
   nft: PublicKey;
   signer: PublicKey;
+  lpMint: PublicKey;
+  mint: PublicKey;
 }
 export interface MarketDetails {
   marketId: string;

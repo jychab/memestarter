@@ -29,7 +29,6 @@ enum FilterCriteria {
 
 function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
   const [projects, setProjects] = useState<PoolType[]>(initialProjects);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
     SortCriteria.presaleTimeLimit
   );
@@ -90,11 +89,6 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
     if (page && sortCriteria && filterCriteria) {
       const projectQuery = createQuery(page * 10);
       const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
-        if (initialLoad) {
-          setInitialLoad(false);
-          return;
-        }
-        console.log("test");
         const updatedProjects: PoolType[] = [];
         querySnapshot.forEach((doc) => {
           // Convert each document to a plain JavaScript object

@@ -94,6 +94,8 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               signer: publicKey,
               poolId: new PublicKey(project.pool),
               nft: new PublicKey(nft.id),
+              mint: new PublicKey(project.mint),
+              lpMint: new PublicKey(project.lpMint),
             },
             connection
           );

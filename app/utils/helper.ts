@@ -242,7 +242,7 @@ export async function initializePoolIx(
         pool: poolId,
         rewardMint: rewardMint.mint,
         rewardMintMetadata: rewardMintMetadata,
-        poolRewardMintAta: poolAndMintRewardAta,
+        poolRewardMintTokenAccount: poolAndMintRewardAta,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
         mplTokenProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -461,6 +461,26 @@ export async function checkClaimElligibility(
     [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
     program(connection).programId
   );
+  const purchaseReceiptMintTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    purchaseReceipt,
+    true
+  );
+  const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    purchaseReceipt,
+    true
+  );
+  const poolMintTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.poolId,
+    true
+  );
+  const poolLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolId,
+    true
+  );
 
   return await program(connection)
     .methods.checkClaimEllgibility()
@@ -468,6 +488,15 @@ export async function checkClaimElligibility(
       purchaseReceipt: purchaseReceipt,
       pool: args.poolId,
       payer: args.signer,
+      purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
+      purchaseReceiptMintTokenAccount: purchaseReceiptMintTokenAccount,
+      poolLpTokenAccount: poolLpTokenAccount,
+      poolMintTokenAccount: poolMintTokenAccount,
+      rewardMint: args.mint,
+      lpMint: args.lpMint,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .instruction();
 }
@@ -495,6 +524,11 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     ],
     MPL_TOKEN_METADATA_PROGRAM_ID
   );
+  const purchaseReceiptMintTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    purchaseReceipt,
+    true
+  );
   return await program(connection)
     .methods.claimRewards()
     .accounts({
@@ -503,6 +537,7 @@ export async function claim(args: ClaimArgs, connection: Connection) {
       pool: args.poolId,
       nftOwner: args.nftOwner,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      purchaseReceiptMintTokenAccount: purchaseReceiptMintTokenAccount,
       rewardMint: args.mint,
       nftOwnerRewardMintTokenAccount: nftOwnerRewardMintTokenAccount,
       payer: args.signer,
@@ -533,9 +568,9 @@ export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
     args.signer,
     true
   );
-  const poolLpTokenAccount = getAssociatedTokenAddressSync(
+  const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
     args.lpMint,
-    args.poolId,
+    purchaseReceipt,
     true
   );
   return await program(connection)
@@ -544,10 +579,10 @@ export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
       purchaseReceipt: purchaseReceipt,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       pool: args.poolId,
-      poolAuthorityTokenLp: poolAuthorityLpTokenAccount,
+      poolAuthorityLpTokenAccount: poolAuthorityLpTokenAccount,
       userWallet: args.signer,
-      userTokenLp: signerLpTokenAccount,
-      poolTokenLp: poolLpTokenAccount,
+      userLpTokenAccount: signerLpTokenAccount,
+      purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
       lpMint: args.lpMint,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -593,9 +628,9 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       pool: args.poolId,
       payer: args.signer,
-      payerTokenWsol: signerWsolTokenAccount,
+      payerWsolTokenAccount: signerWsolTokenAccount,
       nftOwner: args.nftOwner,
-      poolTokenWsol: poolWsolTokenAccount,
+      poolWsolTokenAccount: poolWsolTokenAccount,
       wsol: NATIVE_MINT,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,

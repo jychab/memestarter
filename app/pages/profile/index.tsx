@@ -106,7 +106,7 @@ function Profile() {
           compressed: false,
           sortBy: {
             sortBy: "recent_action",
-            sortDirection: "desc",
+            sortDirection: "asc",
           },
           creatorVerified: true,
           limit: page * 20,

@@ -93,6 +93,11 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "purchaseReceiptMintTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "pool";
           isMut: false;
           isSigner: false;
@@ -174,7 +179,7 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "poolRewardMintAta";
+          name: "poolRewardMintTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -283,7 +288,7 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "poolAuthorityTokenLp";
+          name: "poolAuthorityLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -293,12 +298,12 @@ export type SafePresale = {
           isSigner: true;
         },
         {
-          name: "userTokenLp";
+          name: "userLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "poolTokenLp";
+          name: "purchaseReceiptLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -357,12 +362,12 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "payerTokenWsol";
+          name: "payerWsolTokenAccount";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "poolTokenWsol";
+          name: "poolWsolTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -426,6 +431,36 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "purchaseReceiptLpTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "purchaseReceiptMintTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolLpTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolMintTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "rewardMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "lpMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "pool";
           isMut: false;
           isSigner: false;
@@ -434,6 +469,21 @@ export type SafePresale = {
           name: "payer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "eventAuthority";
@@ -1083,7 +1133,7 @@ export type SafePresale = {
     {
       code: 6000;
       name: "NftIsNotNonFungible";
-      msg: "Nft is not non-fungible";
+      msg: "Nft must be Non-Fungible";
     },
     {
       code: 6001;
@@ -1098,7 +1148,7 @@ export type SafePresale = {
     {
       code: 6003;
       name: "PresaleTargetNotMet";
-      msg: "Presale target not met!";
+      msg: "Presale target not met";
     },
     {
       code: 6004;
@@ -1108,12 +1158,12 @@ export type SafePresale = {
     {
       code: 6005;
       name: "PoolHasExpired";
-      msg: "The pool expired because the creator failed to launch it within the 7 day grace period.";
+      msg: "Creator failed to launch project within 7 days.";
     },
     {
       code: 6006;
       name: "WaitingForCreatorToLaunch";
-      msg: "Presale target is met, unable to withdraw. ";
+      msg: "Presale target is met, Unable to withdraw. ";
     },
     {
       code: 6007;
@@ -1162,58 +1212,63 @@ export type SafePresale = {
     },
     {
       code: 6016;
+      name: "InvalidLpMint";
+      msg: "Invalid lp mint";
+    },
+    {
+      code: 6017;
       name: "MaximumAmountClaimed";
       msg: "Nothing left to claim";
     },
     {
-      code: 6017;
+      code: 6018;
       name: "UnauthorizedAtCurrentTime";
       msg: "Either presale or vesting is still ongoing";
     },
     {
-      code: 6018;
-      name: "VestingSupplyLargerThanTotalSupply";
-      msg: "Vesting Supply larget than total supply";
-    },
-    {
       code: 6019;
-      name: "CreatorBasisPointsExceedMaximumAmount";
-      msg: "Creator Fees basis points exceed 10000";
+      name: "VestingSupplyLargerThanTotalSupply";
+      msg: "Vesting Supply cannot be larger than Total Supply";
     },
     {
       code: 6020;
-      name: "NumberCannotBeZero";
-      msg: "The value needs to be higher than zero.";
+      name: "CreatorBasisPointsExceedMaximumAmount";
+      msg: "Creator Fees Basis Points cannot exceed 10000";
     },
     {
       code: 6021;
-      name: "AmountPurchaseExceeded";
-      msg: "Purchase Amount cannot be exceed allowable amount!";
+      name: "NumberCannotBeZero";
+      msg: "Amount cannot be zero";
     },
     {
       code: 6022;
-      name: "CheckClaimFirstBeforeClaiming";
-      msg: "Check Claim Amount first before claiming";
+      name: "AmountPurchaseExceeded";
+      msg: "Purchase amount exceeded";
     },
     {
       code: 6023;
-      name: "ClaimedAlreadyChecked";
-      msg: "Claim Amount is already updated";
+      name: "CheckClaimFirstBeforeClaiming";
+      msg: "Check elligibility first";
     },
     {
       code: 6024;
+      name: "ClaimedAlreadyChecked";
+      msg: "Already checked";
+    },
+    {
+      code: 6025;
       name: "InvalidSigner";
       msg: "Signer must be owner of nft";
     },
     {
-      code: 6025;
+      code: 6026;
       name: "PurchaseAuthorisationRecordMissing";
-      msg: "Purchase authorisation record is missing!";
+      msg: "Purchase authorisation record is missing";
     },
     {
-      code: 6026;
+      code: 6027;
       name: "UnauthorisedCollection";
-      msg: "Collection is not authorised!";
+      msg: "Collection is not authorised";
     }
   ];
 };
@@ -1313,6 +1368,11 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "purchaseReceiptMintTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "pool",
           isMut: false,
           isSigner: false,
@@ -1394,7 +1454,7 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "poolRewardMintAta",
+          name: "poolRewardMintTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1503,7 +1563,7 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "poolAuthorityTokenLp",
+          name: "poolAuthorityLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1513,12 +1573,12 @@ export const IDL: SafePresale = {
           isSigner: true,
         },
         {
-          name: "userTokenLp",
+          name: "userLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "poolTokenLp",
+          name: "purchaseReceiptLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1577,12 +1637,12 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "payerTokenWsol",
+          name: "payerWsolTokenAccount",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "poolTokenWsol",
+          name: "poolWsolTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1646,6 +1706,36 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "purchaseReceiptLpTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "purchaseReceiptMintTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolLpTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolMintTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "rewardMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "lpMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "pool",
           isMut: false,
           isSigner: false,
@@ -1654,6 +1744,21 @@ export const IDL: SafePresale = {
           name: "payer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "eventAuthority",
@@ -2303,7 +2408,7 @@ export const IDL: SafePresale = {
     {
       code: 6000,
       name: "NftIsNotNonFungible",
-      msg: "Nft is not non-fungible",
+      msg: "Nft must be Non-Fungible",
     },
     {
       code: 6001,
@@ -2318,7 +2423,7 @@ export const IDL: SafePresale = {
     {
       code: 6003,
       name: "PresaleTargetNotMet",
-      msg: "Presale target not met!",
+      msg: "Presale target not met",
     },
     {
       code: 6004,
@@ -2328,12 +2433,12 @@ export const IDL: SafePresale = {
     {
       code: 6005,
       name: "PoolHasExpired",
-      msg: "The pool expired because the creator failed to launch it within the 7 day grace period.",
+      msg: "Creator failed to launch project within 7 days.",
     },
     {
       code: 6006,
       name: "WaitingForCreatorToLaunch",
-      msg: "Presale target is met, unable to withdraw. ",
+      msg: "Presale target is met, Unable to withdraw. ",
     },
     {
       code: 6007,
@@ -2382,58 +2487,63 @@ export const IDL: SafePresale = {
     },
     {
       code: 6016,
+      name: "InvalidLpMint",
+      msg: "Invalid lp mint",
+    },
+    {
+      code: 6017,
       name: "MaximumAmountClaimed",
       msg: "Nothing left to claim",
     },
     {
-      code: 6017,
+      code: 6018,
       name: "UnauthorizedAtCurrentTime",
       msg: "Either presale or vesting is still ongoing",
     },
     {
-      code: 6018,
-      name: "VestingSupplyLargerThanTotalSupply",
-      msg: "Vesting Supply larget than total supply",
-    },
-    {
       code: 6019,
-      name: "CreatorBasisPointsExceedMaximumAmount",
-      msg: "Creator Fees basis points exceed 10000",
+      name: "VestingSupplyLargerThanTotalSupply",
+      msg: "Vesting Supply cannot be larger than Total Supply",
     },
     {
       code: 6020,
-      name: "NumberCannotBeZero",
-      msg: "The value needs to be higher than zero.",
+      name: "CreatorBasisPointsExceedMaximumAmount",
+      msg: "Creator Fees Basis Points cannot exceed 10000",
     },
     {
       code: 6021,
-      name: "AmountPurchaseExceeded",
-      msg: "Purchase Amount cannot be exceed allowable amount!",
+      name: "NumberCannotBeZero",
+      msg: "Amount cannot be zero",
     },
     {
       code: 6022,
-      name: "CheckClaimFirstBeforeClaiming",
-      msg: "Check Claim Amount first before claiming",
+      name: "AmountPurchaseExceeded",
+      msg: "Purchase amount exceeded",
     },
     {
       code: 6023,
-      name: "ClaimedAlreadyChecked",
-      msg: "Claim Amount is already updated",
+      name: "CheckClaimFirstBeforeClaiming",
+      msg: "Check elligibility first",
     },
     {
       code: 6024,
+      name: "ClaimedAlreadyChecked",
+      msg: "Already checked",
+    },
+    {
+      code: 6025,
       name: "InvalidSigner",
       msg: "Signer must be owner of nft",
     },
     {
-      code: 6025,
+      code: 6026,
       name: "PurchaseAuthorisationRecordMissing",
-      msg: "Purchase authorisation record is missing!",
+      msg: "Purchase authorisation record is missing",
     },
     {
-      code: 6026,
+      code: 6027,
       name: "UnauthorisedCollection",
-      msg: "Collection is not authorised!",
+      msg: "Collection is not authorised",
     },
   ],
 };
