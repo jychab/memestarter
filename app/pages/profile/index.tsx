@@ -23,6 +23,7 @@ import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { toWeb3JsTransaction } from "@metaplex-foundation/umi-web3js-adapters";
 import { publicKey as PubKey } from "@metaplex-foundation/umi";
 import { useRouter } from "next/router";
+import { getCustomErrorMessage } from "../../utils/error";
 
 interface CustomAsset extends DasApiAsset {
   image: string;
@@ -131,7 +132,7 @@ function InventoryScreen() {
           !amountOfSolInWallet ||
           amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.5
         ) {
-          toast.error("Insufficient SOL. You need at least 0.5 Sol.");
+          toast.error("Insufficient Sol. You need at least 0.5 Sol.");
           return;
         }
         let sig = await getSignature(
@@ -164,7 +165,7 @@ function InventoryScreen() {
         toast.success("Success");
       }
     } catch (error) {
-      toast.error(`${error}`);
+      toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }

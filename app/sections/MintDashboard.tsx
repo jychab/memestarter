@@ -22,6 +22,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { toast } from "react-toastify";
+import { getCustomErrorMessage } from "../utils/error";
 
 interface InventoryItemProps {
   item: DasApiAsset;
@@ -186,7 +187,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
           await linkAsset(payload);
         }
       } catch (error) {
-        toast.error(`${error}`);
+        toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
         setLoading(false);
         if (setSelectedItem) {

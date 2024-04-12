@@ -1,5 +1,5 @@
 {
-  "name": "merchant",
+  "name": "memestarter",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -22,7 +22,7 @@
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-wallets": "^0.19.30",
-    "@solana/web3.js": "^1.90.1",
+    "@solana/web3.js": "^1.91.4",
     "firebase": "^10.8.1",
     "next": "14.1.0",
     "react": "18.2.0",

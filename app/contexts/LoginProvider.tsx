@@ -55,6 +55,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
           if (user !== null) {
             auth.signOut();
           }
+          setNft(undefined);
           toast.error("Unable to Sign In");
         });
     }

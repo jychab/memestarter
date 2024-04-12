@@ -41,7 +41,7 @@ export const LaunchedTable: FC<LaunchedTableProps> = ({ pool, timer }) => {
         <tbody>
           {pool.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={6}>
+              <td className="p-2 text-xs" colSpan={9}>
                 <span>No projects found.</span>
               </td>
             </tr>

@@ -24,6 +24,7 @@ import { buildSimpleTransaction, TxVersion } from "@raydium-io/raydium-sdk";
 import { getDoc, doc } from "firebase/firestore";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { db } from "../utils/firebase";
+import { getCustomErrorMessage } from "../utils/error";
 
 interface CreatorTableRowProps {
   pool: PoolType;
@@ -84,14 +85,14 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
             amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
           !docRef.exists()
         ) {
-          toast.error("Insufficient SOL. You need at least 3 Sol.");
+          toast.error("Insufficient Sol. You need at least 3 Sol.");
           return;
         } else if (
           (!amountOfSolInWallet ||
             amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
           docRef.exists()
         ) {
-          toast.error("Insufficient SOL. You need at least 0.2 Sol.");
+          toast.error("Insufficient Sol. You need at least 0.2 Sol.");
           return;
         }
         if (!docRef.exists()) {
@@ -171,8 +172,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
         toast.success("Success!");
       }
     } catch (error) {
-      console.log(error);
-      toast.error(`${error}`);
+      toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -311,11 +311,11 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           </td>
         )}
         <td className="p-2 text-center">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center">
             {status === Status.ReadyToLaunch ? (
               <button
                 onClick={launch}
-                className="text-blue-400 disabled:text-gray-400 items-center flex"
+                className="text-blue-400 disabled:text-gray-400 items-center flex gap-2"
               >
                 {loading && (
                   <svg

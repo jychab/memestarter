@@ -47,6 +47,7 @@ import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const program = (connection: Connection) =>
   new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
+
 /**
  * Retrieves the collection mint address from the provided asset response.
  * @param {DAS.GetAssetResponse} item - The asset response object.

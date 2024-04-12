@@ -17,7 +17,7 @@ export const Navbar: FC = () => {
           <Image src={logo} width={160} className="h-auto" alt={"logo"} />
         </Link>
         <div className="flex items-center justify-end gap-4">
-          {publicKey && <CreateProjectBtn />}
+          <CreateProjectBtn />
           {!publicKey ? <SignInBtn /> : <UserProfileBtn />}
         </div>
       </div>

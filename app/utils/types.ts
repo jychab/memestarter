@@ -23,7 +23,7 @@ export enum Status {
   VestingCompleted = "Vesting Completed",
   PresaleInProgress = "Presale In Progress",
   Expired = "Expired",
-  ReadyToLaunch = "ReadyToLaunch",
+  ReadyToLaunch = "Ready To Launch",
 }
 export interface LaunchTokenAmmArgs {
   marketId: PublicKey;

@@ -10,7 +10,7 @@ import PresaleDashboard from "./PresaleDashboard";
 import { Chip } from "../components/Chip";
 
 interface ReviewPaneProps {
-  authority: string;
+  authority?: string;
   image: string;
   name: string;
   symbol: string;
@@ -77,8 +77,12 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="text-black">{symbol}</span>
           <span>Decimals</span>
           <span className=" text-black">{decimals}</span>
-          <span>Creator</span>
-          <span className="w-24 lg:w-64 truncate text-black">{authority}</span>
+          {authority && <span>Creator</span>}
+          {authority && (
+            <span className="w-24 lg:w-64 truncate text-black">
+              {authority}
+            </span>
+          )}
           {mint && <span>Mint Address</span>}
           {mint && (
             <span className="w-24 lg:w-64 truncate text-black">{mint}</span>

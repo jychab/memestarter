@@ -21,25 +21,24 @@ export const VestingTable: FC<VestingTableProps> = ({ projects, timer }) => {
               Funded By You
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Elligible (unvested)
+              Mint Unlocked
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Mint Claimed
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Elligible (Allocated)
+              Mint Allocated
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Vesting End
             </th>
-
             <th scope="col" className="w-24 text-center p-2" />
           </tr>
         </thead>
         <tbody>
           {projects.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={6}>
+              <td className="p-2 text-xs" colSpan={8}>
                 <span>No projects found.</span>
               </td>
             </tr>

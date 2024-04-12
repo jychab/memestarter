@@ -20,18 +20,17 @@ export const CompletedTable: FC<CompletedTableProps> = ({
             <th scope="col" className="w-auto p-2">
               Project
             </th>
-
             <th scope="col" className="w-24 text-center p-2">
               Funded By You
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Elligible (Unvested)
+              Mint Unlocked
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Mint Claimed
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Lp Elligible (Unvested)
+              Lp Unlocked
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Lp Claimed
@@ -42,7 +41,7 @@ export const CompletedTable: FC<CompletedTableProps> = ({
         <tbody>
           {projects.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={6}>
+              <td className="p-2 text-xs" colSpan={8}>
                 <span>No projects found.</span>
               </td>
             </tr>

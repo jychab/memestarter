@@ -1,10 +1,7 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
-  Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
-  Transaction,
-  TransactionSignature,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { useRouter } from "next/router";
@@ -21,6 +18,7 @@ import {
   getSignature,
   launchTokenAmm,
   getCollectionMintAddress,
+  program,
 } from "../../../utils/helper";
 import {
   MarketDetails,
@@ -37,10 +35,10 @@ import {
 import { db } from "../../../utils/firebase";
 import { TxVersion, buildSimpleTransaction } from "@raydium-io/raydium-sdk";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { User } from "firebase/auth";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
+import { getCustomErrorMessage } from "../../../utils/error";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -142,14 +140,14 @@ export function Pool() {
             amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
           !docRef.exists()
         ) {
-          toast.error("Insufficient SOL. You need at least 3 Sol.");
+          toast.error("Insufficient Sol. You need at least 3 Sol.");
           return;
         } else if (
           (!amountOfSolInWallet ||
             amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
           docRef.exists()
         ) {
-          toast.error("Insufficient SOL. You need at least 0.2 Sol.");
+          toast.error("Insufficient Sol. You need at least 0.2 Sol.");
           return;
         }
         if (!docRef.exists()) {
@@ -229,8 +227,7 @@ export function Pool() {
         toast.success("Success!");
       }
     } catch (error) {
-      console.log(error);
-      toast.error(`${error}`);
+      toast.error(getCustomErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -246,21 +243,18 @@ export function Pool() {
         pool &&
         amountToPurchase &&
         signMessage &&
+        nft &&
         signTransaction
       ) {
         setLoading(true);
-        if (!nft) {
-          toast.error("Missing Profile...");
-          router.push("/profile");
-          return;
-        }
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (
           !amountOfSolInWallet ||
-          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL
+          amountOfSolInWallet.lamports <=
+            parseFloat(amountToPurchase) * LAMPORTS_PER_SOL
         ) {
           toast.error(
-            `Insufficient SOL. You need at least ${amountToPurchase} Sol.`
+            `Insufficient Sol. You need at least ${amountToPurchase} Sol.`
           );
           return;
         }
@@ -275,8 +269,7 @@ export function Pool() {
         router.push("/");
       }
     } catch (error) {
-      console.log(error);
-      toast.error(`${error}`);
+      toast.error(getCustomErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -398,8 +391,7 @@ export function Pool() {
             liquidityCollected={pool.liquidityCollected}
             status={status}
           />
-
-          {status && getButton(status, pool, nft, loading)}
+          {status && publicKey && getButton(status, pool, nft, loading)}
         </div>
       </div>
     )

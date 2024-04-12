@@ -17,6 +17,7 @@ import { Project } from "../sections/MintDashboard";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
 import { toast } from "react-toastify";
+import { getCustomErrorMessage } from "../utils/error";
 
 interface TableRowProps {
   project: Project;
@@ -105,7 +106,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         }
         toast.success("Success");
       } catch (error) {
-        toast.error(`${error}`);
+        toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
         setLoading(false);
       }
@@ -134,7 +135,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         );
         toast.success("Success");
       } catch (error) {
-        toast.error(`${error}`);
+        toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
         setLoadingLp(false);
       }
@@ -162,7 +163,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         );
         toast.success("Success");
       } catch (error) {
-        toast.error(`${error}`);
+        toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
         setLoading(false);
       }
@@ -228,7 +229,6 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           </td>
         )}
         {(status === Status.VestingInProgress ||
-          status === Status.ReadyToLaunch ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
             {currentMintElligible
@@ -239,7 +239,6 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           </td>
         )}
         {(status === Status.VestingCompleted ||
-          status === Status.ReadyToLaunch ||
           status === Status.VestingInProgress) && (
           <td className="p-2 text-center">
             {project.mintClaimed
@@ -298,7 +297,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           </td>
         )}
         <td className="p-2 text-center">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             {(status === Status.PresaleInProgress ||
               status === Status.ReadyToLaunch ||
               status === Status.PresaleTargetMet) && <span>{status}</span>}
