@@ -10,10 +10,9 @@ import {
   doc,
   DocumentData,
   QueryDocumentSnapshot,
-  where,
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { getMetadata, getSignature, getStatus } from "../utils/helper";
+import { getMetadata, getStatus } from "../utils/helper";
 import { FundedTable } from "../components/tables/FundedTable";
 import { VestingTable } from "../components/tables/VestingTable";
 import { CompletedTable } from "../components/tables/CompletedTable";
@@ -23,6 +22,7 @@ import { useLogin } from "../hooks/useLogin";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { toast } from "react-toastify";
 import { getCustomErrorMessage } from "../utils/error";
+import { useData } from "../hooks/useData";
 
 interface InventoryItemProps {
   item: DasApiAsset;
@@ -44,23 +44,17 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   setSelectedItem,
 }) => {
   const [projects, setProjects] = useState<Project[]>();
-  const [image, setImage] = useState();
-  const [name, setName] = useState();
-  const [collectionImage, setCollectionImage] = useState();
-  const [collectionName, setCollectionName] = useState();
+  const [image, setImage] = useState<string>();
+  const [name, setName] = useState<string>();
+  const [collectionImage, setCollectionImage] = useState<string>();
+  const [collectionName, setCollectionName] = useState<string>();
   const [projectType, setProjectType] = useState<ProjectType>(ProjectType.all);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { publicKey, signMessage } = useWallet();
-  const {
-    user,
-    signedMessage,
-    sessionKey,
-    setSignedMessage,
-    setSessionKey,
-    nft,
-  } = useLogin();
+  const { publicKey, signIn } = useWallet();
+  const { user } = useLogin();
+  const { nft } = useData();
   const [timer, setTimer] = useState<number>();
 
   function isItemCurrentlyEquipped(
@@ -134,7 +128,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
       }
     );
     return () => unsubscribe();
-  }, [item, projectType]);
+  }, [item, projectType, publicKey]);
 
   useEffect(() => {
     // Function to handle click outside the dialog
@@ -163,26 +157,17 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }, [show]);
 
   const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
-    if (publicKey && user && signMessage && selectedItem) {
+    if (publicKey && user && signIn && selectedItem) {
       try {
         setLoading(true);
-        let sig = await getSignature(
-          user,
-          signedMessage,
-          sessionKey,
-          signMessage,
-          setSignedMessage,
-          setSessionKey
-        );
-        const payload = {
-          signature: sig,
-          pubKey: publicKey.toBase58(),
-          nft: selectedItem,
-        };
+
         if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
           const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
-          await unlinkAsset(payload);
+          await unlinkAsset();
         } else {
+          const payload = {
+            nft: selectedItem,
+          };
           const linkAsset = httpsCallable(getFunctions(), "linkAsset");
           await linkAsset(payload);
         }
@@ -202,50 +187,50 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     name && (
       <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 border text-black border-gray-300 rounded right-2">
         <div className="flex flex-col gap-4">
-          <div
-            className={`flex items-center ${
-              setSelectedItem ? "justify-between" : "justify-end"
-            } gap-2`}
-          >
-            {setSelectedItem && (
-              <button onClick={() => setSelectedItem(undefined)}>
-                <svg
-                  className="w-4 h-4 sm:w-6 sm:h-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20px"
-                  height="20px"
-                  viewBox="0 0 1024 1024"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-                  />
-                </svg>
-              </button>
-            )}
-            {collectionImage && collectionName && (
-              <div className="flex items-center">
-                <div className="relative h-12 w-12">
-                  <Image
-                    className={`rounded object-cover cursor-pointer`}
-                    fill={true}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    src={collectionImage}
-                    alt={""}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] sm:text-[10px] uppercase text-gray-400">
-                    Collection
-                  </span>
-                  <span className="uppercase">{collectionName}</span>
-                </div>
-              </div>
-            )}
+          <div className={`flex items-center justify-between gap-2`}>
+            <div className="flex items-center gap-2">
+              {setSelectedItem && (
+                <button onClick={() => setSelectedItem(undefined)}>
+                  <svg
+                    className="w-4 h-4 sm:w-6 sm:h-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 1024 1024"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
+                    />
+                  </svg>
+                </button>
+              )}
+              {collectionImage && collectionName && (
+                <>
+                  <div className="relative h-8 w-8">
+                    <Image
+                      className={`rounded-full object-cover cursor-pointer`}
+                      fill={true}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      src={collectionImage}
+                      alt={""}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] sm:text-[10px] uppercase text-gray-400">
+                      Collection
+                    </span>
+                    <span className="text-[10px] text-xs">
+                      {collectionName}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
             {item.ownership.owner === publicKey?.toBase58() && (
               <button
                 onClick={() => handleLinkage(item)}

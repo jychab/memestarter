@@ -42,7 +42,6 @@ import {
   WSOL,
 } from "@raydium-io/raydium-sdk";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
-import { User } from "firebase/auth";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 
 export const program = (connection: Connection) =>
@@ -303,7 +302,7 @@ export async function buyPresaleIx(
     true
   );
 
-  let purchaseAuthorisationRecord = null;
+  let purchaseAuthorisationRecord: PublicKey | null = null;
   const poolData = await program(connection).account.pool.fetchNullable(
     args.poolId
   );
@@ -754,31 +753,15 @@ export function formatLargeNumber(number: number) {
   return formattedNumber;
 }
 
-export async function getSignature(
-  user: User,
-  signedMessage: string | null,
-  sessionKey: string | null,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  setSignedMessage: React.Dispatch<React.SetStateAction<string | null>>,
-  setSessionKey: React.Dispatch<React.SetStateAction<string | null>>
-) {
-  const sessKey = await user.getIdToken();
-  let sig = signedMessage;
-  if (!sig || sessionKey !== sessKey) {
-    const prepend = "Sign In To Meme Starter!\n\nSession Key: ";
-    const message = new TextEncoder().encode(prepend + sessKey);
-    sig = Buffer.from(await signMessage(message)).toString("base64");
-    setSignedMessage(sig);
-    setSessionKey(sessKey);
-  }
-  return sig;
-}
-
-export async function getMetadata(pool: string): Promise<any | undefined> {
-  if (typeof pool === "string") {
-    const res = await fetch(pool);
+export async function getMetadata(json_uri: string): Promise<any | undefined> {
+  if (typeof json_uri === "string") {
+    const res = await fetch(json_uri);
     const data = res.json();
     return data;
   }
   return;
+}
+
+export function createLoginMessage(sessionKey: string) {
+  return `Sign In to https://memestarter.app\n\nNonce: ${sessionKey}}`;
 }

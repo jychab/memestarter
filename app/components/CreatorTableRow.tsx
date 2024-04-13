@@ -11,7 +11,6 @@ import {
   convertSecondsToNearestUnit,
   createMarket,
   formatLargeNumber,
-  getSignature,
   getStatus,
   launchTokenAmm,
   sendTransactions,
@@ -34,11 +33,10 @@ interface CreatorTableRowProps {
 export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status>();
-  const { publicKey, signTransaction, signMessage, signAllTransactions } =
+  const { publicKey, signTransaction, signIn, signAllTransactions } =
     useWallet();
   const { connection } = useConnection();
-  const { user, signedMessage, setSignedMessage, sessionKey, setSessionKey } =
-    useLogin();
+  const { user } = useLogin();
   const [unlockedMint, setUnlockedMint] = useState<number>();
   const router = useRouter();
 
@@ -70,7 +68,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
         user &&
         connection &&
         pool &&
-        signMessage &&
+        signIn &&
         signTransaction &&
         signAllTransactions
       ) {
@@ -121,16 +119,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
             getFunctions(),
             "updateMarketDetails"
           );
-          let sig = await getSignature(
-            user,
-            signedMessage,
-            sessionKey,
-            signMessage,
-            setSignedMessage,
-            setSessionKey
-          );
           const payload = {
-            signature: sig,
             pubKey: publicKey.toBase58(),
             poolId: pool.pool,
             marketDetails: {

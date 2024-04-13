@@ -3,12 +3,8 @@ import { User } from "firebase/auth";
 import { createContext, useContext } from "react";
 
 export interface LoginContextState {
-  setSignedMessage: React.Dispatch<React.SetStateAction<string | null>>;
-  signedMessage: string | null;
-  setSessionKey: React.Dispatch<React.SetStateAction<string | null>>;
-  sessionKey: string | null;
-  nft: DasApiAsset | undefined;
   user: User | null;
+  signOut: () => Promise<void>;
 }
 
 export const LoginContext = createContext<LoginContextState>(

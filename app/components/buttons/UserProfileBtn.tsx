@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 
 export const UserProfileBtn: FC = () => {
   const [expand, setExpand] = useState(false);
-  const { user } = useLogin();
+  const { signOut } = useLogin();
   const { publicKey, disconnect, wallet } = useWallet();
   const { networkConfiguration } = useNetworkConfiguration();
   const router = useRouter();
@@ -80,7 +80,7 @@ export const UserProfileBtn: FC = () => {
               }}
               className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
-              My Profile
+              Profile
             </button>
           </li>
           <li>
@@ -91,7 +91,7 @@ export const UserProfileBtn: FC = () => {
               }}
               className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
-              My Projects
+              Projects
             </button>
           </li>
           {/* <li>
@@ -108,12 +108,7 @@ export const UserProfileBtn: FC = () => {
           <li>
             <button
               onClick={async () => {
-                if (publicKey) {
-                  await disconnect();
-                }
-                if (user !== null) {
-                  await auth.signOut();
-                }
+                await signOut();
                 setExpand(false);
               }}
               className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"

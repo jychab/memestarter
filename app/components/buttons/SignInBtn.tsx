@@ -3,7 +3,7 @@ import React, { FC, useEffect, useRef, useState } from "react";
 import { Wallet, useWallet } from "@solana/wallet-adapter-react";
 export const SignInBtn: FC = () => {
   const [open, setOpen] = useState(false);
-  const { select, wallets, connected, connecting, signIn } = useWallet();
+  const { select, wallets, connected, connecting } = useWallet();
 
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [connectionStatus, setConectionStatus] = useState<string>();
@@ -49,15 +49,13 @@ export const SignInBtn: FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="px-4 py-1 text-black hover:text-blue-800 transition-duration-150"
-        >
-          Sign In
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="p-1 text-black hover:text-blue-800 transition-duration-150"
+      >
+        Sign In
+      </button>
       <div
         className="fixed overflow-y-auto overflow-x-hidden top-0 right-0 left-0 z-50 w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50"
         hidden={!open}

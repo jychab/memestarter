@@ -14,9 +14,9 @@ export const Navbar: FC = () => {
     <nav className="bg-white border-b border-gray-200 px-4 pt-8 pb-8 shadow-sm">
       <div className="mx-auto flex justify-between items-center max-w-screen-xl">
         <Link className="text-black uppercase text-base lg:text-xl" href="/">
-          <Image src={logo} width={160} className="h-auto" alt={"logo"} />
+          <Image src={logo} width={140} className="h-auto" alt={"logo"} />
         </Link>
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex items-center justify-end gap-2">
           <CreateProjectBtn />
           {!publicKey ? <SignInBtn /> : <UserProfileBtn />}
         </div>

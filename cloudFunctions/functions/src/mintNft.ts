@@ -1,5 +1,5 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
-import {db, umi, verifyPubKey} from "./utils";
+import {db, umi} from "./utils";
 import {
   createNft,
   findMetadataPda,
@@ -17,10 +17,6 @@ import * as anchor from "@coral-xyz/anchor";
 import {base64} from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {FieldValue} from "firebase-admin/firestore";
 
-interface MintNft {
-  signature: string;
-  pubKey: string;
-}
 async function uploadMetadata(
   name: string,
   description: string,
@@ -36,29 +32,14 @@ async function uploadMetadata(
   });
   return uri;
 }
-export default async function mintNft(
-  data: MintNft,
-  context: CallableContext
-): Promise<any> {
-  // Checking that the user is authenticated.
+export default async function mintNft(context: CallableContext): Promise<any> {
   if (!context.auth) {
-    // Throwing an HttpsError so that the client gets the error details.
-    throw new HttpsError(
-      "failed-precondition",
-      "The function must be called " + "while authenticated."
-    );
+    throw new HttpsError("permission-denied", "Unauthenticated");
   }
-  if (context.auth.token.firebase.sign_in_provider === "anonymous") {
-    if (!data.signature || !data.pubKey) {
-      throw new HttpsError("aborted", "Missing pubkey or signature!");
-    }
-    const isValid = verifyPubKey(context, data.signature, data.pubKey);
-    if (!isValid) {
-      throw new HttpsError("aborted", "Pubkey signature verification failed");
-    }
-  } else {
-    throw new HttpsError("aborted", "Wrong Authentication Provider!");
+  if (context.auth.token.firebase.sign_in_provider !== "custom") {
+    throw new HttpsError("permission-denied", "Wrong authentication provider!");
   }
+
   const collectionNft = publicKey(
     "Bs1sGga8rTdnwqi9W5f8eEP2neqBQstmv1ehDDDdGsGe"
   );
@@ -86,7 +67,7 @@ export default async function mintNft(
   const transaction = createNft(umi, {
     mint: randomNft,
     name: name,
-    tokenOwner: publicKey(data.pubKey),
+    tokenOwner: publicKey(context.auth.uid),
     uri: uri,
     sellerFeeBasisPoints: percentAmount(3.33, 2),
     collection: {
@@ -105,7 +86,7 @@ export default async function mintNft(
     )
     .append(
       transferSol(umi, {
-        source: createNoopSigner(publicKey(data.pubKey)),
+        source: createNoopSigner(publicKey(context.auth.uid)),
         destination: umi.identity.publicKey,
         amount: {
           basisPoints: new anchor.BN(0.5 * LAMPORTS_PER_SOL),

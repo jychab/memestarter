@@ -15,9 +15,9 @@ import {
 import { Status } from "../utils/types";
 import { Project } from "../sections/MintDashboard";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useLogin } from "../hooks/useLogin";
 import { toast } from "react-toastify";
 import { getCustomErrorMessage } from "../utils/error";
+import { useData } from "../hooks/useData";
 
 interface TableRowProps {
   project: Project;
@@ -31,7 +31,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
   const [currentMintElligible, setCurrentMintElligible] = useState<number>();
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
-  const { nft } = useLogin();
+  const { nft } = useData();
   const router = useRouter();
 
   useEffect(() => {

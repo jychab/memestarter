@@ -1,6 +1,4 @@
-import {CallableContext} from "firebase-functions/v1/https";
 import {Keypair, PublicKey} from "@solana/web3.js";
-import nacl = require("tweetnacl");
 import admin = require("firebase-admin");
 import {Helius} from "helius-sdk";
 import {AnchorProvider, Program, Wallet} from "@coral-xyz/anchor";
@@ -24,7 +22,7 @@ const programId = defineString("PROGRAM_ID");
 const collectionAuthority = defineString("COLLECTION_AUTHORITY");
 const heliusApiKey = defineString("HELIUS_API_KEY");
 const nftStorageKey = defineString("NFT_STORAGE_KEY");
-const prod = false;
+export const prod = false;
 onInit(() => {
   helius = new Helius(heliusApiKey.value(), prod ? "mainnet-beta" : "devnet");
   umi = createUmi(helius.connection);
@@ -47,24 +45,3 @@ onInit(() => {
     })
   );
 });
-
-/**
- * Verifies a given signature against a public key using a message and the NaCl library.
- * @param {CallableContext} context - The context object containing information about the call.
- * @param {string} signature - The signature to verify, encoded in base64 format.
- * @param {string} pubKey - The public key used for verification.
- * @return {boolean} Returns true if the signature is valid, false otherwise.
- */
-export function verifyPubKey(
-  context: CallableContext,
-  signature: string,
-  pubKey: string
-): boolean {
-  const idToken =
-    context.rawRequest.headers.authorization!.split("Bearer ")[1]!;
-  const prepend = "Sign In To Meme Starter!\n\nSession Key: ";
-  const msg = new TextEncoder().encode(prepend + idToken);
-  const sig = new Uint8Array(Buffer.from(signature, "base64"));
-  const publicKey = new PublicKey(pubKey).toBytes();
-  return nacl.sign.detached.verify(msg, sig, publicKey);
-}

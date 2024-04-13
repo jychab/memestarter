@@ -10,6 +10,7 @@ import {
   useNetworkConfiguration,
 } from "./NetworkConfigurationProvider";
 import React from "react";
+import { toast } from "react-toastify";
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { networkConfiguration } = useNetworkConfiguration();
@@ -18,11 +19,10 @@ const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = useMemo(() => [], [network]);
 
   const onError = useCallback((error: WalletError) => {
-    console.error(error);
+    toast.error(error.message ? `${error.name}: ${error.message}` : error.name);
   }, []);
 
   return (
-    // TODO: updates needed for updating and referencing endpoint: wallet adapter rework
     <ConnectionProvider
       endpoint={
         "https://devnet.helius-rpc.com/?api-key=67cc99fc-f14e-499c-9507-48127506901f"

@@ -15,10 +15,8 @@ import {
   getStatus,
   createMarket,
   sendTransactions,
-  getSignature,
   launchTokenAmm,
   getCollectionMintAddress,
-  program,
 } from "../../../utils/helper";
 import {
   MarketDetails,
@@ -39,6 +37,7 @@ import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
 import { getCustomErrorMessage } from "../../../utils/error";
+import { useData } from "../../../hooks/useData";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -47,16 +46,10 @@ export function Pool() {
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const [mint, setMint] = useState<MintType>();
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
-  const { publicKey, signTransaction, signMessage, signAllTransactions } =
+  const { publicKey, signTransaction, signIn, signAllTransactions } =
     useWallet();
-  const {
-    nft,
-    user,
-    setSignedMessage,
-    signedMessage,
-    setSessionKey,
-    sessionKey,
-  } = useLogin();
+  const { user } = useLogin();
+  const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
   const { poolId } = router.query;
@@ -91,41 +84,14 @@ export function Pool() {
     }
   }, [pool]);
 
-  async function buyPresale(
-    amount: number,
-    nft: DasApiAsset,
-    pool: PoolType,
-    publicKey: PublicKey,
-    signTransaction: any
-  ) {
-    const nftCollection = getCollectionMintAddress(nft);
-    if (!nftCollection) {
-      throw Error("NFT has no collection");
-    }
-    console.log(amount);
-    const ix = await buyPresaleIx(
-      {
-        amount: amount,
-        nft: new PublicKey(nft.id),
-        nftCollection: new PublicKey(nftCollection),
-        poolId: new PublicKey(pool.pool),
-        signer: publicKey,
-      },
-      connection
-    );
-
-    await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
-  }
-
   const launch = async () => {
     try {
       if (
-        status &&
         publicKey &&
         user &&
         connection &&
         pool &&
-        signMessage &&
+        signIn &&
         signTransaction &&
         signAllTransactions
       ) {
@@ -176,16 +142,8 @@ export function Pool() {
             getFunctions(),
             "updateMarketDetails"
           );
-          let sig = await getSignature(
-            user,
-            signedMessage,
-            sessionKey,
-            signMessage,
-            setSignedMessage,
-            setSessionKey
-          );
+
           const payload = {
-            signature: sig,
             pubKey: publicKey.toBase58(),
             poolId: pool.pool,
             marketDetails: {
@@ -236,13 +194,10 @@ export function Pool() {
   const buy = async () => {
     try {
       if (
-        status &&
         publicKey &&
-        user &&
         connection &&
         pool &&
         amountToPurchase &&
-        signMessage &&
         nft &&
         signTransaction
       ) {
@@ -258,10 +213,24 @@ export function Pool() {
           );
           return;
         }
-        await buyPresale(
-          parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
-          nft,
-          pool,
+        const nftCollection = getCollectionMintAddress(nft);
+        if (!nftCollection) {
+          throw Error("NFT has no collection");
+        }
+        const ix = await buyPresaleIx(
+          {
+            amount: parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
+            nft: new PublicKey(nft.id),
+            nftCollection: new PublicKey(nftCollection),
+            poolId: new PublicKey(pool.pool),
+            signer: publicKey,
+          },
+          connection
+        );
+
+        await buildAndSendTransaction(
+          connection,
+          [ix],
           publicKey,
           signTransaction
         );

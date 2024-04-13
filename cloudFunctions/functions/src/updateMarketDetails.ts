@@ -1,9 +1,7 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
-import {db, verifyPubKey} from "./utils";
+import {db} from "./utils";
 
 interface UpdateMarket {
-  signature: string;
-  pubKey: string;
   poolId: string;
   marketDetails: {
     marketId: string;
@@ -22,24 +20,11 @@ export default async function updateMarketDetails(
   data: UpdateMarket,
   context: CallableContext
 ): Promise<any> {
-  // Checking that the user is authenticated.
   if (!context.auth) {
-    // Throwing an HttpsError so that the client gets the error details.
-    throw new HttpsError(
-      "failed-precondition",
-      "The function must be called " + "while authenticated."
-    );
+    throw new HttpsError("permission-denied", "Unauthenticated");
   }
-  if (context.auth.token.firebase.sign_in_provider === "anonymous") {
-    if (!data.signature || !data.pubKey) {
-      throw new HttpsError("aborted", "Missing pubkey or signature!");
-    }
-    const isValid = verifyPubKey(context, data.signature, data.pubKey);
-    if (!isValid) {
-      throw new HttpsError("aborted", "Pubkey signature verification failed");
-    }
-  } else {
-    throw new HttpsError("aborted", "Wrong Authentication Provider!");
+  if (context.auth.token.firebase.sign_in_provider !== "custom") {
+    throw new HttpsError("permission-denied", "Wrong authentication provider!");
   }
 
   await db

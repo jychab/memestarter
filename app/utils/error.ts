@@ -1,6 +1,5 @@
 import { IDL as SafePresaleIdl } from "./idl";
 export function getCustomErrorMessage(errorMessage: any) {
-  console.log(JSON.stringify(errorMessage));
   const customErrorExpression =
     /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
   let match = customErrorExpression.exec(errorMessage);
