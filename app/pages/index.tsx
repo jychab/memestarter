@@ -99,7 +99,7 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
 
       return () => unsubscribe();
     }
-  }, [page, sortCriteria, filterCriteria]);
+  }, [page, sortCriteria, filterCriteria, createQuery]);
 
   useEffect(() => {
     // Function to handle click outside the dialog

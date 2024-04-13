@@ -14,6 +14,7 @@ import { httpsCallable, getFunctions } from "firebase/functions";
 import { toast } from "react-toastify";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { createLoginMessage } from "../utils/helper";
+import { PublicKey } from "@solana/web3.js";
 
 export interface LoginProviderProps {
   children: ReactNode;
@@ -24,10 +25,10 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   const { publicKey, signMessage, disconnect } = useWallet();
 
   useEffect(() => {
-    if (publicKey) {
-      handleLogin();
+    if (publicKey && signMessage) {
+      handleLogin(publicKey, signMessage);
     }
-  }, [publicKey]);
+  }, [publicKey, signMessage]);
 
   const signOut = async () => {
     if (auth) {
@@ -39,7 +40,10 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     }
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (
+    publicKey: PublicKey,
+    signMessage: (message: Uint8Array) => Promise<Uint8Array>
+  ) => {
     try {
       const currentUser = await signInAnonymously(auth);
       const sessionKey = await currentUser.user.getIdToken();
@@ -56,7 +60,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
       const user = await signInWithCustomToken(auth, token);
       setUser(user.user);
     } catch (error) {
-      toast.error(error);
+      toast.error(`${error}`);
     }
   };
 
