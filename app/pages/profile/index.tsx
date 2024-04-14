@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { MintDashboard } from "../../sections/MintDashboard";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { useLogin } from "../../hooks/useLogin";
 import { toast } from "react-toastify";
 import {
@@ -11,9 +10,10 @@ import {
   DasApiMetadata,
 } from "@metaplex-foundation/digital-asset-standard-api";
 import useUmi from "../../hooks/useUmi";
-import { getCollectionMintAddress, sendTransactions } from "../../utils/helper";
+import { getCollectionMintAddress } from "../../utils/helper";
+import { sendTransactions } from "../../utils/transactions";
 import solanaLogo from "../../public/solanaLogoMark.png";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {
@@ -24,6 +24,7 @@ import { publicKey as PubKey } from "@metaplex-foundation/umi";
 import { useRouter } from "next/router";
 import { getCustomErrorMessage } from "../../utils/error";
 import { useData } from "../../hooks/useData";
+import { linkAsset, mintNft } from "../../utils/cloudFunctions";
 
 interface CustomAsset extends DasApiAsset {
   image: string;
@@ -55,13 +56,15 @@ interface CustomDasApiAsset {
 }
 
 function Profile() {
-  const { user } = useLogin();
+  const { user, handleLogin } = useLogin();
   const { nft } = useData();
-  const { publicKey, signIn, signAllTransactions } = useWallet();
+  const { publicKey, signMessage, signAllTransactions } = useWallet();
   const { connection } = useConnection();
   const [page, setPage] = useState(1);
-  const [endOfPage, setEndOfPage] = useState<number>();
-  const [umiPage, setUmiPage] = useState(1);
+
+  const [currentLength, setCurrentLength] = useState<number>();
+  const [endOfPage, setEndofPage] = useState<number>();
+  const [limit, setLimit] = useState(50);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [walletAssets, setWalletAssets] = useState<(CustomAsset | undefined)[]>(
@@ -69,16 +72,8 @@ function Profile() {
   );
   const [selectedItem, setSelectedItem] = useState<CustomAsset>();
   const [collectionItem, setCollectionItem] = useState<DasApiAsset>();
+  const [currentUser, setCurrentUser] = useState<PublicKey>();
   const umi = useUmi();
-
-  const reset = () => {
-    setUmiPage(1);
-    setPage(1);
-    setEndOfPage(undefined);
-    setWalletAssets(Array(20).fill(undefined));
-    setSelectedItem(undefined);
-    setCollectionItem(undefined);
-  };
 
   useEffect(() => {
     if (selectedItem) {
@@ -118,7 +113,7 @@ function Profile() {
     const results = await Promise.all(promises);
 
     // Update walletAssets with non-null results
-    const temp = [...walletAssets.filter((item) => item != undefined)];
+    const temp = [];
     results.forEach((result, i) => {
       if (result !== null) {
         temp.push(result);
@@ -142,34 +137,37 @@ function Profile() {
   }, [publicKey, nft, router]);
 
   useEffect(() => {
-    if (publicKey && user && umiPage && !nft) {
-      if (publicKey.toBase58() !== user.uid) {
-        reset();
-      } else {
-        umi.rpc
-          .searchAssets({
-            owner: fromWeb3JsPublicKey(publicKey),
-            compressed: false,
-            sortBy: {
-              sortBy: "recent_action",
-              sortDirection: "desc",
-            },
-            creatorVerified: true,
-            page: umiPage,
-          })
-          .then((walletData: DasApiAssetList) => {
-            setEndOfPage(walletData.total === 0 ? page : undefined);
-            loadAssets(walletData);
-          });
+    if (publicKey && limit && !nft) {
+      if (!currentUser || currentUser.toBase58() !== publicKey.toBase58()) {
+        setPage(1);
       }
-
-      return () => {};
+      setCurrentUser(publicKey);
+      umi.rpc
+        .searchAssets({
+          owner: fromWeb3JsPublicKey(publicKey),
+          compressed: false,
+          sortBy: {
+            sortBy: "recent_action",
+            sortDirection: "desc",
+          },
+          creatorVerified: true,
+          limit: limit,
+        })
+        .then((walletData: DasApiAssetList) => {
+          loadAssets(walletData);
+        });
     }
-  }, [publicKey, user, umiPage, nft]);
+  }, [publicKey, limit, nft]);
 
   const handleMintNft = async () => {
     try {
-      if (publicKey && user && signIn && signAllTransactions && connection) {
+      if (
+        publicKey &&
+        user &&
+        signMessage &&
+        signAllTransactions &&
+        connection
+      ) {
         setLoading(true);
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (
@@ -181,11 +179,7 @@ function Profile() {
         }
 
         toast.info("Minting...");
-        const mintNft = httpsCallable(getFunctions(), "mintNft");
-        const { tx, mint } = (await mintNft()).data as {
-          tx: string;
-          mint: string;
-        };
+        const { tx, mint } = await mintNft(publicKey, signMessage, handleLogin);
         const transactionBuffer = base64.decode(tx as string);
         const transaction = toWeb3JsTransaction(
           umi.transactions.deserialize(transactionBuffer)
@@ -193,8 +187,7 @@ function Profile() {
         await sendTransactions(connection, [transaction], signAllTransactions);
         toast.info("Linking...");
         const asset = await umi.rpc.getAsset(PubKey(mint));
-        const linkAsset = httpsCallable(getFunctions(), "linkAsset");
-        await linkAsset({ nft: asset });
+        await linkAsset(asset, publicKey, signMessage, handleLogin);
         toast.success("Success");
       }
     } catch (error) {
@@ -205,7 +198,7 @@ function Profile() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">
+    <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center">
       {!publicKey ? (
         <span className="text-black">You need to sign in first.</span>
       ) : selectedItem ? (
@@ -298,19 +291,17 @@ function Profile() {
                     </button>
                     <button
                       onClick={() => {
-                        if (
-                          !endOfPage &&
-                          (walletAssets.length < (page + 1) * 20 ||
-                            walletAssets
-                              .slice(page * 20, (page + 1) * 20)
-                              .filter((item) => !item).length <
-                              walletAssets.length)
-                        ) {
-                          setUmiPage(umiPage + 1);
+                        let end = endOfPage;
+                        if (!end && currentLength == walletAssets.length) {
+                          end = page;
+                          setEndofPage(page);
+                        } else {
+                          setCurrentLength(walletAssets.length);
                         }
-                        setPage(
-                          endOfPage ? Math.min(page + 1, endOfPage) : page + 1
-                        );
+                        if (!end) {
+                          setLimit(limit + 50);
+                        }
+                        setPage(end ? Math.min(page + 1, end) : page + 1);
                       }}
                       className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg text-black border-gray-400 hover:text-blue-600"
                     >

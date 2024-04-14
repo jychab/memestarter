@@ -10,13 +10,8 @@ import {
   UseMethods,
 } from "./enums";
 import { Timestamp } from "firebase/firestore";
+import { Market } from "@raydium-io/raydium-sdk";
 
-export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
-  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-);
-export const PROGRAM_ID = new PublicKey(
-  "memep6GYetMx84qtBgB9p1rncn81HMmZZa1UoxauYGt"
-);
 export enum Status {
   PresaleTargetMet = "Presale Target Met",
   VestingInProgress = "Vesting In Progress",
@@ -47,12 +42,20 @@ export interface BuyPresaleArgs {
   poolId: PublicKey;
   signer: PublicKey;
 }
+
+export interface CreatePoolArgs extends InitializePoolArgs {
+  publicKey: PublicKey;
+  collectionsRequired: CollectionDetails[];
+  externalUrl: string;
+  description: string;
+}
+
 export interface InitializePoolArgs {
   name: string;
   symbol: string;
   decimal: number;
   uri: string;
-  creator_fees_basis_points: number;
+  creatorFeesBasisPoints: number;
   presaleDuration: number;
   presaleTarget: number;
   vestingPeriod: number;
@@ -98,6 +101,12 @@ export interface CheckClaimElligbilityArgs {
   signer: PublicKey;
   lpMint: PublicKey;
   mint: PublicKey;
+}
+
+export interface UpdateMarketDataArgs {
+  pubKey: string;
+  poolId: string;
+  marketDetails: MarketDetails;
 }
 export interface MarketDetails {
   marketId: string;

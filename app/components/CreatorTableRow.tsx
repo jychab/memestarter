@@ -1,30 +1,18 @@
 import React, { FC, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  VersionedTransaction,
-} from "@solana/web3.js";
-import {
-  buildAndSendTransaction,
   convertSecondsToNearestUnit,
-  createMarket,
-  determineOptimalParameters,
   formatLargeNumber,
   getStatus,
-  launchTokenAmm,
-  sendTransactions,
 } from "../utils/helper";
-import { MarketDetails, PoolType, Status } from "../utils/types";
+import { PoolType, Status } from "../utils/types";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
 import { toast } from "react-toastify";
-import { buildSimpleTransaction, TxVersion } from "@raydium-io/raydium-sdk";
-import { getDoc, doc } from "firebase/firestore";
-import { httpsCallable, getFunctions } from "firebase/functions";
-import { db } from "../utils/firebase";
 import { getCustomErrorMessage } from "../utils/error";
+import { launchToken } from "../utils/functions";
 
 interface CreatorTableRowProps {
   pool: PoolType;
@@ -34,10 +22,10 @@ interface CreatorTableRowProps {
 export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status>();
-  const { publicKey, signTransaction, signIn, signAllTransactions } =
+  const { publicKey, signTransaction, signMessage, signAllTransactions } =
     useWallet();
   const { connection } = useConnection();
-  const { user } = useLogin();
+  const { handleLogin } = useLogin();
   const [unlockedMint, setUnlockedMint] = useState<number>();
   const router = useRouter();
 
@@ -64,106 +52,22 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
   const launch = async () => {
     try {
       if (
-        status &&
         publicKey &&
-        user &&
         connection &&
         pool &&
-        signIn &&
+        signMessage &&
         signTransaction &&
         signAllTransactions
       ) {
         setLoading(true);
-        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-        const docRef = await getDoc(
-          doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
-        );
-        let marketId;
-        if (
-          (!amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
-          !docRef.exists()
-        ) {
-          toast.error("Insufficient Sol. You need at least 3 Sol.");
-          return;
-        } else if (
-          (!amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
-          docRef.exists()
-        ) {
-          toast.error("Insufficient Sol. You need at least 0.2 Sol.");
-          return;
-        }
-        if (!docRef.exists()) {
-          toast.info("Determining optimal parameters...");
-          const { tickSize, orderSize } = await determineOptimalParameters(
-            { pool: pool.pool, decimal: pool.decimal },
-            connection
-          );
-          toast.info("Creating Market..");
-          const { innerTransactions, address } = await createMarket(
-            {
-              signer: publicKey,
-              mint: new PublicKey(pool.mint),
-              decimal: pool.decimal,
-              lotSize: orderSize,
-              tickSize: tickSize,
-            },
-            connection
-          );
-          const txs = await buildSimpleTransaction({
-            connection: connection,
-            makeTxVersion: TxVersion.V0,
-            payer: publicKey,
-            innerTransactions,
-          });
-          await sendTransactions(
-            connection,
-            txs as VersionedTransaction[],
-            signAllTransactions
-          );
-          const updateMarket = httpsCallable(
-            getFunctions(),
-            "updateMarketDetails"
-          );
-          const payload = {
-            pubKey: publicKey.toBase58(),
-            poolId: pool.pool,
-            marketDetails: {
-              marketId: address.marketId.toBase58(),
-              requestQueue: address.requestQueue.toBase58(),
-              eventQueue: address.eventQueue.toBase58(),
-              bids: address.bids.toBase58(),
-              asks: address.asks.toBase58(),
-              baseVault: address.baseVault.toBase58(),
-              quoteVault: address.quoteVault.toBase58(),
-              baseMint: address.baseMint.toBase58(),
-              quoteMint: address.quoteMint.toBase58(),
-            } as MarketDetails,
-          };
-          await updateMarket(payload);
-          marketId = address.marketId.toBase58();
-        } else {
-          marketId = (docRef.data() as MarketDetails).marketId;
-        }
-        let ix = [];
-        ix.push(
-          await launchTokenAmm(
-            {
-              marketId: new PublicKey(marketId),
-              mint: new PublicKey(pool.mint),
-              signer: publicKey,
-              poolAuthority: new PublicKey(pool.authority),
-              poolId: new PublicKey(pool.pool),
-            },
-            connection
-          )
-        );
-        await buildAndSendTransaction(
+        await launchToken(
+          pool,
           connection,
-          ix,
           publicKey,
-          signTransaction
+          signMessage,
+          handleLogin,
+          signTransaction,
+          signAllTransactions
         );
         toast.success("Success!");
       }

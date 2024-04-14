@@ -5,7 +5,7 @@ export function getCustomErrorMessage(errorMessage: any) {
   let match = customErrorExpression.exec(errorMessage);
   const errorNumberFound = match?.groups?.errorNumber;
   if (!errorNumberFound) {
-    return null;
+    return errorMessage;
   }
   const errorNumber = parseInt(errorNumberFound, 16);
   return (

@@ -3,15 +3,15 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
-  buildAndSendTransaction,
-  checkClaimElligibility,
-  claim,
   convertSecondsToNearestUnit,
   formatLargeNumber,
   getStatus,
-  withdraw,
-  withdrawLp,
 } from "../utils/helper";
+import { buildAndSendTransaction } from "../utils/transactions";
+import { checkClaimElligibility } from "../utils/instructions";
+import { claim } from "../utils/instructions";
+import { withdrawLp } from "../utils/instructions";
+import { withdraw } from "../utils/instructions";
 import { Status } from "../utils/types";
 import { Project } from "../sections/MintDashboard";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";

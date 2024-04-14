@@ -19,10 +19,10 @@ import { CompletedTable } from "../components/tables/CompletedTable";
 import { ExpiredTable } from "../components/tables/ExpiredTable";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useLogin } from "../hooks/useLogin";
-import { httpsCallable, getFunctions } from "firebase/functions";
 import { toast } from "react-toastify";
 import { getCustomErrorMessage } from "../utils/error";
 import { useData } from "../hooks/useData";
+import { linkAsset, unlinkAsset } from "../utils/cloudFunctions";
 
 interface InventoryItemProps {
   item: DasApiAsset;
@@ -52,8 +52,8 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { publicKey, signIn } = useWallet();
-  const { user } = useLogin();
+  const { publicKey, signMessage } = useWallet();
+  const { user, handleLogin } = useLogin();
   const { nft } = useData();
   const [timer, setTimer] = useState<number>();
 
@@ -157,19 +157,13 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }, [show]);
 
   const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
-    if (publicKey && user && signIn && selectedItem) {
+    if (publicKey && signMessage && selectedItem) {
       try {
         setLoading(true);
-
         if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
-          const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
-          await unlinkAsset();
+          await unlinkAsset(publicKey, signMessage, handleLogin);
         } else {
-          const payload = {
-            nft: selectedItem,
-          };
-          const linkAsset = httpsCallable(getFunctions(), "linkAsset");
-          await linkAsset(payload);
+          await linkAsset(selectedItem, publicKey, signMessage, handleLogin);
         }
       } catch (error) {
         toast.error(`${getCustomErrorMessage(error)}`);

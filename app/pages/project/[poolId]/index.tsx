@@ -1,30 +1,10 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import {
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  VersionedTransaction,
-} from "@solana/web3.js";
 import { useRouter } from "next/router";
-import { FC, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useLogin } from "../../../hooks/useLogin";
-import { ReviewPane } from "../../../sections/ReviewPane";
-import {
-  buyPresaleIx,
-  buildAndSendTransaction,
-  getStatus,
-  createMarket,
-  sendTransactions,
-  launchTokenAmm,
-  getCollectionMintAddress,
-  determineOptimalParameters,
-} from "../../../utils/helper";
-import {
-  MarketDetails,
-  MintType,
-  PoolType,
-  Status,
-} from "../../../utils/types";
+import { getStatus, getCollectionMintAddress } from "../../../utils/helper";
+import { MintType, PoolType, Status } from "../../../utils/types";
 import {
   collection,
   doc,
@@ -32,8 +12,6 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "../../../utils/firebase";
-import { TxVersion, buildSimpleTransaction } from "@raydium-io/raydium-sdk";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
@@ -41,6 +19,7 @@ import { getCustomErrorMessage } from "../../../utils/error";
 import { useData } from "../../../hooks/useData";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
 import { MainPane } from "../../../sections/MainPane";
+import { buyPresale, launchToken } from "../../../utils/functions";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -49,9 +28,9 @@ export function Pool() {
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const [mint, setMint] = useState<MintType>();
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
-  const { publicKey, signTransaction, signIn, signAllTransactions } =
+  const { publicKey, signTransaction, signAllTransactions, signMessage } =
     useWallet();
-  const { user } = useLogin();
+  const { handleLogin } = useLogin();
   const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
@@ -91,110 +70,26 @@ export function Pool() {
     try {
       if (
         publicKey &&
-        user &&
         connection &&
         pool &&
-        signIn &&
+        signMessage &&
         signTransaction &&
         signAllTransactions
       ) {
         setLoading(true);
-        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-        const docRef = await getDoc(
-          doc(db, `Pool/${pool.pool}/Market/${pool.mint}`)
-        );
-        let marketId;
-        if (
-          (!amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
-          !docRef.exists()
-        ) {
-          toast.error("Insufficient Sol. You need at least 3 Sol.");
-          return;
-        } else if (
-          (!amountOfSolInWallet ||
-            amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
-          docRef.exists()
-        ) {
-          toast.error("Insufficient Sol. You need at least 0.2 Sol.");
-          return;
-        }
-        if (!docRef.exists()) {
-          toast.info("Determining optimal parameters...");
-          const { tickSize, orderSize } = await determineOptimalParameters(
-            { pool: pool.pool, decimal: pool.decimal },
-            connection
-          );
-          toast.info("Creating Market..");
-          const { innerTransactions, address } = await createMarket(
-            {
-              signer: publicKey,
-              mint: new PublicKey(pool.mint),
-              decimal: pool.decimal,
-              lotSize: orderSize,
-              tickSize: tickSize,
-            },
-            connection
-          );
-          const txs = await buildSimpleTransaction({
-            connection: connection,
-            makeTxVersion: TxVersion.V0,
-            payer: publicKey,
-            innerTransactions,
-          });
-          await sendTransactions(
-            connection,
-            txs as VersionedTransaction[],
-            signAllTransactions
-          );
-          const updateMarket = httpsCallable(
-            getFunctions(),
-            "updateMarketDetails"
-          );
-
-          const payload = {
-            pubKey: publicKey.toBase58(),
-            poolId: pool.pool,
-            marketDetails: {
-              marketId: address.marketId.toBase58(),
-              requestQueue: address.requestQueue.toBase58(),
-              eventQueue: address.eventQueue.toBase58(),
-              bids: address.bids.toBase58(),
-              asks: address.asks.toBase58(),
-              baseVault: address.baseVault.toBase58(),
-              quoteVault: address.quoteVault.toBase58(),
-              baseMint: address.baseMint.toBase58(),
-              quoteMint: address.quoteMint.toBase58(),
-            } as MarketDetails,
-          };
-          await updateMarket(payload);
-          marketId = address.marketId.toBase58();
-        } else {
-          marketId = (docRef.data() as MarketDetails).marketId;
-        }
-        let ix = [];
-        ix.push(
-          await launchTokenAmm(
-            {
-              marketId: new PublicKey(marketId),
-              mint: new PublicKey(pool.mint),
-              signer: publicKey,
-              poolAuthority: new PublicKey(pool.authority),
-              poolId: new PublicKey(pool.pool),
-            },
-            connection
-          )
-        );
-        await buildAndSendTransaction(
+        await launchToken(
+          pool,
           connection,
-          ix,
           publicKey,
-          signTransaction
+          signMessage,
+          handleLogin,
+          signTransaction,
+          signAllTransactions
         );
         toast.success("Success!");
       }
     } catch (error) {
-      toast.error(getCustomErrorMessage(error));
+      toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -211,36 +106,12 @@ export function Pool() {
         signTransaction
       ) {
         setLoading(true);
-        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-        if (
-          !amountOfSolInWallet ||
-          amountOfSolInWallet.lamports <=
-            parseFloat(amountToPurchase) * LAMPORTS_PER_SOL
-        ) {
-          toast.error(
-            `Insufficient Sol. You need at least ${amountToPurchase} Sol.`
-          );
-          return;
-        }
-        const nftCollection = getCollectionMintAddress(nft);
-        if (!nftCollection) {
-          throw Error("NFT has no collection");
-        }
-        const ix = await buyPresaleIx(
-          {
-            amount: parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
-            nft: new PublicKey(nft.id),
-            nftCollection: new PublicKey(nftCollection),
-            poolId: new PublicKey(pool.pool),
-            signer: publicKey,
-          },
-          connection
-        );
-
-        await buildAndSendTransaction(
-          connection,
-          [ix],
+        await buyPresale(
+          pool,
+          nft,
+          amountToPurchase,
           publicKey,
+          connection,
           signTransaction
         );
         toast.success("Success!");

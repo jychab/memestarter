@@ -5,16 +5,11 @@ import { toast } from "react-toastify";
 import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import {
-  initializePoolIx,
-  buildAndSendTransaction,
-  createPurchaseAuthorisationIx,
-} from "../../utils/helper";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { ReviewPane } from "../../sections/ReviewPane";
 import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { createPool, uploadImage, uploadMetadata } from "../../utils/functions";
 
 function CreateCollection() {
   const { user } = useLogin();
@@ -49,43 +44,7 @@ function CreateCollection() {
   >([]);
   const [creatorFees, setCreatorFees] = useState<string>("5"); //in percentage -> need to convert to basis pts
 
-  async function uploadMetadata(
-    name: string,
-    symbol: string,
-    description: string,
-    image: string,
-    externalUrl: string
-  ) {
-    const payload = {
-      name,
-      symbol,
-      description,
-      image,
-      externalUrl,
-    };
-    const blob = new Blob([JSON.stringify(payload)], {
-      type: "application/json",
-    });
-    const storage = getStorage();
-    const uuid = crypto.randomUUID();
-    const reference = ref(storage, uuid);
-    // 'file' comes from the Blob or File API
-    await uploadBytes(reference, blob);
-    const uri = await getDownloadURL(reference);
-    return uri;
-  }
-
-  async function uploadImage(picture: Blob) {
-    const storage = getStorage();
-    const uuid = crypto.randomUUID();
-    const reference = ref(storage, uuid);
-    // 'file' comes from the Blob or File API
-    await uploadBytes(reference, picture);
-    const imageUrl = await getDownloadURL(reference);
-    return imageUrl;
-  }
   const reset = () => {
-    setLoading(false);
     setName("");
     setSymbol("");
     setDescription("");
@@ -144,7 +103,6 @@ function CreateCollection() {
       if (user === null || !publicKey || picture === null || !signTransaction) {
         return;
       }
-
       const creatorFeesBasisPts =
         parseFloat(creatorFees.replaceAll("%", "")) * 100;
       const presaleTargetLamports =
@@ -152,38 +110,8 @@ function CreateCollection() {
       const totalSupplyNum = parseInt(supply.replaceAll(",", ""));
       const vestingSupplyNum =
         (parseInt(vestingSupply.replaceAll(",", "")) / 100) * totalSupplyNum;
-
-      if (creatorFeesBasisPts > 5000) {
-        toast.error("Creator Fees cannot be higher than 50%");
-        return;
-      }
-      if (presaleTargetLamports > 10000 * LAMPORTS_PER_SOL) {
-        toast.error(
-          "Presale Target is too high. You will not be able to launch your project unless the target is met."
-        );
-        return;
-      }
-      if (presaleTargetLamports < LAMPORTS_PER_SOL) {
-        toast.error(
-          "Presale Target is too low. It needs to be higher than 1 Sol."
-        );
-        return;
-      }
-      if (totalSupplyNum < 1000000) {
-        toast.error("Total supply cannot be lower than 1,000,000");
-        return;
-      }
-      if (vestingSupplyNum > totalSupplyNum) {
-        toast.error("Vesting supply cannot be higher than Total supply");
-        return;
-      }
-      if (presaleDuration > 30 * 24 * 60 * 60) {
-        toast.error("Presale duration cannot be longer than a month");
-        return;
-      }
       try {
         setLoading(true);
-        toast.info("Uploading Metadata... please wait");
         const imageUrl = await uploadImage(picture);
         const uri = await uploadMetadata(
           name,
@@ -192,16 +120,17 @@ function CreateCollection() {
           imageUrl,
           externalUrl
         );
-        toast.info("Upload Completed.");
-        const requiresCollection = collectionsRequired.length != 0;
-        let ix = [];
-        const { instruction, poolId } = await initializePoolIx(
+        await createPool(
           {
+            publicKey: publicKey,
+            collectionsRequired: collectionsRequired,
+            externalUrl: externalUrl,
+            description: description,
             name: name,
             symbol: symbol,
             decimal: decimals,
             uri: uri,
-            creator_fees_basis_points: creatorFeesBasisPts,
+            creatorFeesBasisPoints: creatorFeesBasisPts,
             presaleDuration: presaleDuration,
             presaleTarget: presaleTargetLamports,
             vestingPeriod: vestingPeriod,
@@ -212,39 +141,18 @@ function CreateCollection() {
               maxAmountPerPurchase != ""
                 ? parseFloat(maxAmountPerPurchase) * LAMPORTS_PER_SOL
                 : null,
-            requiresCollection: requiresCollection,
+            requiresCollection: collectionsRequired.length != 0,
           },
-          connection
-        );
-        ix.push(instruction);
-        if (requiresCollection) {
-          ix = ix.concat(
-            await Promise.all(
-              collectionsRequired.map((collection) =>
-                createPurchaseAuthorisationIx(
-                  {
-                    collectionMint: new PublicKey(collection.mintAddress),
-                    signer: publicKey,
-                    poolId: poolId,
-                  },
-                  connection
-                )
-              )
-            )
-          );
-        }
-        await buildAndSendTransaction(
           connection,
-          ix,
-          publicKey,
           signTransaction
         );
         toast.success("Success!");
+        reset();
         router.push("/");
       } catch (error) {
         toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
-        reset();
+        setLoading(false);
       }
     }
   };
