@@ -97,6 +97,12 @@ function CreateCollection() {
       if (!publicKey || picture === null || !signTransaction) {
         return;
       }
+      const amountOfSol = (await connection.getAccountInfo(publicKey))
+        ?.lamports;
+      if (!amountOfSol || amountOfSol < 0.01 * LAMPORTS_PER_SOL) {
+        toast.error("Insufficient sol, need at least 0.022 sol");
+        return;
+      }
       const creatorFeesBasisPts =
         parseFloat(creatorFees.replaceAll("%", "")) * 100;
       const presaleTargetLamports =

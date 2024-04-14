@@ -239,6 +239,7 @@ export function Pool() {
             liquidityCollected={pool.liquidityCollected}
             presaleTimeLimit={pool.presaleTimeLimit}
             presaleTarget={pool.presaleTarget}
+            description={pool.description}
           />
           {status && publicKey && getButton(status, pool, nft, loading)}
         </div>

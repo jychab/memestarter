@@ -45,7 +45,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   maxAmountPerPurchase,
 }) => {
   return (
-    <div className="flex flex-col text-gray-400 font-medium rounded gap-8">
+    <div className="flex flex-col text-gray-400 font-medium rounded gap-8 overflow-x-auto">
       <MainPane
         image={image}
         name={name}
@@ -54,21 +54,21 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         authority={authority}
       />
       <div className="grid grid-cols-6 items-center gap-4 text-xs">
-        {description && (
-          <span className="col-span-2 sm:col-span-1">Description</span>
-        )}
-        {description && (
-          <span className="col-span-4 sm:col-span-5 text-black">
-            {description}
+        {collectionsRequired && collectionsRequired.length > 0 && (
+          <span className="col-span-2 sm:col-span-1">
+            Whitelisted Collections
           </span>
         )}
-        {externalUrl && (
-          <span className="col-span-2 sm:col-span-1">External Url</span>
-        )}
-        {externalUrl && (
-          <span className="col-span-4 sm:col-span-5 text-black">
-            {externalUrl}
-          </span>
+        {collectionsRequired && collectionsRequired.length > 0 && (
+          <div className="col-span-4 sm:col-span-5 flex gap-2 flex-wrap">
+            {collectionsRequired.map((collection) => (
+              <Chip
+                key={collection.mintAddress}
+                k={collection.name}
+                textColor="text-white"
+              />
+            ))}
+          </div>
         )}
         <span className="col-span-2 sm:col-span-1">Total Supply</span>
         <span className="col-span-4 sm:col-span-2 text-black">
@@ -111,21 +111,21 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
             {maxAmountPerPurchase / LAMPORTS_PER_SOL + " Sol"}
           </span>
         )}
-        {collectionsRequired && collectionsRequired.length > 0 && (
-          <span className="col-span-2 sm:col-span-1">
-            Whitelisted Collections
+        {externalUrl && (
+          <span className="col-span-2 sm:col-span-1">External Url</span>
+        )}
+        {externalUrl && (
+          <span className="col-span-4 sm:col-span-5 text-black">
+            {externalUrl}
           </span>
         )}
-        {collectionsRequired && collectionsRequired.length > 0 && (
-          <div className="col-span-4 sm:col-span-5 flex gap-2 flex-wrap">
-            {collectionsRequired.map((collection) => (
-              <Chip
-                key={collection.mintAddress}
-                k={collection.name}
-                textColor="text-white"
-              />
-            ))}
-          </div>
+        {description && (
+          <span className="col-span-2 sm:col-span-1">Description</span>
+        )}
+        {description && (
+          <span className="col-span-4 sm:col-span-5 text-black truncate text-wrap">
+            {description}
+          </span>
         )}
       </div>
     </div>

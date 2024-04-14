@@ -19,6 +19,7 @@ interface PresaleDashboardProps {
   liquidityCollected: number;
   presaleTimeLimit: number;
   presaleTarget: number;
+  description?: string;
   collectionsRequired?: CollectionDetails[] | null;
 }
 
@@ -32,10 +33,11 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   symbol,
   vestedSupply,
   vestingPeriod,
+  description,
   collectionsRequired,
 }) => {
   return (
-    <div className="grid grid-cols-10 items-end justify-center gap-4">
+    <div className="grid grid-cols-10 items-end justify-center overflow-x-auto gap-4">
       {collectionsRequired && (
         <div className="col-span-10">
           <div className="flex-col flex gap-2 bg-gray-100 rounded p-2">
@@ -101,6 +103,14 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         )}`}</span>
         <span className="text-[10px]">{`vesting period`}</span>
       </div>
+      {description && (
+        <span className="uppercase text-xs col-span-10">About</span>
+      )}
+      {description && (
+        <span className="text-[10px] sm:text-xs text-black text-wrap truncate col-span-10">
+          {description}
+        </span>
+      )}
     </div>
   );
 };
