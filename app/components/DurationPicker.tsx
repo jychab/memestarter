@@ -13,8 +13,20 @@ export const DurationPicker: FC<DurationPickerProps> = ({
 }) => {
   const showDurationDialogRef = useRef<HTMLDivElement>(null);
   const [showDuration, setShowDuration] = useState(false);
-  const [value, setValue] = useState("");
-  const [periodEnum, setPeriodEnum] = useState<Period>(Period.Days);
+  const [periodEnum, setPeriodEnum] = useState<Period>(
+    period > 60 * 60 * 24
+      ? period > 30 * 24 * 60 * 60
+        ? Period.Months
+        : Period.Days
+      : Period.Hours
+  );
+  const [value, setValue] = useState(
+    period > 60 * 60 * 24
+      ? period > 30 * 24 * 60 * 60
+        ? `${period / (30 * 24 * 60 * 60)}`
+        : `${period / (24 * 60 * 60)}`
+      : `${period / (60 * 60)}`
+  );
   useEffect(() => {
     // Function to handle click outside the dialog
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,18 +64,6 @@ export const DurationPicker: FC<DurationPickerProps> = ({
       }
     }
   }, [value, periodEnum, setPeriod]);
-
-  useEffect(() => {
-    if (periodEnum && period) {
-      if (periodEnum === Period.Days) {
-        setValue((period / (24 * 60 * 60)).toString());
-      } else if (periodEnum === Period.Hours) {
-        setValue((period / (60 * 60)).toString());
-      } else {
-        setValue((period / (30 * 24 * 60 * 60)).toString());
-      }
-    }
-  }, [periodEnum]);
 
   return (
     <div className="grid grid-cols-2 gap-4 items-center">

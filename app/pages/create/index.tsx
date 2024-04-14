@@ -11,7 +11,6 @@ import {
   buildAndSendTransaction,
   createPurchaseAuthorisationIx,
 } from "../../utils/helper";
-import useUmi from "../../hooks/useUmi";
 import { ReviewPane } from "../../sections/ReviewPane";
 import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
@@ -21,7 +20,6 @@ function CreateCollection() {
   const { user } = useLogin();
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
-  const umi = useUmi();
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
