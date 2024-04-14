@@ -11,7 +11,7 @@ import { useRouter } from "next/router";
 export const UserProfileBtn: FC = () => {
   const [expand, setExpand] = useState(false);
   const { signOut } = useLogin();
-  const { publicKey, disconnect, wallet } = useWallet();
+  const { publicKey, wallet } = useWallet();
   const { networkConfiguration } = useNetworkConfiguration();
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);

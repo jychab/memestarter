@@ -56,7 +56,7 @@ interface CustomDasApiAsset {
 }
 
 function Profile() {
-  const { user, handleLogin } = useLogin();
+  const { handleLogin } = useLogin();
   const { nft } = useData();
   const { publicKey, signMessage, signAllTransactions } = useWallet();
   const { connection } = useConnection();
@@ -161,13 +161,7 @@ function Profile() {
 
   const handleMintNft = async () => {
     try {
-      if (
-        publicKey &&
-        user &&
-        signMessage &&
-        signAllTransactions &&
-        connection
-      ) {
+      if (publicKey && signMessage && signAllTransactions && connection) {
         setLoading(true);
         const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
         if (

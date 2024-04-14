@@ -53,7 +53,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const { publicKey, signMessage } = useWallet();
-  const { user, handleLogin } = useLogin();
+  const { handleLogin } = useLogin();
   const { nft } = useData();
   const [timer, setTimer] = useState<number>();
 

@@ -19,7 +19,7 @@ export const MainPane: FC<MainPaneProps> = ({
   mint,
 }) => {
   return (
-    <div className="flex gap-">
+    <div className="flex gap-4">
       <div className="relative h-40 w-40 lg:w-60 lg:h-60">
         <Image
           className={`rounded object-cover cursor-pointer`}
@@ -38,11 +38,11 @@ export const MainPane: FC<MainPaneProps> = ({
         <span className=" text-black">{decimals}</span>
         {authority && <span>Creator</span>}
         {authority && (
-          <span className="w-24 lg:w-64 truncate text-black">{authority}</span>
+          <span className="w-48 lg:w-80 truncate text-black">{authority}</span>
         )}
         {mint && <span>Mint Address</span>}
         {mint && (
-          <span className="w-24 lg:w-64 truncate text-black">{mint}</span>
+          <span className="w-48 lg:w-64 truncate text-black">{mint}</span>
         )}
       </div>
     </div>

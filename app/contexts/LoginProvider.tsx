@@ -50,7 +50,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   return (
     <LoginContext.Provider
       value={{
-        user,
         signOut,
         handleLogin,
       }}

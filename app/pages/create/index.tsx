@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
-import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -12,7 +11,6 @@ import { getCustomErrorMessage } from "../../utils/error";
 import { createPool, uploadImage, uploadMetadata } from "../../utils/functions";
 
 function CreateCollection() {
-  const { user } = useLogin();
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
   const router = useRouter();
@@ -96,11 +94,7 @@ function CreateCollection() {
       }
       setPage(page + 1);
     } else {
-      if (!publicKey) {
-        router.push("/profile");
-        return;
-      }
-      if (user === null || !publicKey || picture === null || !signTransaction) {
+      if (!publicKey || picture === null || !signTransaction) {
         return;
       }
       const creatorFeesBasisPts =
