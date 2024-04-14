@@ -25,16 +25,7 @@ export async function getCurrentPrice(): Promise<{
   };
 }
 
-export async function updateMarketData(
-  payload: UpdateMarketDataArgs,
-  publicKey: PublicKey,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  handleLogin: (
-    publicKey: PublicKey,
-    signMessage: (message: Uint8Array) => Promise<Uint8Array>
-  ) => Promise<void>
-) {
-  await handleLogin(publicKey, signMessage);
+export async function updateMarketData(payload: UpdateMarketDataArgs) {
   const updateMarket = httpsCallable(getFunctions(), "updateMarketDetails");
   await updateMarket(payload);
 }
@@ -52,15 +43,7 @@ export async function verifyAndGetToken(
   ).data as string;
 }
 
-export async function mintNft(
-  publicKey: PublicKey,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  handleLogin: (
-    publicKey: PublicKey,
-    signMessage: (message: Uint8Array) => Promise<Uint8Array>
-  ) => Promise<void>
-) {
-  await handleLogin(publicKey, signMessage);
+export async function mintNft(publicKey: PublicKey) {
   const mintNftFn = httpsCallable(getFunctions(), "mintNft");
   const { tx, mint } = (await mintNftFn()).data as {
     tx: string;
@@ -69,29 +52,12 @@ export async function mintNft(
   return { tx, mint };
 }
 
-export async function linkAsset(
-  asset: DasApiAsset,
-  publicKey: PublicKey,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  handleLogin: (
-    publicKey: PublicKey,
-    signMessage: (message: Uint8Array) => Promise<Uint8Array>
-  ) => Promise<void>
-) {
-  await handleLogin(publicKey, signMessage);
+export async function linkAsset(asset: DasApiAsset) {
   const linkAssetFn = httpsCallable(getFunctions(), "linkAsset");
   await linkAssetFn({ nft: asset });
 }
 
-export async function unlinkAsset(
-  publicKey: PublicKey,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  handleLogin: (
-    publicKey: PublicKey,
-    signMessage: (message: Uint8Array) => Promise<Uint8Array>
-  ) => Promise<void>
-) {
-  await handleLogin(publicKey, signMessage);
+export async function unlinkAsset() {
   const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
   await unlinkAsset();
 }

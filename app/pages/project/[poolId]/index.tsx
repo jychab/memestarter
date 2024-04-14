@@ -77,12 +77,11 @@ export function Pool() {
         signAllTransactions
       ) {
         setLoading(true);
+        await handleLogin(publicKey, signMessage);
         await launchToken(
           pool,
           connection,
           publicKey,
-          signMessage,
-          handleLogin,
           signTransaction,
           signAllTransactions
         );

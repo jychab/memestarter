@@ -160,10 +160,11 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     if (publicKey && signMessage && selectedItem) {
       try {
         setLoading(true);
+        await handleLogin(publicKey, signMessage);
         if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
-          await unlinkAsset(publicKey, signMessage, handleLogin);
+          await unlinkAsset();
         } else {
-          await linkAsset(selectedItem, publicKey, signMessage, handleLogin);
+          await linkAsset(selectedItem);
         }
       } catch (error) {
         toast.error(`${getCustomErrorMessage(error)}`);

@@ -36,11 +36,6 @@ export async function launchToken(
   pool: PoolType,
   connection: Connection,
   publicKey: PublicKey,
-  signMessage: (message: Uint8Array) => Promise<Uint8Array>,
-  handleLogin: (
-    publicKey: PublicKey,
-    signMessage: (message: Uint8Array) => Promise<Uint8Array>
-  ) => Promise<void>,
   signTransaction: <T extends VersionedTransaction | Transaction>(
     transaction: T
   ) => Promise<T>,
@@ -92,26 +87,21 @@ export async function launchToken(
       txs as VersionedTransaction[],
       signAllTransactions
     );
-    await updateMarketData(
-      {
-        pubKey: publicKey.toBase58(),
-        poolId: pool.pool,
-        marketDetails: {
-          marketId: address.marketId.toBase58(),
-          requestQueue: address.requestQueue.toBase58(),
-          eventQueue: address.eventQueue.toBase58(),
-          bids: address.bids.toBase58(),
-          asks: address.asks.toBase58(),
-          baseVault: address.baseVault.toBase58(),
-          quoteVault: address.quoteVault.toBase58(),
-          baseMint: address.baseMint.toBase58(),
-          quoteMint: address.quoteMint.toBase58(),
-        } as MarketDetails,
-      },
-      publicKey,
-      signMessage,
-      handleLogin
-    );
+    await updateMarketData({
+      pubKey: publicKey.toBase58(),
+      poolId: pool.pool,
+      marketDetails: {
+        marketId: address.marketId.toBase58(),
+        requestQueue: address.requestQueue.toBase58(),
+        eventQueue: address.eventQueue.toBase58(),
+        bids: address.bids.toBase58(),
+        asks: address.asks.toBase58(),
+        baseVault: address.baseVault.toBase58(),
+        quoteVault: address.quoteVault.toBase58(),
+        baseMint: address.baseMint.toBase58(),
+        quoteMint: address.quoteMint.toBase58(),
+      } as MarketDetails,
+    });
     marketId = address.marketId.toBase58();
   } else {
     marketId = (docRef.data() as MarketDetails).marketId;

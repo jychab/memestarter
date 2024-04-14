@@ -60,12 +60,11 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
         signAllTransactions
       ) {
         setLoading(true);
+        await handleLogin(publicKey, signMessage);
         await launchToken(
           pool,
           connection,
           publicKey,
-          signMessage,
-          handleLogin,
           signTransaction,
           signAllTransactions
         );

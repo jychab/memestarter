@@ -171,9 +171,9 @@ function Profile() {
           toast.error("Insufficient Sol. You need at least 0.5 Sol.");
           return;
         }
-
+        await handleLogin(publicKey, signMessage);
         toast.info("Minting...");
-        const { tx, mint } = await mintNft(publicKey, signMessage, handleLogin);
+        const { tx, mint } = await mintNft(publicKey);
         const transactionBuffer = base64.decode(tx as string);
         const transaction = toWeb3JsTransaction(
           umi.transactions.deserialize(transactionBuffer)
@@ -181,7 +181,7 @@ function Profile() {
         await sendTransactions(connection, [transaction], signAllTransactions);
         toast.info("Linking...");
         const asset = await umi.rpc.getAsset(PubKey(mint));
-        await linkAsset(asset, publicKey, signMessage, handleLogin);
+        await linkAsset(asset);
         toast.success("Success");
       }
     } catch (error) {
