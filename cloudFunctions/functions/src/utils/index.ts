@@ -22,6 +22,7 @@ const programId = defineString("PROGRAM_ID");
 const collectionAuthority = defineString("COLLECTION_AUTHORITY");
 const heliusApiKey = defineString("HELIUS_API_KEY");
 const nftStorageKey = defineString("NFT_STORAGE_KEY");
+export const birdEyeApiKey = defineString("BIRDEYE_API_KEY");
 export const prod = false;
 onInit(() => {
   helius = new Helius(heliusApiKey.value(), prod ? "mainnet-beta" : "devnet");

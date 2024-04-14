@@ -10,6 +10,7 @@ import {
   buildAndSendTransaction,
   convertSecondsToNearestUnit,
   createMarket,
+  determineOptimalParameters,
   formatLargeNumber,
   getStatus,
   launchTokenAmm,
@@ -94,13 +95,19 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           return;
         }
         if (!docRef.exists()) {
+          toast.info("Determining optimal parameters...");
+          const { tickSize, orderSize } = await determineOptimalParameters(
+            { pool: pool.pool, decimal: pool.decimal },
+            connection
+          );
+          toast.info("Creating Market..");
           const { innerTransactions, address } = await createMarket(
             {
               signer: publicKey,
               mint: new PublicKey(pool.mint),
               decimal: pool.decimal,
-              lotSize: 1,
-              tickSize: Math.max(10 ^ -pool.decimal, 10 ^ -6),
+              lotSize: orderSize,
+              tickSize: tickSize,
             },
             connection
           );

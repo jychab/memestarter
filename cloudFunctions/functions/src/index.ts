@@ -12,6 +12,7 @@ import {onSchedule} from "firebase-functions/v2/scheduler";
 import {updatePoolStatus} from "./updatePoolStatus";
 import {enQueue} from "./enQueue";
 import {verifySignIn} from "./verifySignIn";
+import getPrice from "./getPrice";
 
 exports.programWebhook = onRequest(async (req, res) =>
   cors({origin: true})(req, res, async () => await programWebhook(req, res))
@@ -22,6 +23,10 @@ exports.updatePool = firestore
 
 exports.verifySignIn = onCall(
   async (data, context) => await verifySignIn(data, context)
+);
+
+exports.getPrice = onCall(
+  async (data, context) => await getPrice(data, context)
 );
 
 exports.linkAsset = onCall(

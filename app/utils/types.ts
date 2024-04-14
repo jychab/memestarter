@@ -111,6 +111,11 @@ export interface MarketDetails {
   quoteMint: string;
 }
 
+export interface DetermineOptimalParams {
+  pool: string;
+  decimal: number;
+}
+
 export interface CollectionDetails {
   name: string;
   image: string;

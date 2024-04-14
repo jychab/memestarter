@@ -11,6 +11,7 @@ import {
   CreateMarketArgs,
   CreatePurchaseAuthorisationRecordArgs,
   DAS,
+  DetermineOptimalParams,
   InitializePoolArgs,
   LaunchTokenAmmArgs,
   MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -30,6 +31,7 @@ import {
   TransactionMessage,
   SystemProgram,
   Transaction,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { BN, Program } from "@coral-xyz/anchor";
 import {
@@ -43,6 +45,7 @@ import {
 } from "@raydium-io/raydium-sdk";
 import { IDL as SafePresaleIdl, SafePresale } from "./idl";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 export const program = (connection: Connection) =>
   new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
@@ -764,4 +767,65 @@ export async function getMetadata(json_uri: string): Promise<any | undefined> {
 
 export function createLoginMessage(sessionKey: string) {
   return `Sign In to https://memestarter.app\n\nNonce: ${sessionKey}}`;
+}
+function countDecimalPlaces(number: number) {
+  // Convert number to string
+  var numStr = number.toString();
+
+  // If number is in scientific notation
+  if (numStr.indexOf("e") !== -1) {
+    // Extract exponent part
+    var exponent = parseInt(numStr.split("e")[1]);
+
+    // Return the negative exponent as the number of decimal places
+    return -exponent;
+  }
+  // Find the position of the decimal point
+  var decimalPosition = numStr.indexOf(".");
+  // If there's no decimal point, return 0
+  if (decimalPosition === -1) {
+    return 0;
+  }
+
+  // Look for the first non-zero digit after the decimal point
+  var nonZeroIndex = decimalPosition + 1;
+  while (nonZeroIndex < numStr.length && numStr.charAt(nonZeroIndex) === "0") {
+    nonZeroIndex++;
+  }
+
+  // Calculate the number of decimal places
+  var numDecimalPlaces = nonZeroIndex - decimalPosition - 1;
+
+  return numDecimalPlaces;
+}
+
+export async function determineOptimalParameters(
+  args: DetermineOptimalParams,
+  connection: Connection
+) {
+  const poolData = await program(connection).account.pool.fetch(args.pool);
+  console.log(poolData);
+  const amountInSol = poolData.liquidityCollected / LAMPORTS_PER_SOL;
+  const getPrice = httpsCallable(getFunctions(), "getPrice");
+  const response = (
+    await getPrice({ address: "So11111111111111111111111111111111111111112" })
+  ).data as {
+    data: {
+      value: number;
+      updateUnixTime: number;
+      updateHumanTime: string;
+    };
+    success: boolean;
+  };
+  console.log(response);
+  const amountInUSD = amountInSol * response.data.value;
+  const amountOfCoin =
+    (poolData.totalSupply - poolData.vestedSupply) / 10 ** args.decimal;
+  const initialPrice = amountInUSD / amountOfCoin;
+  const tickSize = initialPrice / 1000;
+  const maxDecimals = 6;
+  const tickDecimals = countDecimalPlaces(tickSize);
+  const orderSizeDecimals = Math.min(maxDecimals - tickDecimals, 6);
+  const optimalOrderSize = 1 / Math.pow(10, orderSizeDecimals);
+  return { tickSize: tickSize, orderSize: optimalOrderSize };
 }
