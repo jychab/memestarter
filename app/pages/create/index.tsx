@@ -12,10 +12,10 @@ import {
   createPurchaseAuthorisationIx,
 } from "../../utils/helper";
 import useUmi from "../../hooks/useUmi";
-import { createGenericFileFromBrowserFile } from "@metaplex-foundation/umi";
 import { ReviewPane } from "../../sections/ReviewPane";
 import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 
 function CreateCollection() {
   const { user } = useLogin();
@@ -51,18 +51,40 @@ function CreateCollection() {
   >([]);
   const [creatorFees, setCreatorFees] = useState<string>("5"); //in percentage -> need to convert to basis pts
 
-  async function uploadMetadata(picture: File) {
-    const image = await createGenericFileFromBrowserFile(picture);
-    const [imageUri] = await umi.uploader.upload([image]);
-    const uri = await umi.uploader.uploadJson({
-      name: name,
-      symbol: symbol,
-      description: description,
-      ticker: symbol,
-      decimals: decimals,
-      image: imageUri,
+  async function uploadMetadata(
+    name: string,
+    symbol: string,
+    description: string,
+    image: string,
+    externalUrl: string
+  ) {
+    const payload = {
+      name,
+      symbol,
+      description,
+      image,
+      externalUrl,
+    };
+    const blob = new Blob([JSON.stringify(payload)], {
+      type: "application/json",
     });
+    const storage = getStorage();
+    const uuid = crypto.randomUUID();
+    const reference = ref(storage, uuid);
+    // 'file' comes from the Blob or File API
+    await uploadBytes(reference, blob);
+    const uri = await getDownloadURL(reference);
     return uri;
+  }
+
+  async function uploadImage(picture: Blob) {
+    const storage = getStorage();
+    const uuid = crypto.randomUUID();
+    const reference = ref(storage, uuid);
+    // 'file' comes from the Blob or File API
+    await uploadBytes(reference, picture);
+    const imageUrl = await getDownloadURL(reference);
+    return imageUrl;
   }
   const reset = () => {
     setLoading(false);
@@ -164,7 +186,14 @@ function CreateCollection() {
       try {
         setLoading(true);
         toast.info("Uploading Metadata... please wait");
-        const uri = await uploadMetadata(picture);
+        const imageUrl = await uploadImage(picture);
+        const uri = await uploadMetadata(
+          name,
+          symbol,
+          description,
+          imageUrl,
+          externalUrl
+        );
         toast.info("Upload Completed.");
         const requiresCollection = collectionsRequired.length != 0;
         let ix = [];

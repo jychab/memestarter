@@ -20,7 +20,7 @@ export async function verifySignIn(
   }
   const idToken =
     context.rawRequest.headers.authorization!.split("Bearer ")[1]!;
-  const message = createLoginMessage(idToken.slice(0, 8));
+  const message = createLoginMessage(idToken.slice(0, 32));
 
   const verified = nacl.sign.detached.verify(
     new TextEncoder().encode(message),

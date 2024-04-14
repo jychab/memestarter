@@ -38,6 +38,8 @@ import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
 import { getCustomErrorMessage } from "../../../utils/error";
 import { useData } from "../../../hooks/useData";
+import PresaleDashboard from "../../../sections/PresaleDashboard";
+import { MainPane } from "../../../sections/MainPane";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -340,25 +342,26 @@ export function Pool() {
   return (
     pool && (
       <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
-        <div className="flex flex-col gap-8 rounded border w-full shadow-sm p-4">
-          <ReviewPane
-            collectionsRequired={pool.collectionsRequired}
-            authority={pool.authority}
-            uniqueBackers={uniqueBackers}
-            decimal={pool.decimal}
-            mint={pool.mint}
+        <div className="flex flex-col gap-8 rounded border w-full shadow-sm p-4 text-gray-400 font-medium">
+          <MainPane
             image={pool.image}
             name={pool.name}
             symbol={pool.symbol}
-            externalUrl={""}
+            decimals={pool.decimal}
+            authority={pool.authority}
+            mint={pool.mint}
+          />
+          <PresaleDashboard
+            collectionsRequired={pool.collectionsRequired}
+            uniqueBackers={uniqueBackers}
+            symbol={pool.symbol}
+            decimal={pool.decimal}
             totalSupply={pool.totalSupply}
             vestedSupply={pool.vestedSupply}
             vestingPeriod={pool.vestingPeriod}
+            liquidityCollected={pool.liquidityCollected}
             presaleTimeLimit={pool.presaleTimeLimit}
             presaleTarget={pool.presaleTarget}
-            description={pool.description}
-            liquidityCollected={pool.liquidityCollected}
-            status={status}
           />
           {status && publicKey && getButton(status, pool, nft, loading)}
         </div>
