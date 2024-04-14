@@ -129,22 +129,22 @@ export function Pool() {
     nft: DasApiAsset | undefined,
     loading: boolean
   ) {
-    if (!nft) {
-      return (
-        <div className="flex items-center justify-center">
-          <Link
-            href={"/profile"}
-            className="text-gray-100 bg-gray-700 hover:bg-gray-800 text-sm sm:text-base rounded p-2"
-          >
-            {"Missing Profile!"}
-          </Link>
-        </div>
-      );
-    }
     if (
       status === Status.PresaleInProgress ||
       status === Status.PresaleTargetMet
     ) {
+      if (!nft) {
+        return (
+          <div className="flex items-center justify-center">
+            <Link
+              href={"/profile"}
+              className="text-gray-100 bg-gray-700 hover:bg-gray-800 text-sm sm:text-base rounded p-2"
+            >
+              {"Missing Profile!"}
+            </Link>
+          </div>
+        );
+      }
       if (
         pool.collectionsRequired === null ||
         (pool.collectionsRequired &&
@@ -228,19 +228,23 @@ export function Pool() {
             authority={pool.authority}
             mint={pool.mint}
           />
-          <PresaleDashboard
-            collectionsRequired={pool.collectionsRequired}
-            uniqueBackers={uniqueBackers}
-            symbol={pool.symbol}
-            decimal={pool.decimal}
-            totalSupply={pool.totalSupply}
-            vestedSupply={pool.vestedSupply}
-            vestingPeriod={pool.vestingPeriod}
-            liquidityCollected={pool.liquidityCollected}
-            presaleTimeLimit={pool.presaleTimeLimit}
-            presaleTarget={pool.presaleTarget}
-            description={pool.description}
-          />
+          {(status == Status.PresaleInProgress ||
+            status == Status.PresaleTargetMet ||
+            status == Status.ReadyToLaunch) && (
+            <PresaleDashboard
+              collectionsRequired={pool.collectionsRequired}
+              uniqueBackers={uniqueBackers}
+              symbol={pool.symbol}
+              decimal={pool.decimal}
+              totalSupply={pool.totalSupply}
+              vestedSupply={pool.vestedSupply}
+              vestingPeriod={pool.vestingPeriod}
+              liquidityCollected={pool.liquidityCollected}
+              presaleTimeLimit={pool.presaleTimeLimit}
+              presaleTarget={pool.presaleTarget}
+              description={pool.description}
+            />
+          )}
           {status && publicKey && getButton(status, pool, nft, loading)}
         </div>
       </div>

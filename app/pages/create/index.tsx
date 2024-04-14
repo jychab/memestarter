@@ -94,7 +94,7 @@ function CreateCollection() {
       }
       setPage(page + 1);
     } else {
-      if (!publicKey || picture === null || !signTransaction) {
+      if (!publicKey || picture === null || !signTransaction || loading) {
         return;
       }
       const amountOfSol = (await connection.getAccountInfo(publicKey))
@@ -147,7 +147,6 @@ function CreateCollection() {
           signTransaction
         );
         toast.success("Success!");
-        reset();
         router.push("/");
       } catch (error) {
         toast.error(`${getCustomErrorMessage(error)}`);

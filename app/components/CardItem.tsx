@@ -50,7 +50,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
               </div>
             )}
           </div>
-          <div className="flex flex-col w-40 lg:w-60 min-h-16 lg:min-h-16 h-fit group-hover:max-h-64 gap-2 overflow-hidden bg-white px-4 py-2 lg:py-4">
+          <div className="flex flex-col w-40 lg:w-60 min-h-16 lg:min-h-16 h-fit group-hover:max-h-40 gap-2 overflow-hidden bg-white px-4 py-2 lg:py-4">
             <div className="flex items-center justify-between">
               <h6 className="group-hover:text-gray-900 max-w-20 truncate text-gray-800 text-sm lg:text-base">
                 {pool.name}

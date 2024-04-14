@@ -167,7 +167,6 @@ export async function uploadMetadata(
   image: string,
   externalUrl: string
 ) {
-  toast.info("Uploading metadata...");
   const payload = {
     name,
     symbol,
@@ -188,7 +187,6 @@ export async function uploadMetadata(
 }
 
 export async function uploadImage(picture: Blob) {
-  toast.info("Uploading Metadata... please wait");
   const storage = getStorage();
   const uuid = crypto.randomUUID();
   const reference = ref(storage, uuid);

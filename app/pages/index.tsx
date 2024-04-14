@@ -27,8 +27,8 @@ enum FilterCriteria {
   expired = "Expired",
 }
 
-function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
-  const [projects, setProjects] = useState<PoolType[]>(initialProjects);
+function Projects() {
+  const [projects, setProjects] = useState<PoolType[]>();
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
     SortCriteria.presaleTimeLimit
   );
@@ -39,9 +39,10 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
   const [showFilter, setShowFilter] = useState(false);
   const sortDropDownRef = useRef<HTMLDivElement>(null);
   const [showSort, setShowSort] = useState(false);
-
-  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [itemsLimit, setItemsLimit] = useState(10);
   const [timer, setTimer] = useState<number>();
+  const [endReached, setEndReached] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
@@ -85,9 +86,26 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
 
     return query(base, ...queries);
   };
+
+  const handleScroll = () => {
+    const scrollTop =
+      (document.documentElement && document.documentElement.scrollTop) ||
+      document.body.scrollTop;
+    const scrollHeight =
+      (document.documentElement && document.documentElement.scrollHeight) ||
+      document.body.scrollHeight;
+    const clientHeight =
+      document.documentElement.clientHeight || window.innerHeight;
+    const scrolledToBottom =
+      Math.ceil(scrollTop + clientHeight) >= scrollHeight;
+    if (scrolledToBottom && !loading && !endReached) {
+      setItemsLimit((prevLimit) => prevLimit + 10); // Increase limit by 10 when scrolled to bottom
+    }
+  };
   useEffect(() => {
-    if (page && sortCriteria && filterCriteria) {
-      const projectQuery = createQuery(page * 10);
+    if (itemsLimit && sortCriteria && filterCriteria) {
+      setLoading(true);
+      const projectQuery = createQuery(itemsLimit);
       const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
         const updatedProjects: PoolType[] = [];
         querySnapshot.forEach((doc) => {
@@ -95,11 +113,19 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
           updatedProjects.push(doc.data() as PoolType);
         });
         setProjects(updatedProjects);
+        if (querySnapshot.size < itemsLimit) {
+          setEndReached(true); // If fetched data is less than the limit, it means no more data available
+        }
+        setLoading(false);
       });
 
-      return () => unsubscribe();
+      window.addEventListener("scroll", handleScroll);
+      return () => {
+        unsubscribe();
+        window.removeEventListener("scroll", handleScroll);
+      };
     }
-  }, [page, sortCriteria, filterCriteria, createQuery]);
+  }, [itemsLimit, sortCriteria, filterCriteria]);
 
   useEffect(() => {
     // Function to handle click outside the dialog
@@ -245,83 +271,20 @@ function Projects({ initialProjects }: { initialProjects: PoolType[] }) {
           </div>
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {projects &&
           projects.length > 0 &&
-          projects
-            .filter((_, index) => index >= (page - 1) * 10 && index < page * 10)
-            .map((project) => (
-              <CardItem pool={project} key={project.pool} timer={timer} />
-            ))}
+          projects.map((project) => (
+            <CardItem pool={project} key={project.pool} timer={timer} />
+          ))}
       </div>
-
-      {projects && projects.length > 10 && (
-        <div className="overflow-hidden flex items-end justify-end">
-          <div className="flex items-center">
-            <span className="text-sm font-normal text-gray-400 px-2">
-              Showing
-              <span className="font-semibold text-white px-2">
-                {`${(page - 1) * 10 + 1} to ${projects.length}`}
-              </span>
-              of
-              <span className="font-semibold text-white px-2">
-                {projects.length}
-              </span>
-            </span>
-            <div className="flex items-center justify-end gap-2 ">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setPage(Math.min(page + 1, Math.ceil(projects.length / 10)))
-                }
-                className="flex items-center justify-center px-2 py-1 text-xs font-medium border rounded-lg bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+      {loading && (
+        <span className="text-black flex items-center justify-center">
+          Loading...
+        </span>
       )}
     </div>
   );
 }
 
-export async function getServerSideProps() {
-  // Fetch initial data from Firestore
-  const projectQuery = query(
-    collection(db, "Pool"),
-    where("valid", "==", true),
-    where("status", "==", "Initialized"),
-    orderBy("presaleTimeLimit", "asc"),
-    limit(10)
-  );
-  const querySnapshot = await getDocs(projectQuery);
-
-  const initialProjects: PoolType[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = doc.data() as PoolType;
-    initialProjects.push({
-      ...data,
-      createdAt: data.createdAt
-        ? (data.createdAt as Timestamp).toDate().getTime()
-        : null,
-      updatedAt: data.updatedAt
-        ? (data.updatedAt as Timestamp).toDate().getTime()
-        : null,
-    });
-  });
-
-  // Pass initial data as props to the page component
-  return {
-    props: {
-      initialProjects,
-    },
-  };
-}
 export default Projects;
