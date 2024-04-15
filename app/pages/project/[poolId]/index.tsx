@@ -3,7 +3,11 @@ import { useRouter } from "next/router";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "react-toastify";
 import { useLogin } from "../../../hooks/useLogin";
-import { getStatus, getCollectionMintAddress } from "../../../utils/helper";
+import {
+  getStatus,
+  getCollectionMintAddress,
+  getMetadata,
+} from "../../../utils/helper";
 import { MintType, PoolType, Status } from "../../../utils/types";
 import {
   collection,
@@ -20,6 +24,7 @@ import { useData } from "../../../hooks/useData";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
 import { MainPane } from "../../../sections/MainPane";
 import { buyPresale, launchToken } from "../../../utils/functions";
+import { CommentsSection } from "../../../components/commentSection";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -31,6 +36,7 @@ export function Pool() {
   const { publicKey, signTransaction, signAllTransactions, signMessage } =
     useWallet();
   const { handleLogin } = useLogin();
+  const [image, setImage] = useState();
   const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
@@ -46,6 +52,9 @@ export function Pool() {
             setMint(data);
           }
         }
+      );
+      getMetadata(nft.content.json_uri).then((response) =>
+        setImage(response.image)
       );
       return () => unsubscribe();
     }
@@ -146,12 +155,12 @@ export function Pool() {
     ) {
       if (!nft) {
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-start">
             <Link
               href={"/profile"}
-              className="text-gray-100 bg-gray-700 hover:bg-gray-800 text-sm sm:text-base rounded p-2"
+              className="text-blue-600 hover:text-blue-800 text-sm sm:text-base rounded"
             >
-              {"Missing Profile!"}
+              {"You need to set up your profile first!"}
             </Link>
           </div>
         );
@@ -239,8 +248,8 @@ export function Pool() {
 
   return (
     pool && (
-      <div className="flex flex-1 items-center justify-center gap-4 max-w-screen-sm w-full h-full">
-        <div className="flex flex-col gap-8 rounded border w-full shadow-sm p-4 text-gray-400 font-medium">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
+        <div className="flex flex-col gap-4 rounded border w-full shadow-sm p-4 text-gray-400 font-medium">
           <MainPane
             image={pool.image}
             name={pool.name}
@@ -266,8 +275,14 @@ export function Pool() {
               description={pool.description}
             />
           )}
+          {publicKey && <span className="uppercase text-xs">Funding</span>}
           {status && publicKey && getButton}
         </div>
+        <CommentsSection
+          poolId={pool.pool}
+          publicKey={publicKey}
+          image={image}
+        />
       </div>
     )
   );

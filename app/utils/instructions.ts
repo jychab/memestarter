@@ -4,11 +4,11 @@ import {
   TOKEN_PROGRAM_ID,
   Liquidity,
   WSOL,
-  DEVNET_PROGRAM_ID,
   RENT_PROGRAM_ID,
   SYSTEM_PROGRAM_ID,
   MarketV2,
   TxVersion,
+  MAINNET_PROGRAM_ID,
 } from "@raydium-io/raydium-sdk";
 import { getAssociatedTokenAddressSync, NATIVE_MINT } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
@@ -230,8 +230,8 @@ export async function launchTokenAmm(
     quoteMint: NATIVE_MINT,
     baseDecimals: 6,
     quoteDecimals: WSOL.decimals,
-    programId: DEVNET_PROGRAM_ID.AmmV4,
-    marketProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET,
+    programId: MAINNET_PROGRAM_ID.AmmV4,
+    marketProgramId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
   });
   const userTokenLp = getAssociatedTokenAddressSync(
     poolInfo.lpMint,
@@ -304,7 +304,7 @@ export async function launchTokenAmm(
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       ammCoinMint: poolInfo.baseMint,
       ammPcMint: poolInfo.quoteMint,
-      raydiumAmmProgram: DEVNET_PROGRAM_ID.AmmV4,
+      raydiumAmmProgram: MAINNET_PROGRAM_ID.AmmV4,
     })
     .remainingAccounts(remainingAccounts)
     .instruction();
@@ -327,7 +327,7 @@ export async function createMarket(
       },
       lotSize: args.lotSize,
       tickSize: args.tickSize,
-      dexProgramId: DEVNET_PROGRAM_ID.OPENBOOK_MARKET,
+      dexProgramId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
       makeTxVersion: TxVersion.V0,
     });
   return { innerTransactions, address };

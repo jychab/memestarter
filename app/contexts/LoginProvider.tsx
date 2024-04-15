@@ -42,7 +42,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
         setUser(user.user);
       } catch (error) {
         signOut();
-        throw new Error(error as string);
+        throw Error(error as string);
       }
     }
   };

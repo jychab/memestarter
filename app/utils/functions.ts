@@ -1,8 +1,3 @@
-import {
-  publicKey,
-  signAllTransactions,
-  signTransaction,
-} from "@metaplex-foundation/umi";
 import { buildSimpleTransaction, TxVersion } from "@raydium-io/raydium-sdk";
 import {
   Connection,
@@ -13,13 +8,9 @@ import {
 } from "@solana/web3.js";
 import { getDoc, doc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { updateMarketData, verifyAndGetToken } from "./cloudFunctions";
-import { auth, db } from "./firebase";
-import {
-  createLoginMessage,
-  determineOptimalParameters,
-  getCollectionMintAddress,
-} from "./helper";
+import { updateMarketData } from "./cloudFunctions";
+import { db } from "./firebase";
+import { determineOptimalParameters, getCollectionMintAddress } from "./helper";
 import {
   buyPresaleIx,
   createMarket,

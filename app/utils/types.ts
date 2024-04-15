@@ -9,8 +9,28 @@ import {
   RoyaltyModel,
   UseMethods,
 } from "./enums";
-import { Timestamp } from "firebase/firestore";
-import { Market } from "@raydium-io/raydium-sdk";
+import { FieldValue, Timestamp } from "firebase/firestore";
+
+export interface IUser {
+  image: string;
+  username: string;
+}
+export interface IReply {
+  id: string;
+  content: string;
+  score: number;
+  user: IUser;
+  createdAt: Timestamp;
+  replyingTo: string;
+}
+export type IComment = {
+  id: string;
+  content: string;
+  createdAt: Timestamp;
+  score: number;
+  user: IUser;
+  replies: IReply[];
+};
 
 export enum Status {
   PresaleTargetMet = "Presale Target Met",

@@ -24,9 +24,7 @@ const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <ConnectionProvider
-      endpoint={
-        "https://devnet.helius-rpc.com/?api-key=67cc99fc-f14e-499c-9507-48127506901f"
-      }
+      endpoint={`https://${network}.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`}
     >
       <WalletProvider wallets={wallets} onError={onError} autoConnect>
         {children}

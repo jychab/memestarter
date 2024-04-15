@@ -161,6 +161,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
       } else {
         await linkAsset(selectedItem);
       }
+      toast.success("Success");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
