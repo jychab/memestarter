@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { PoolType, Status } from "../../utils/types";
@@ -23,7 +23,7 @@ function MyProjects() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
 
-  const [timer, setTimer] = useState<number>();
+  const [timer, setTimer] = useState<number>(Date.now());
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
@@ -70,6 +70,42 @@ function MyProjects() {
     };
   }, [show]);
 
+  const createdProjects = useMemo(() => {
+    if (!myPools) return [];
+    return myPools.filter((item) => {
+      const status = getStatus(item);
+      return (
+        ((projectType === CreatorProjectType.Created ||
+          projectType === CreatorProjectType.All) &&
+          status === Status.PresaleInProgress) ||
+        status === Status.PresaleTargetMet ||
+        status === Status.ReadyToLaunch
+      );
+    });
+  }, [myPools, projectType]);
+  const launchedProjects = useMemo(() => {
+    if (!myPools) return [];
+    return myPools.filter((item) => {
+      const status = getStatus(item);
+      return (
+        ((projectType === CreatorProjectType.Launched ||
+          projectType === CreatorProjectType.All) &&
+          status === Status.VestingCompleted) ||
+        status === Status.VestingInProgress
+      );
+    });
+  }, [myPools, projectType]);
+  const failedProjects = useMemo(() => {
+    if (!myPools) return [];
+    return myPools.filter((item) => {
+      const status = getStatus(item);
+      return (
+        (projectType === CreatorProjectType.Failed ||
+          projectType === CreatorProjectType.All) &&
+        status === Status.Expired
+      );
+    });
+  }, [myPools, projectType]);
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">
       {!publicKey ? (
@@ -117,59 +153,33 @@ function MyProjects() {
               </div>
             </div>
           </div>
-          {(projectType === CreatorProjectType.Created ||
-            projectType === CreatorProjectType.All) &&
-            timer &&
-            myPools && (
-              <>
-                {projectType === CreatorProjectType.All && (
-                  <span>{CreatorProjectType.Created}</span>
-                )}
-                <CreatedTable
-                  pool={myPools.filter(
-                    (item) =>
-                      getStatus(item) === Status.PresaleInProgress ||
-                      getStatus(item) === Status.PresaleTargetMet ||
-                      getStatus(item) === Status.ReadyToLaunch
-                  )}
-                  timer={timer}
-                />
-              </>
-            )}
-          {(projectType === CreatorProjectType.Launched ||
-            projectType === CreatorProjectType.All) &&
-            timer &&
-            myPools && (
-              <>
-                {projectType === CreatorProjectType.All && (
-                  <span>{CreatorProjectType.Launched}</span>
-                )}
-                <LaunchedTable
-                  pool={myPools.filter(
-                    (item) =>
-                      getStatus(item) === Status.VestingCompleted ||
-                      getStatus(item) === Status.VestingInProgress
-                  )}
-                  timer={timer}
-                />
-              </>
-            )}
+
+          {projectType === CreatorProjectType.All ||
+            (projectType === CreatorProjectType.Created && (
+              <span>{CreatorProjectType.Created}</span>
+            ))}
+          {(projectType === CreatorProjectType.All ||
+            projectType === CreatorProjectType.Created) && (
+            <CreatedTable pool={createdProjects} timer={timer} />
+          )}
+
+          {projectType === CreatorProjectType.Launched ||
+            (projectType === CreatorProjectType.All && (
+              <span>{CreatorProjectType.Launched}</span>
+            ))}
+          {projectType === CreatorProjectType.Launched ||
+            (projectType === CreatorProjectType.All && (
+              <LaunchedTable pool={launchedProjects} timer={timer} />
+            ))}
+
           {(projectType === CreatorProjectType.Failed ||
-            projectType === CreatorProjectType.All) &&
-            timer &&
-            myPools && (
-              <>
-                {projectType === CreatorProjectType.All && (
-                  <span>{CreatorProjectType.Failed}</span>
-                )}
-                <FailedTable
-                  pool={myPools.filter(
-                    (item) => getStatus(item) === Status.Expired
-                  )}
-                  timer={timer}
-                />
-              </>
-            )}
+            projectType === CreatorProjectType.All) && (
+            <span>{CreatorProjectType.Failed}</span>
+          )}
+          {(projectType === CreatorProjectType.Failed ||
+            projectType === CreatorProjectType.All) && (
+            <FailedTable pool={failedProjects} timer={timer} />
+          )}
         </div>
       )}
     </div>

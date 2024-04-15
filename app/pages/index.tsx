@@ -38,7 +38,7 @@ function Projects() {
   const [showSort, setShowSort] = useState(false);
   const [loading, setLoading] = useState(false);
   const [itemsLimit, setItemsLimit] = useState(10);
-  const [timer, setTimer] = useState<number>();
+  const [timer, setTimer] = useState<number>(Date.now());
   const [endReached, setEndReached] = useState(false);
 
   useEffect(() => {
