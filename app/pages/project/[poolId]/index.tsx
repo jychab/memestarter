@@ -221,7 +221,7 @@ export function Pool() {
         );
       }
     }
-  }, [status, publicKey, pool, loading, nft]);
+  }, [status, publicKey, pool, loading, nft, amountToPurchase, buy, launch]);
 
   return (
     pool && (

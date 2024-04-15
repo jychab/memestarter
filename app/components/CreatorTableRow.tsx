@@ -80,7 +80,14 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [publicKey, project, connection, signMessage, signTransaction]);
+  }, [
+    publicKey,
+    project,
+    connection,
+    signMessage,
+    signAllTransactions,
+    signTransaction,
+  ]);
 
   return useMemo(() => {
     if (!project || !status) return null;
@@ -260,5 +267,5 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
         </td>
       </tr>
     );
-  }, [project, timer, status, unlockedMint, launch]);
+  }, [project, timer, status, unlockedMint, loading, router, launch]);
 };

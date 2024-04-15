@@ -381,5 +381,15 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         </td>
       </tr>
     );
-  }, [project, timer, status, currentMintElligible, handleAction]);
+  }, [
+    project,
+    timer,
+    status,
+    currentMintElligible,
+    loading,
+    loadingLp,
+    nft,
+    router,
+    handleAction,
+  ]);
 };
