@@ -13,7 +13,7 @@ interface MainBtnProps {
   setAmountToPurchase?: (e: string) => void;
   maxAllowedPerPurchase?: number;
   amount?: number;
-  creatorFeeBasisPoints?: string;
+  creatorFeeBasisPoints?: number;
 }
 
 export const MainBtn: FC<MainBtnProps> = ({
@@ -53,7 +53,7 @@ export const MainBtn: FC<MainBtnProps> = ({
           {creatorFeeBasisPoints && (
             <div className="flex justify-between text-gray-400">
               <span>{`Creator Fees:`}</span>
-              <span>{parseInt(creatorFeeBasisPoints) / 100 + "%"}</span>
+              <span>{creatorFeeBasisPoints / 100 + "%"}</span>
             </div>
           )}
         </div>

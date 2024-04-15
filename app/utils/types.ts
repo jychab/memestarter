@@ -140,7 +140,7 @@ export interface PoolType {
   amountWsolWithdrawn: number;
   amountPc: number;
   authority: string;
-  creatorFeeBasisPoints: string;
+  creatorFeeBasisPoints: number;
   liquidityCollected: number;
   totalClaimed: number;
   lpMint: string;

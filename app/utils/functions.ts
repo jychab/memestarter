@@ -135,17 +135,16 @@ export async function buyPresale(
   const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
   if (
     !amountOfSolInWallet ||
-    amountOfSolInWallet.lamports <=
+    amountOfSolInWallet.lamports <
       parseFloat(amountToPurchase) * LAMPORTS_PER_SOL
   ) {
-    throw new Error(
-      `Insufficient Sol. You need at least ${amountToPurchase} Sol.`
-    );
+    throw Error(`Insufficient Sol. You need at least ${amountToPurchase} Sol.`);
   }
   const nftCollection = getCollectionMintAddress(nft);
   if (!nftCollection) {
     throw Error("NFT has no collection");
   }
+
   const ix = await buyPresaleIx(
     {
       amount: parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,

@@ -91,7 +91,7 @@ export const UserProfileBtn: FC = () => {
               }}
               className="flex w-full px-4 py-2 text-sm text-black hover:text-blue-800"
             >
-              Projects
+              My Projects
             </button>
           </li>
           {/* <li>

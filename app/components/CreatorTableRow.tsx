@@ -135,13 +135,13 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
         {status !== Status.Expired && (
           <td scope="row" className="p-2 text-center">
             {`${
-              (liquidityCollected * parseInt(creatorFeeBasisPoints)) /
+              (liquidityCollected * creatorFeeBasisPoints) /
               (LAMPORTS_PER_SOL * 10000)
             } 
                Sol ${
                  amountLpWithdrawn
                    ? `& ${
-                       (amountLpWithdrawn * parseInt(creatorFeeBasisPoints)) /
+                       (amountLpWithdrawn * creatorFeeBasisPoints) /
                        (10000 * 10 ** decimal)
                      } 
                       ${symbol}`

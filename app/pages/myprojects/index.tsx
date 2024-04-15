@@ -154,10 +154,10 @@ function MyProjects() {
             </div>
           </div>
 
-          {projectType === CreatorProjectType.All ||
-            (projectType === CreatorProjectType.Created && (
-              <span>{CreatorProjectType.Created}</span>
-            ))}
+          {(projectType === CreatorProjectType.All ||
+            projectType === CreatorProjectType.Created) && (
+            <span>{CreatorProjectType.Created}</span>
+          )}
           {(projectType === CreatorProjectType.All ||
             projectType === CreatorProjectType.Created) && (
             <CreatedTable pool={createdProjects} timer={timer} />
@@ -167,10 +167,10 @@ function MyProjects() {
             (projectType === CreatorProjectType.All && (
               <span>{CreatorProjectType.Launched}</span>
             ))}
-          {projectType === CreatorProjectType.Launched ||
-            (projectType === CreatorProjectType.All && (
-              <LaunchedTable pool={launchedProjects} timer={timer} />
-            ))}
+          {(projectType === CreatorProjectType.Launched ||
+            projectType === CreatorProjectType.All) && (
+            <LaunchedTable pool={launchedProjects} timer={timer} />
+          )}
 
           {(projectType === CreatorProjectType.Failed ||
             projectType === CreatorProjectType.All) && (

@@ -10,9 +10,9 @@ import {
   doc,
   getCountFromServer,
   getDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../../../utils/firebase";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
 import { getCustomErrorMessage } from "../../../utils/error";
@@ -38,26 +38,31 @@ export function Pool() {
 
   useEffect(() => {
     if (nft && pool) {
-      getDoc(doc(db, `Mint/${nft.id}/Pool/${pool.pool}`)).then((doc) => {
-        if (doc.exists()) {
-          const data = doc.data() as MintType;
-          setMint(data);
+      const unsubscribe = onSnapshot(
+        doc(db, `Mint/${nft.id}/Pool/${pool.pool}`),
+        (doc) => {
+          if (doc.exists()) {
+            const data = doc.data() as MintType;
+            setMint(data);
+          }
         }
-      });
+      );
+      return () => unsubscribe();
     }
   }, [nft, pool]);
 
   useEffect(() => {
     if (poolId) {
-      getDoc(doc(db, `Pool/${poolId}`)).then((doc) => {
-        if (doc.exists()) {
-          setPool(doc.data() as PoolType);
-        }
-      });
       const coll = collection(db, `Pool/${poolId}/Mint`);
       getCountFromServer(coll).then((result) =>
         setUniqueBackers(result.data().count)
       );
+      const unsubscribe = onSnapshot(doc(db, `Pool/${poolId}`), (doc) => {
+        if (doc.exists()) {
+          setPool(doc.data() as PoolType);
+        }
+      });
+      return () => unsubscribe();
     }
   }, [poolId]);
   useEffect(() => {
@@ -126,9 +131,8 @@ export function Pool() {
         signTransaction
       );
       toast.success("Success!");
-      router.push("/");
     } catch (error) {
-      toast.error(getCustomErrorMessage(error));
+      toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -221,7 +225,17 @@ export function Pool() {
         );
       }
     }
-  }, [status, publicKey, pool, loading, nft, amountToPurchase, buy, launch]);
+  }, [
+    status,
+    publicKey,
+    pool,
+    loading,
+    nft,
+    amountToPurchase,
+    mint,
+    buy,
+    launch,
+  ]);
 
   return (
     pool && (
