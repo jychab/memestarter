@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import { MintType, PoolType, Status } from "../utils/types";
 import Image from "next/image";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
@@ -55,7 +55,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const { publicKey, signMessage } = useWallet();
   const { handleLogin } = useLogin();
   const { nft } = useData();
-  const [timer, setTimer] = useState<number>();
+  const [timer, setTimer] = useState<number>(Date.now());
 
   function isItemCurrentlyEquipped(
     nft: DasApiAsset | undefined,
@@ -119,12 +119,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     const unsubscribe = onSnapshot(
       query(collection(db, `Mint/${item.id}/Pool`)),
       (snapshot) => {
-        if (snapshot.empty) {
-          setProjects([]);
-        } else {
-          setProjects((prev) => (!prev ? [] : prev));
-          loadProject(snapshot.docs).then((res) => setProjects(res));
-        }
+        loadProject(snapshot.docs).then((res) => setProjects(res));
       }
     );
     return () => unsubscribe();
@@ -157,25 +152,76 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }, [show]);
 
   const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
-    if (publicKey && signMessage && selectedItem) {
-      try {
-        setLoading(true);
-        await handleLogin(publicKey, signMessage);
-        if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
-          await unlinkAsset();
-        } else {
-          await linkAsset(selectedItem);
-        }
-      } catch (error) {
-        toast.error(`${getCustomErrorMessage(error)}`);
-      } finally {
-        setLoading(false);
-        if (setSelectedItem) {
-          setSelectedItem(undefined);
-        }
+    if (!(publicKey && signMessage && selectedItem)) return;
+    try {
+      setLoading(true);
+      await handleLogin(publicKey, signMessage);
+      if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
+        await unlinkAsset();
+      } else {
+        await linkAsset(selectedItem);
+      }
+    } catch (error) {
+      toast.error(`${getCustomErrorMessage(error)}`);
+    } finally {
+      setLoading(false);
+      if (setSelectedItem) {
+        setSelectedItem(undefined);
       }
     }
   };
+
+  // Define useMemo for expensive computation of projects
+  const fundedProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((item) => {
+      const status = getStatus(item);
+      return (
+        (projectType === ProjectType.funded ||
+          projectType === ProjectType.all) &&
+        (status === Status.PresaleInProgress ||
+          status === Status.PresaleTargetMet ||
+          status === Status.ReadyToLaunch)
+      );
+    });
+  }, [projects, projectType]);
+
+  // Define useMemo for other filtered project types
+  const vestingProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((item) => {
+      const status = getStatus(item);
+      return (
+        (projectType === ProjectType.vesting ||
+          projectType === ProjectType.all) &&
+        status === Status.VestingInProgress
+      );
+    });
+  }, [projects, projectType]);
+
+  const completedProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((item) => {
+      const status = getStatus(item);
+      return (
+        (projectType === ProjectType.completed ||
+          projectType === ProjectType.all) &&
+        status === Status.VestingCompleted
+      );
+    });
+  }, [projects, projectType]);
+
+  const expiredProjects = useMemo(() => {
+    if (!projects) return [];
+    return projects.filter((item) => {
+      const status = getStatus(item);
+      return (
+        (projectType === ProjectType.expired ||
+          projectType === ProjectType.all) &&
+        status === Status.Expired
+      );
+    });
+  }, [projects, projectType]);
 
   return (
     image &&
@@ -369,72 +415,37 @@ export const MintDashboard: FC<InventoryItemProps> = ({
           </div>
           <div className="flex flex-col text-xs text-gray-400 gap-4">
             {(projectType === ProjectType.funded ||
-              projectType === ProjectType.all) &&
-              timer &&
-              projects && (
-                <>
-                  {projectType === ProjectType.all && (
-                    <span>{ProjectType.funded}</span>
-                  )}
-                  <FundedTable
-                    projects={projects.filter(
-                      (item) =>
-                        getStatus(item) === Status.PresaleInProgress ||
-                        getStatus(item) === Status.PresaleTargetMet ||
-                        getStatus(item) === Status.ReadyToLaunch
-                    )}
-                    timer={timer}
-                  />
-                </>
-              )}
+              projectType === ProjectType.all) && (
+              <span>{ProjectType.funded}</span>
+            )}
+            {(projectType === ProjectType.funded ||
+              projectType === ProjectType.all) && (
+              <FundedTable projects={fundedProjects} timer={timer} />
+            )}
             {(projectType === ProjectType.vesting ||
-              projectType === ProjectType.all) &&
-              projects &&
-              timer && (
-                <>
-                  {projectType === ProjectType.all && (
-                    <span>{ProjectType.vesting}</span>
-                  )}
-                  <VestingTable
-                    projects={projects.filter(
-                      (item) => getStatus(item) === Status.VestingInProgress
-                    )}
-                    timer={timer}
-                  />
-                </>
-              )}
+              projectType === ProjectType.all) && (
+              <span>{ProjectType.vesting}</span>
+            )}
+            {(projectType === ProjectType.vesting ||
+              projectType === ProjectType.all) && (
+              <VestingTable projects={vestingProjects} timer={timer} />
+            )}
             {(projectType === ProjectType.completed ||
-              projectType === ProjectType.all) &&
-              projects &&
-              timer && (
-                <>
-                  {projectType === ProjectType.all && (
-                    <span>{ProjectType.completed}</span>
-                  )}
-                  <CompletedTable
-                    projects={projects.filter(
-                      (item) => getStatus(item) === Status.VestingCompleted
-                    )}
-                    timer={timer}
-                  />
-                </>
-              )}
+              projectType === ProjectType.all) && (
+              <span>{ProjectType.completed}</span>
+            )}
+            {(projectType === ProjectType.completed ||
+              projectType === ProjectType.all) && (
+              <CompletedTable projects={completedProjects} timer={timer} />
+            )}
             {(projectType === ProjectType.expired ||
-              projectType === ProjectType.all) &&
-              projects &&
-              timer && (
-                <>
-                  {projectType === ProjectType.all && (
-                    <span>{ProjectType.expired}</span>
-                  )}
-                  <ExpiredTable
-                    projects={projects.filter(
-                      (item) => getStatus(item) === Status.Expired
-                    )}
-                    timer={timer}
-                  />
-                </>
-              )}
+              projectType === ProjectType.all) && (
+              <span>{ProjectType.expired}</span>
+            )}
+            {(projectType === ProjectType.expired ||
+              projectType === ProjectType.all) && (
+              <ExpiredTable projects={expiredProjects} timer={timer} />
+            )}
           </div>
         </div>
       </div>

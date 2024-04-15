@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
@@ -67,96 +67,66 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
     }
   }, [timer, project]);
 
-  const handleMint = async () => {
-    if (publicKey && nft && project && signTransaction) {
+  const handleAction = useCallback(
+    async (actionType: string) => {
+      if (!publicKey || !nft || !project || !signTransaction) return;
+
       try {
         setLoading(true);
-        if (project.mintElligible) {
-          const ix = await claim(
-            {
-              signer: publicKey,
-              nftOwner: publicKey,
-              nft: new PublicKey(nft.id),
-              poolId: new PublicKey(project.pool),
-              mint: new PublicKey(project.mint),
-            },
-            connection
-          );
-          await buildAndSendTransaction(
-            connection,
-            [ix],
-            publicKey,
-            signTransaction
-          );
-        } else {
-          const ix = await checkClaimElligibility(
-            {
-              signer: publicKey,
-              poolId: new PublicKey(project.pool),
-              nft: new PublicKey(nft.id),
-              mint: new PublicKey(project.mint),
-              lpMint: new PublicKey(project.lpMint),
-            },
-            connection
-          );
-          await buildAndSendTransaction(
-            connection,
-            [ix],
-            publicKey,
-            signTransaction
-          );
+        let ix;
+
+        switch (actionType) {
+          case "claim":
+            ix = await claim(
+              {
+                signer: publicKey,
+                nftOwner: publicKey,
+                nft: new PublicKey(nft.id),
+                poolId: new PublicKey(project.pool),
+                mint: new PublicKey(project.mint),
+              },
+              connection
+            );
+            break;
+          case "checkClaim":
+            ix = await checkClaimElligibility(
+              {
+                signer: publicKey,
+                poolId: new PublicKey(project.pool),
+                nft: new PublicKey(nft.id),
+                mint: new PublicKey(project.mint),
+                lpMint: new PublicKey(project.lpMint),
+              },
+              connection
+            );
+            break;
+          case "withdrawLp":
+            ix = await withdrawLp(
+              {
+                poolId: new PublicKey(project.pool),
+                poolAuthority: new PublicKey(project.authority),
+                lpMint: new PublicKey(project.lpMint),
+                signer: publicKey,
+                nft: new PublicKey(nft.id),
+              },
+              connection
+            );
+            break;
+          case "withdraw":
+            ix = await withdraw(
+              {
+                poolId: new PublicKey(project.pool),
+                signer: publicKey,
+                nftOwner: publicKey,
+                nft: new PublicKey(nft.id),
+              },
+              connection
+            );
+            break;
+          default:
+            throw new Error("Invalid action type");
         }
-        toast.success("Success");
-      } catch (error) {
-        toast.error(`${getCustomErrorMessage(error)}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
 
-  const handleLp = async () => {
-    if (publicKey && nft && project && signTransaction) {
-      try {
-        setLoadingLp(true);
-        const ix = await withdrawLp(
-          {
-            poolId: new PublicKey(project.pool),
-            poolAuthority: new PublicKey(project.authority),
-            lpMint: new PublicKey(project.lpMint),
-            signer: publicKey,
-            nft: new PublicKey(nft.id),
-          },
-          connection
-        );
-        await buildAndSendTransaction(
-          connection,
-          [ix],
-          publicKey,
-          signTransaction
-        );
-        toast.success("Success");
-      } catch (error) {
-        toast.error(`${getCustomErrorMessage(error)}`);
-      } finally {
-        setLoadingLp(false);
-      }
-    }
-  };
-
-  const handleExpired = async () => {
-    if (publicKey && nft && project && signTransaction) {
-      try {
-        setLoading(true);
-        const ix = await withdraw(
-          {
-            poolId: new PublicKey(project.pool),
-            signer: publicKey,
-            nftOwner: publicKey,
-            nft: new PublicKey(nft.id),
-          },
-          connection
-        );
         await buildAndSendTransaction(
           connection,
           [ix],
@@ -169,15 +139,33 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
       } finally {
         setLoading(false);
       }
-    }
-  };
+    },
+    [publicKey, nft, project, connection, signTransaction]
+  );
+  return useMemo(() => {
+    if (!project || !status) return null;
+    const {
+      name,
+      amount,
+      liquidityCollected,
+      presaleTarget,
+      presaleTimeLimit,
+      decimal,
+      mintElligible,
+      vestingEndingAt,
+      lpElligibleAfterFees,
+      amountWsolWithdrawn,
+      mintClaimed,
+      lpClaimed,
+      image,
+      pool,
+      originalMint,
+    } = project;
 
-  return (
-    project &&
-    timer && (
+    return (
       <tr className="text-[10px] sm:text-xs text-black hover:bg-gray-100">
         <td
-          onClick={() => router.push(`/project/${project.pool}`)}
+          onClick={() => router.push(`/project/${pool}`)}
           scope="row"
           className="cursor-pointer hidden sm:table-cell p-2"
         >
@@ -186,50 +174,49 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               className={`rounded object-cover cursor-pointer`}
               fill={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              src={project.image}
+              src={image}
               alt={""}
             />
           </div>
         </td>
         <td
-          onClick={() => router.push(`/project/${project.pool}`)}
+          onClick={() => router.push(`/project/${pool}`)}
           scope="row"
           className="cursor-pointer p-2"
         >
-          {project.name}
+          {name}
         </td>
         <td scope="row" className="p-2 text-center">
-          {project.amount / LAMPORTS_PER_SOL + " Sol"}
+          {amount / LAMPORTS_PER_SOL + " Sol"}
         </td>
         {(status === Status.PresaleInProgress ||
           status === Status.PresaleTargetMet ||
           status === Status.ReadyToLaunch ||
           status === Status.Expired) && (
           <td scope="row" className="p-2 text-center">
-            {project.liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
+            {liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
           status === Status.ReadyToLaunch ||
           status === Status.PresaleTargetMet) && (
           <td scope="row" className="p-2 text-center">
-            {project.presaleTarget / LAMPORTS_PER_SOL + " Sol"}
+            {presaleTarget / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
           status === Status.ReadyToLaunch ||
-          status === Status.PresaleTargetMet) && (
-          <td className="p-2 text-center">
-            {project.presaleTimeLimit - timer / 1000 > 0
-              ? convertSecondsToNearestUnit(
-                  project.presaleTimeLimit - timer / 1000
-                )
-                  .split(" ")
-                  .slice(0, 2)
-                  .join(" ")
-              : "Ended"}
-          </td>
-        )}
+          status === Status.PresaleTargetMet) &&
+          timer && (
+            <td className="p-2 text-center">
+              {presaleTimeLimit - timer / 1000 > 0
+                ? convertSecondsToNearestUnit(presaleTimeLimit - timer / 1000)
+                    .split(" ")
+                    .slice(0, 2)
+                    .join(" ")
+                : "Ended"}
+            </td>
+          )}
         {(status === Status.VestingInProgress ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
@@ -243,23 +230,19 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td className="p-2 text-center">
-            {project.mintClaimed
-              ? formatLargeNumber(project.mintClaimed / 10 ** project.decimal)
-              : ""}
+            {mintClaimed ? formatLargeNumber(mintClaimed / 10 ** decimal) : ""}
           </td>
         )}
         {status === Status.VestingInProgress && (
           <td className="p-2 text-center">
-            {project.mintElligible
-              ? formatLargeNumber(project.mintElligible / 10 ** project.decimal)
+            {mintElligible
+              ? formatLargeNumber(mintElligible / 10 ** decimal)
               : ""}
           </td>
         )}
         {status === Status.VestingInProgress && timer && (
           <td className="p-2 text-center">
-            {`${convertSecondsToNearestUnit(
-              project.vestingEndingAt - timer / 1000
-            )
+            {`${convertSecondsToNearestUnit(vestingEndingAt - timer / 1000)
               .split(" ")
               .slice(0, 2)
               .join(" ")} left`}
@@ -267,48 +250,46 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         )}
         {status === Status.VestingCompleted && (
           <td className="p-2 text-center">
-            {project.lpElligibleAfterFees -
-              (project.lpClaimed ? project.lpClaimed : 0) >
-            0
-              ? formatLargeNumber(
-                  project.lpElligibleAfterFees / 10 ** project.decimal
-                )
+            {lpElligibleAfterFees - (lpClaimed ? lpClaimed : 0) > 0
+              ? formatLargeNumber(lpElligibleAfterFees / 10 ** decimal)
               : "Fully Claimed"}
           </td>
         )}
         {status === Status.VestingCompleted && (
           <td className="p-2 text-center">
-            {project.lpClaimed
-              ? formatLargeNumber(project.lpClaimed / 10 ** project.decimal)
-              : ""}
+            {lpClaimed ? formatLargeNumber(lpClaimed / 10 ** decimal) : ""}
           </td>
         )}
         {status === Status.Expired && (
           <td scope="row" className="p-2 text-center">
-            {(project.liquidityCollected -
-              (project.amountWsolWithdrawn ? project.amountWsolWithdrawn : 0)) /
+            {(liquidityCollected -
+              (amountWsolWithdrawn ? amountWsolWithdrawn : 0)) /
               LAMPORTS_PER_SOL +
               " Sol"}
           </td>
         )}
         {status === Status.Expired && (
           <td className="p-2 text-center">
-            {project.amountWsolWithdrawn === project.amount
-              ? "Fully Withdrawn"
-              : ""}
+            {amountWsolWithdrawn === amount ? "Fully Withdrawn" : ""}
           </td>
         )}
         <td className="p-2 text-center">
           <div className="flex flex-col items-center gap-2">
             {(status === Status.PresaleInProgress ||
               status === Status.ReadyToLaunch ||
-              status === Status.PresaleTargetMet) && <span>{status}</span>}
+              status === Status.PresaleTargetMet) && (
+              <span className="text-nowrap">{status}</span>
+            )}
             {((nft &&
-              nft.id === project.originalMint &&
+              nft.id === originalMint &&
               status === Status.VestingInProgress) ||
               status === Status.VestingCompleted) && (
               <button
-                onClick={handleMint}
+                onClick={() =>
+                  mintElligible
+                    ? handleAction("claim")
+                    : handleAction("checkClaim")
+                }
                 disabled={currentMintElligible === 0}
                 className="text-blue-400 disabled:text-gray-400 flex items-center"
               >
@@ -331,7 +312,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                 )}
                 <span>
                   {`${
-                    project.mintElligible
+                    mintElligible
                       ? currentMintElligible === 0
                         ? ""
                         : "Claim Mint"
@@ -341,11 +322,11 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               </button>
             )}
             {nft &&
-              nft.id === project.originalMint &&
+              nft.id === originalMint &&
               status === Status.VestingCompleted &&
-              project.lpClaimed !== project.lpElligibleAfterFees && (
+              lpClaimed !== lpElligibleAfterFees && (
                 <button
-                  onClick={handleLp}
+                  onClick={() => handleAction("withdrawLp")}
                   className="text-blue-400 disabled:text-gray-400 flex items-center"
                 >
                   {loadingLp && (
@@ -369,11 +350,11 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                 </button>
               )}
             {nft &&
-              nft.id === project.originalMint &&
+              nft.id === originalMint &&
               status === Status.Expired &&
-              project.amountWsolWithdrawn !== project.amount && (
+              amountWsolWithdrawn !== amount && (
                 <button
-                  onClick={handleExpired}
+                  onClick={() => handleAction("withdraw")}
                   className="text-blue-400 disabled:text-gray-400 items-center flex"
                 >
                   {loading && (
@@ -399,6 +380,6 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           </div>
         </td>
       </tr>
-    )
-  );
+    );
+  }, [project, timer, status, currentMintElligible, handleAction]);
 };

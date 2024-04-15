@@ -1,6 +1,6 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "react-toastify";
 import { useLogin } from "../../../hooks/useLogin";
 import { getStatus, getCollectionMintAddress } from "../../../utils/helper";
@@ -66,69 +66,76 @@ export function Pool() {
     }
   }, [pool]);
 
-  const launch = async () => {
-    try {
-      if (
+  const launch = useCallback(async () => {
+    if (
+      !(
         publicKey &&
         connection &&
         pool &&
         signMessage &&
         signTransaction &&
         signAllTransactions
-      ) {
-        setLoading(true);
-        await handleLogin(publicKey, signMessage);
-        await launchToken(
-          pool,
-          connection,
-          publicKey,
-          signTransaction,
-          signAllTransactions
-        );
-        toast.success("Success!");
-      }
+      )
+    )
+      return;
+    try {
+      setLoading(true);
+      await handleLogin(publicKey, signMessage);
+      await launchToken(
+        pool,
+        connection,
+        publicKey,
+        signTransaction,
+        signAllTransactions
+      );
+      toast.success("Success!");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    publicKey,
+    connection,
+    pool,
+    signMessage,
+    signTransaction,
+    signAllTransactions,
+  ]);
 
-  const buy = async () => {
-    try {
-      if (
+  const buy = useCallback(async () => {
+    if (
+      !(
         publicKey &&
         connection &&
         pool &&
         amountToPurchase &&
         nft &&
         signTransaction
-      ) {
-        setLoading(true);
-        await buyPresale(
-          pool,
-          nft,
-          amountToPurchase,
-          publicKey,
-          connection,
-          signTransaction
-        );
-        toast.success("Success!");
-        router.push("/");
-      }
+      )
+    )
+      return;
+    try {
+      setLoading(true);
+      await buyPresale(
+        pool,
+        nft,
+        amountToPurchase,
+        publicKey,
+        connection,
+        signTransaction
+      );
+      toast.success("Success!");
+      router.push("/");
     } catch (error) {
       toast.error(getCustomErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  };
+  }, [pool, nft, amountToPurchase, publicKey, connection, signTransaction]);
 
-  function getButton(
-    status: Status,
-    pool: PoolType,
-    nft: DasApiAsset | undefined,
-    loading: boolean
-  ) {
+  const getButton = useMemo(() => {
+    if (!status || !publicKey || !pool) return null;
     if (
       status === Status.PresaleInProgress ||
       status === Status.PresaleTargetMet
@@ -214,7 +221,7 @@ export function Pool() {
         );
       }
     }
-  }
+  }, [status, publicKey, pool, loading, nft]);
 
   return (
     pool && (
@@ -245,7 +252,7 @@ export function Pool() {
               description={pool.description}
             />
           )}
-          {status && publicKey && getButton(status, pool, nft, loading)}
+          {status && publicKey && getButton}
         </div>
       </div>
     )

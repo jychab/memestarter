@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { MintDashboard } from "../../../sections/MintDashboard";
 import useUmi from "../../../hooks/useUmi";
@@ -13,19 +13,21 @@ export default function Mint() {
   const [collectionItem, setCollectionItem] = useState<DasApiAsset>();
   const { mintId } = router.query;
 
-  useEffect(() => {
+  const fetchAsset = useCallback(async () => {
     if (mintId) {
-      umi.rpc.getAsset(publicKey(mintId as string)).then((response) => {
-        setItem(response);
-        const collectionMint = getCollectionMintAddress(response);
-        if (collectionMint) {
-          umi.rpc
-            .getAsset(publicKey(collectionMint))
-            .then((res) => setCollectionItem(res));
-        }
-      });
+      const response = await umi.rpc.getAsset(publicKey(mintId as string));
+      setItem(response);
+      const collectionMint = getCollectionMintAddress(response);
+      if (collectionMint) {
+        const res = await umi.rpc.getAsset(publicKey(collectionMint));
+        setCollectionItem(res);
+      }
     }
-  }, [mintId]);
+  }, [mintId, umi]);
+
+  useEffect(() => {
+    fetchAsset();
+  }, [fetchAsset]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">

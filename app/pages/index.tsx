@@ -2,14 +2,11 @@ import {
   orderBy,
   limit,
   onSnapshot,
-  collectionGroup,
   collection,
   where,
   query,
-  getDocs,
-  Timestamp,
 } from "firebase/firestore";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { db } from "../utils/firebase";
 import { PoolType } from "../utils/types";
 import CardItem from "../components/CardItem";
@@ -35,7 +32,7 @@ function Projects() {
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(
     FilterCriteria.ongoing
   );
-  const fitlerDropDownRef = useRef<HTMLDivElement>(null);
+  const filterDropDownRef = useRef<HTMLDivElement>(null);
   const [showFilter, setShowFilter] = useState(false);
   const sortDropDownRef = useRef<HTMLDivElement>(null);
   const [showSort, setShowSort] = useState(false);
@@ -48,134 +45,129 @@ function Projects() {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
     return () => clearInterval(interval);
   }, []);
-  const createQuery = (max: number) => {
-    const base = collection(db, "Pool");
-    const queries = [];
-    queries.push(where("valid", "==", true));
-    if (filterCriteria) {
-      switch (filterCriteria) {
-        case FilterCriteria.ongoing:
-          queries.push(where("status", "==", "Initialized"));
-          break;
-        case FilterCriteria.launched:
-          queries.push(where("status", "==", "Launched"));
-          break;
-        case FilterCriteria.expired:
-          queries.push(where("status", "==", "Ended"));
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (sortCriteria) {
-      switch (sortCriteria) {
-        case SortCriteria.createdTime:
-          queries.push(orderBy("createdAt", "desc"));
-          break;
-        case SortCriteria.liquidity:
-          queries.push(orderBy("liquidityCollected", "desc"));
-          break;
-        default:
-          queries.push(orderBy("presaleTimeLimit", "asc"));
-          break;
-      }
-    }
-
-    queries.push(limit(max));
-
-    return query(base, ...queries);
-  };
-
-  const handleScroll = () => {
-    const scrollTop =
-      (document.documentElement && document.documentElement.scrollTop) ||
-      document.body.scrollTop;
-    const scrollHeight =
-      (document.documentElement && document.documentElement.scrollHeight) ||
-      document.body.scrollHeight;
-    const clientHeight =
-      document.documentElement.clientHeight || window.innerHeight;
-    const scrolledToBottom =
-      Math.ceil(scrollTop + clientHeight) >= scrollHeight;
-    if (scrolledToBottom && !loading && !endReached) {
-      setItemsLimit((prevLimit) => prevLimit + 10); // Increase limit by 10 when scrolled to bottom
-    }
-  };
-  useEffect(() => {
-    if (itemsLimit && sortCriteria && filterCriteria) {
-      setLoading(true);
-      const projectQuery = createQuery(itemsLimit);
-      const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
-        const updatedProjects: PoolType[] = [];
-        querySnapshot.forEach((doc) => {
-          // Convert each document to a plain JavaScript object
-          updatedProjects.push(doc.data() as PoolType);
-        });
-        setProjects(updatedProjects);
-        if (querySnapshot.size < itemsLimit) {
-          setEndReached(true); // If fetched data is less than the limit, it means no more data available
+  const createQuery = useMemo(() => {
+    return (max: number) => {
+      const base = collection(db, "Pool");
+      const queries = [];
+      queries.push(where("valid", "==", true));
+      if (filterCriteria) {
+        switch (filterCriteria) {
+          case FilterCriteria.ongoing:
+            queries.push(where("status", "==", "Initialized"));
+            break;
+          case FilterCriteria.launched:
+            queries.push(where("status", "==", "Launched"));
+            break;
+          case FilterCriteria.expired:
+            queries.push(where("status", "==", "Ended"));
+            break;
+          default:
+            break;
         }
-        setLoading(false);
-      });
+      }
 
-      window.addEventListener("scroll", handleScroll);
-      return () => {
-        unsubscribe();
-        window.removeEventListener("scroll", handleScroll);
+      if (sortCriteria) {
+        switch (sortCriteria) {
+          case SortCriteria.createdTime:
+            queries.push(orderBy("createdAt", "desc"));
+            break;
+          case SortCriteria.liquidity:
+            queries.push(orderBy("liquidityCollected", "desc"));
+            break;
+          default:
+            queries.push(orderBy("presaleTimeLimit", "asc"));
+            break;
+        }
+      }
+      queries.push(limit(max));
+      return query(base, ...queries);
+    };
+  }, [filterCriteria, sortCriteria]);
+
+  useEffect(() => {
+    const handleScrollDebounced = debounce(handleScroll, 200);
+    function debounce<T extends (...args: any[]) => any>(
+      func: T,
+      delay: number
+    ) {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      return function (this: any, ...args: Parameters<T>) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
       };
     }
-  }, [itemsLimit, sortCriteria, filterCriteria]);
+    function handleScroll() {
+      const scrollTop =
+        (document.documentElement && document.documentElement.scrollTop) ||
+        document.body.scrollTop;
+      const scrollHeight =
+        (document.documentElement && document.documentElement.scrollHeight) ||
+        document.body.scrollHeight;
+      const clientHeight =
+        document.documentElement.clientHeight || window.innerHeight;
+      const scrolledToBottom =
+        Math.ceil(scrollTop + clientHeight) >= scrollHeight;
+      if (scrolledToBottom && !loading && !endReached) {
+        setItemsLimit((prevLimit) => prevLimit + 10);
+      }
+    }
+    window.addEventListener("scroll", handleScrollDebounced);
+    return () => {
+      window.removeEventListener("scroll", handleScrollDebounced);
+    };
+  }, [loading, endReached]);
 
   useEffect(() => {
-    // Function to handle click outside the dialog
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        fitlerDropDownRef.current &&
-        !fitlerDropDownRef.current.contains(event.target as Node)
-      ) {
-        // Click occurred outside the dialog, so close the dialog
-        setShowFilter(false);
+    if (!(itemsLimit && sortCriteria && filterCriteria)) return;
+    setLoading(true);
+    const projectQuery = createQuery(itemsLimit);
+    const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
+      const updatedProjects: PoolType[] = [];
+      querySnapshot.forEach((doc) => {
+        // Convert each document to a plain JavaScript object
+        updatedProjects.push(doc.data() as PoolType);
+      });
+      setProjects(updatedProjects);
+      if (querySnapshot.size < itemsLimit) {
+        setEndReached(true); // If fetched data is less than the limit, it means no more data available
       }
-    };
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [itemsLimit, sortCriteria, filterCriteria]);
 
-    // Attach event listener when the dialog is open
-    if (showFilter) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      // Remove event listener when the dialog is closed
-      document.removeEventListener("mousedown", handleClickOutside);
+  const handleClickOutside = <T extends HTMLElement>(
+    event: MouseEvent,
+    ref: React.RefObject<T>,
+    setShow: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    if (ref.current && !ref.current.contains(event.target as Node)) {
+      setShow(false);
     }
-
-    // Cleanup the event listener on component unmount
+  };
+  useEffect(() => {
+    const handleClickOutsideFilter = (event: MouseEvent) =>
+      handleClickOutside(event, filterDropDownRef, setShowFilter);
+    if (showFilter) {
+      document.addEventListener("mousedown", handleClickOutsideFilter);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutsideFilter);
+    }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideFilter);
     };
   }, [showFilter]);
 
   useEffect(() => {
-    // Function to handle click outside the dialog
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sortDropDownRef.current &&
-        !sortDropDownRef.current.contains(event.target as Node)
-      ) {
-        // Click occurred outside the dialog, so close the dialog
-        setShowSort(false);
-      }
-    };
-
-    // Attach event listener when the dialog is open
+    const handleClickOutsideSort = (event: MouseEvent) =>
+      handleClickOutside(event, sortDropDownRef, setShowSort);
     if (showSort) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutsideSort);
     } else {
-      // Remove event listener when the dialog is closed
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideSort);
     }
-
-    // Cleanup the event listener on component unmount
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideSort);
     };
   }, [showSort]);
 
@@ -204,7 +196,7 @@ function Projects() {
             <div
               id="dropdown-type"
               hidden={!showFilter}
-              ref={fitlerDropDownRef}
+              ref={filterDropDownRef}
               className="z-20 mt-2 absolute rounded w-28"
             >
               <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">

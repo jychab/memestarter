@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -19,7 +19,10 @@ interface CreatorTableRowProps {
   timer?: number;
 }
 
-export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
+export const CreatorTableRow: FC<CreatorTableRowProps> = ({
+  pool: project,
+  timer,
+}) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status>();
   const { publicKey, signTransaction, signMessage, signAllTransactions } =
@@ -30,59 +33,78 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (pool) {
-      setStatus(getStatus(pool));
+    if (project) {
+      setStatus(getStatus(project));
     }
-  }, [pool]);
+  }, [project]);
 
   useEffect(() => {
     if (
-      pool.vestingStartedAt &&
-      pool.vestingPeriod &&
-      pool.vestedSupply &&
+      project.vestingStartedAt &&
+      project.vestingPeriod &&
+      project.vestedSupply &&
       timer
     ) {
       setUnlockedMint(
-        ((timer / 1000 - pool.vestingStartedAt) * pool.vestedSupply) /
-          pool.vestingPeriod
+        ((timer / 1000 - project.vestingStartedAt) * project.vestedSupply) /
+          project.vestingPeriod
       );
     }
-  }, [timer, pool]);
+  }, [timer, project]);
 
-  const launch = async () => {
-    try {
-      if (
+  const launch = useCallback(async () => {
+    if (
+      !(
         publicKey &&
         connection &&
-        pool &&
+        project &&
         signMessage &&
         signTransaction &&
         signAllTransactions
-      ) {
-        setLoading(true);
-        await handleLogin(publicKey, signMessage);
-        await launchToken(
-          pool,
-          connection,
-          publicKey,
-          signTransaction,
-          signAllTransactions
-        );
-        toast.success("Success!");
-      }
+      )
+    )
+      return;
+    try {
+      setLoading(true);
+      await handleLogin(publicKey, signMessage);
+      await launchToken(
+        project,
+        connection,
+        publicKey,
+        signTransaction,
+        signAllTransactions
+      );
+      toast.success("Success!");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [publicKey, project, connection, signMessage, signTransaction]);
 
-  return (
-    pool &&
-    timer && (
+  return useMemo(() => {
+    if (!project || !status) return null;
+    const {
+      name,
+      totalClaimed,
+      vestedSupply,
+      totalSupply,
+      creatorFeeBasisPoints,
+      liquidityCollected,
+      symbol,
+      presaleTarget,
+      presaleTimeLimit,
+      decimal,
+      vestingEndingAt,
+      amountLpWithdrawn,
+      amountWsolWithdrawn,
+      image,
+      pool,
+    } = project;
+    return (
       <tr className="text-[10px] sm:text-xs text-black hover:bg-gray-100">
         <td
-          onClick={() => router.push(`/project/${pool.pool}`)}
+          onClick={() => router.push(`/project/${pool}`)}
           scope="row"
           className="cursor-pointer hidden sm:table-cell p-2"
         >
@@ -91,32 +113,31 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
               className={`rounded object-cover cursor-pointer`}
               fill={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              src={pool.image}
+              src={image}
               alt={""}
             />
           </div>
         </td>
         <td
-          onClick={() => router.push(`/project/${pool.pool}`)}
+          onClick={() => router.push(`/project/${pool}`)}
           scope="row"
           className="cursor-pointer p-2"
         >
-          {pool.name}
+          {name}
         </td>
         {status !== Status.Expired && (
           <td scope="row" className="p-2 text-center">
             {`${
-              (pool.liquidityCollected * parseInt(pool.creatorFeeBasisPoints)) /
+              (liquidityCollected * parseInt(creatorFeeBasisPoints)) /
               (LAMPORTS_PER_SOL * 10000)
             } 
                Sol ${
-                 pool.amountLpWithdrawn
+                 amountLpWithdrawn
                    ? `& ${
-                       (pool.amountLpWithdrawn *
-                         parseInt(pool.creatorFeeBasisPoints)) /
-                       (10000 * 10 ** pool.decimal)
+                       (amountLpWithdrawn * parseInt(creatorFeeBasisPoints)) /
+                       (10000 * 10 ** decimal)
                      } 
-                      ${pool.symbol}`
+                      ${symbol}`
                    : ""
                }`}
           </td>
@@ -126,7 +147,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           status === Status.ReadyToLaunch ||
           status === Status.Expired) && (
           <td scope="row" className="p-2 text-center">
-            {pool.liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
+            {liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
 
@@ -134,37 +155,34 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           status === Status.ReadyToLaunch ||
           status === Status.PresaleTargetMet) && (
           <td scope="row" className="p-2 text-center">
-            {pool.presaleTarget / LAMPORTS_PER_SOL + " Sol"}
+            {presaleTarget / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
           status === Status.ReadyToLaunch ||
-          status === Status.PresaleTargetMet) && (
-          <td className="p-2 text-center">
-            {pool.presaleTimeLimit - timer / 1000 > 0
-              ? convertSecondsToNearestUnit(
-                  pool.presaleTimeLimit - timer / 1000
-                )
-                  .split(" ")
-                  .slice(0, 2)
-                  .join(" ")
-              : "Ended"}
-          </td>
-        )}
+          status === Status.PresaleTargetMet) &&
+          timer && (
+            <td className="p-2 text-center">
+              {presaleTimeLimit - timer / 1000 > 0
+                ? convertSecondsToNearestUnit(presaleTimeLimit - timer / 1000)
+                    .split(" ")
+                    .slice(0, 2)
+                    .join(" ")
+                : "Ended"}
+            </td>
+          )}
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
-            {formatLargeNumber(pool.totalSupply / 10 ** pool.decimal)}
+            {formatLargeNumber(totalSupply / 10 ** decimal)}
           </td>
         )}
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
             {formatLargeNumber(
-              (pool.totalSupply -
-                pool.vestedSupply +
-                (pool.totalClaimed ? pool.totalClaimed : 0)) /
-                10 ** pool.decimal
+              (totalSupply - vestedSupply + (totalClaimed ? totalClaimed : 0)) /
+                10 ** decimal
             )}
           </td>
         )}
@@ -172,8 +190,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
             {formatLargeNumber(
-              (pool.vestedSupply - (unlockedMint ? unlockedMint : 0)) /
-                10 ** pool.decimal
+              (vestedSupply - (unlockedMint ? unlockedMint : 0)) / 10 ** decimal
             )}
           </td>
         )}
@@ -181,30 +198,31 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
             {formatLargeNumber(
-              (unlockedMint ? unlockedMint : 0) / 10 ** pool.decimal
+              (unlockedMint ? unlockedMint : 0) / 10 ** decimal
             )}
           </td>
         )}
         {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
-          <td scope="row" className="p-2 text-center">
-            {convertSecondsToNearestUnit(pool.vestingEndingAt - timer / 1000)
-              .split(" ")
-              .slice(0, 2)
-              .join(" ")}
-          </td>
-        )}
+          status === Status.VestingInProgress) &&
+          timer && (
+            <td scope="row" className="p-2 text-center">
+              {convertSecondsToNearestUnit(vestingEndingAt - timer / 1000)
+                .split(" ")
+                .slice(0, 2)
+                .join(" ")}
+            </td>
+          )}
         {status === Status.Expired && (
           <td scope="row" className="p-2 text-center">
-            {(pool.amountWsolWithdrawn ? pool.amountWsolWithdrawn : 0) /
+            {(amountWsolWithdrawn ? amountWsolWithdrawn : 0) /
               LAMPORTS_PER_SOL +
               " Sol"}
           </td>
         )}
         {status === Status.Expired && (
           <td scope="row" className="p-2 text-center">
-            {(pool.liquidityCollected -
-              (pool.amountWsolWithdrawn ? pool.amountWsolWithdrawn : 0)) /
+            {(liquidityCollected -
+              (amountWsolWithdrawn ? amountWsolWithdrawn : 0)) /
               LAMPORTS_PER_SOL +
               " Sol"}
           </td>
@@ -236,11 +254,11 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
                 <span>{"Launch"}</span>
               </button>
             ) : (
-              <span>{status}</span>
+              <span className="text-nowrap">{status}</span>
             )}
           </div>
         </td>
       </tr>
-    )
-  );
+    );
+  }, [project, timer, status, unlockedMint, launch]);
 };
