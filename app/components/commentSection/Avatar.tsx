@@ -12,9 +12,9 @@ const Avatar = (props: AvatarProps) => {
 
   return (
     <Image
-      className={`rounded`}
-      width={32}
-      height={32}
+      className={`rounded-full`}
+      width={24}
+      height={24}
       src={props.sourceImage != "" ? props.sourceImage : logo}
       alt={username}
     />

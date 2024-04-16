@@ -19,7 +19,7 @@ const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = useMemo(() => [], [network]);
 
   const onError = useCallback((error: WalletError) => {
-    toast.error(error.message ? `${error.name}: ${error.message}` : error.name);
+    console.log(error);
   }, []);
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ActionButton from "./ActionButton";
-import { IComment, IUser } from "../../utils/types";
+import { IUser } from "../../utils/types";
 
 type ContentProps = {
   poolId: string;
@@ -32,22 +32,24 @@ const Content = (props: ContentProps) => {
   };
 
   return (
-    <>
+    <div>
       {!isEditing ? (
-        <div className="text-black text-sm">
-          <span
-            className={
-              (replyingTo ? "" : "hidden ") +
-              "text-blue-600 font-medium hover:cursor-pointer"
-            }
-          >
-            {replyingTo + " "}
-          </span>
+        <div className="text-black text-wrap w-10/12 md:w-full text-sm">
+          <div className="truncate w-36 md:w-96">
+            <span
+              className={
+                (replyingTo ? "" : "hidden ") +
+                "text-blue-600 font-medium text-xs hover:cursor-pointer "
+              }
+            >
+              {"@" + replyingTo + " "}
+            </span>
+          </div>
           {content}
         </div>
       ) : null}
       {isEditing ? (
-        <div className="flex flex-col items-end gap-4 rounded-md">
+        <div className="flex flex-col md:flex-row items-end gap-4 rounded-md">
           <textarea
             className="border px-4 py-2 rounded-lg text-black w-full"
             placeholder="Add a comment..."
@@ -68,7 +70,7 @@ const Content = (props: ContentProps) => {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 };
 

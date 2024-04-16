@@ -121,18 +121,14 @@ export function convertSecondsToNearestUnit(seconds: number) {
   } else if (seconds < year) {
     const months = Math.floor(seconds / month);
     const remainingDays = (seconds % month) / day;
-    return `${months} month${months === 1 ? "" : "s"}${
+    return `${months} mo${
       remainingDays > 0 ? ` ${remainingDays.toFixed(1)}d` : ""
     }`;
   } else {
     const years = Math.floor(seconds / year);
     const remainingMonths = (seconds % year) / month;
-    return `${years} year${years === 1 ? "" : "s"}${
-      remainingMonths > 0
-        ? ` ${remainingMonths.toFixed(1)} month${
-            remainingMonths === 1 ? "" : "s"
-          }`
-        : ""
+    return `${years} y${
+      remainingMonths > 0 ? ` ${remainingMonths.toFixed(1)}mo` : ""
     }`;
   }
 }

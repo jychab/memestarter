@@ -3,12 +3,14 @@ import React from "react";
 
 type ReplyButtonProps = {
   hide: boolean;
+  disabled?: boolean;
   onIsReplyingChange: () => void;
   isReplying: boolean;
 };
 
 const ReplyButton = (props: ReplyButtonProps) => {
   const hide = props.hide ? "hidden " : " ";
+  const disabled = props.disabled ? props.disabled : false;
   const isReplying = props.isReplying;
   const onIsReplyingChange = props.onIsReplyingChange;
   const handleClick = () => {
@@ -17,6 +19,7 @@ const ReplyButton = (props: ReplyButtonProps) => {
 
   return (
     <button
+      disabled={disabled}
       onClick={handleClick}
       className={
         hide +
@@ -26,14 +29,20 @@ const ReplyButton = (props: ReplyButtonProps) => {
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="currentColor"
-        height="18px"
-        width="18px"
+        width="16px"
+        height="16px"
+        viewBox="0 0 48 48"
+        enableBackground="new 0 0 48 48"
+        id="Layer_1"
         version="1.1"
-        viewBox="0 0 512 512"
-        enableBackground="new 0 0 512 512"
+        xmlSpace="preserve"
       >
-        <path d="M185.2,128.6V19.7L0,204.9l185.2,185.2V281.1c152.5,0,250.5,0,326.8,217.9C512,390.1,522.9,128.6,185.2,128.6z" />
+        <g id="Layer_3">
+          <path
+            d="M0,1.499v36h12.031V48l14.906-10.501H48v-36H0z M44,33.499H26.906L16,41.125v-3.75v-3.876H4v-28h40V33.499z   "
+            fill="currentColor"
+          />
+        </g>
       </svg>
       <div className="text-gray-700 text-sm font-medium">Reply</div>
     </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserDetail from "./UserDetail";
 import Content from "./Content";
 import Vote from "./Vote";
@@ -10,9 +10,20 @@ import InputComment from "./InputComment";
 import DeleteButton from "./DeleteButton";
 import EditButton from "./EditButton";
 import { IUser, IComment, IReply } from "../../utils/types";
+import Avatar from "./Avatar";
+import {
+  onSnapshot,
+  query,
+  collection,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { db } from "../../utils/firebase";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type CommentProps = {
   poolId: string;
+  poolCreator: string;
   currentUser: IUser;
   comment: IComment;
 };
@@ -20,12 +31,17 @@ type CommentProps = {
 const Comment = (props: CommentProps) => {
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const poolCreator = props.poolCreator;
   const poolId = props.poolId;
   const comment = props.comment;
   const currentUser = props.currentUser;
+  const numReplies = props.comment.numReplies;
   const isCurrentUser =
     comment.user.username == currentUser.username ? true : false;
-  const replies = comment.replies;
+  const [replies, setReplies] = useState<IReply[]>([]);
+  const [maxReplies, setMaxReplies] = useState(5);
+  const { publicKey } = useWallet();
 
   const handleIsReplyingChange = () => {
     setIsReplying((prevIsReplying) => !prevIsReplying);
@@ -35,64 +51,87 @@ const Comment = (props: CommentProps) => {
     setIsEditing((prevIsEditing) => !prevIsEditing);
   };
 
+  useEffect(() => {
+    if (showReplies && comment && poolId) {
+      const repliesUnsubscribe = onSnapshot(
+        query(
+          collection(db, `Pool/${poolId}/Comments/${comment.id}/Replies`),
+          orderBy("score", "desc"),
+          orderBy("createdAt", "asc"),
+          limit(maxReplies)
+        ),
+        (repliesSnapshot) => {
+          setReplies(repliesSnapshot.docs.map((doc) => doc.data() as IReply));
+        }
+      );
+      return () => repliesUnsubscribe();
+    } else {
+      setReplies([]);
+    }
+  }, [showReplies, comment, maxReplies, poolId]);
+
   return (
-    <>
-      <div className="border border-gray-300 p-4 flex flex-col md:flex-row gap-4 rounded-md">
-        <div className="hidden md:block">
-          <Vote
-            disabled={currentUser.username == "Anon"}
-            poolId={poolId}
-            commentIdToChangeVote={comment.id}
-            score={comment.score}
+    <div className="flex flex-col gap-4 w-full">
+      <div
+        className={`flex flex-col p-4 gap-4 rounded ${
+          showReplies ? "border border-gray-300" : ""
+        }`}
+      >
+        <div className="flex items-start gap-4">
+          <Avatar
+            sourceImage={currentUser.image}
+            username={currentUser.username}
           />
-        </div>
-        <div className="flex flex-col gap-4 w-full">
-          <UserDetail
-            poolId={poolId}
-            image={comment.user.image}
-            username={comment.user.username}
-            currentUser={currentUser}
-            createdAt={comment.createdAt}
-            isReplying={isReplying}
-            onIsReplyingChange={handleIsReplyingChange}
-            isEditing={isEditing}
-            onIsEditingChange={handleIsEditingChange}
-            commentId={comment.id}
-          />
-          <Content
-            onIsEditingChange={handleIsEditingChange}
-            commentId={comment.id}
-            currentUser={currentUser}
-            content={comment.content}
-            isEditing={isEditing}
-            poolId={poolId}
-          />
-        </div>
-        <div className="flex gap-4 justify-between">
-          <div className="block md:hidden">
-            <Vote
-              disabled={currentUser.username == "Anon"}
-              commentIdToChangeVote={comment.id}
+          <div className="flex flex-col gap-2 w-full rounded-md">
+            <UserDetail
+              poolCreator={poolCreator}
               poolId={poolId}
-              score={comment.score}
+              image={comment.user.image}
+              username={comment.user.username}
+              createdAt={comment.createdAt}
             />
-          </div>
-          <div className="flex items-center justify-center gap-4 md:hidden">
-            <ReplyButton
-              hide={isCurrentUser || currentUser.username == "Anon"}
-              isReplying={isReplying}
-              onIsReplyingChange={handleIsReplyingChange}
-            />
-            <DeleteButton
-              commentId={comment.id}
-              show={isCurrentUser}
-              poolId={poolId}
-            />
-            <EditButton
-              show={isCurrentUser}
-              isEditing={isEditing}
+            <Content
               onIsEditingChange={handleIsEditingChange}
+              commentId={comment.id}
+              currentUser={currentUser}
+              content={comment.content}
+              isEditing={isEditing}
+              poolId={poolId}
             />
+            <div className="flex gap-4 items-center ">
+              <Vote
+                disabled={!publicKey}
+                commentIdToChangeVote={comment.id}
+                poolId={poolId}
+                score={comment.score}
+              />
+              <ReplyButton
+                disabled={!publicKey}
+                hide={isCurrentUser || !publicKey}
+                isReplying={isReplying}
+                onIsReplyingChange={handleIsReplyingChange}
+              />
+              <DeleteButton
+                commentId={comment.id}
+                show={isCurrentUser}
+                poolId={poolId}
+              />
+              <EditButton
+                show={isCurrentUser}
+                isEditing={isEditing}
+                onIsEditingChange={handleIsEditingChange}
+              />
+            </div>
+            {numReplies > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="flex items-start py-2"
+              >
+                <span className="text-blue-600 font-medium text-xs">
+                  {showReplies ? "Hide replies" : `${numReplies} replies`}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -109,6 +148,7 @@ const Comment = (props: CommentProps) => {
       {replies.map((value: IReply) => {
         return (
           <Reply
+            poolCreator={poolCreator}
             key={value.id}
             currentUser={currentUser}
             reply={value}
@@ -117,7 +157,15 @@ const Comment = (props: CommentProps) => {
           />
         );
       })}
-    </>
+      {showReplies && maxReplies < numReplies && (
+        <button
+          onClick={() => setMaxReplies(maxReplies + 10)}
+          className="ml-8 pl-8 flex items-start"
+        >
+          <span className="text-blue-600 font-medium text-xs">{`Show more`}</span>
+        </button>
+      )}
+    </div>
   );
 };
 

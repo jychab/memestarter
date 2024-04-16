@@ -78,6 +78,11 @@ export const handleReplyComment = async (
   commentId: string
 ) => {
   await setDoc(
+    doc(db, `Pool/${poolId}/Comments/${commentId}`),
+    { numReplies: increment(1) },
+    { merge: true }
+  );
+  await setDoc(
     doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${newReply.id}`),
     newReply
   );

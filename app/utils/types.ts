@@ -29,7 +29,7 @@ export type IComment = {
   createdAt: Timestamp;
   score: number;
   user: IUser;
-  replies: IReply[];
+  numReplies: number;
 };
 
 export enum Status {

@@ -1,21 +1,28 @@
 import React from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type UserLabelProps = {
-  show: boolean;
+  commentUser: string;
+  creator: string;
 };
 
 const UserLabel = (props: UserLabelProps) => {
-  const show = props.show ? "block" : "hidden";
-
+  const { publicKey } = useWallet();
+  const user = props.commentUser;
+  const creator = props.creator;
   return (
-    <div
-      className={
-        "bg-blue-600 uppercase rounded text-white text-xs font-medium py-0.5 px-1.5 flex items-center justify-center " +
-        show
-      }
-    >
-      you
-    </div>
+    publicKey &&
+    (user == publicKey.toBase58() || creator == publicKey.toBase58()) && (
+      <div
+        className={`uppercase rounded ${
+          user == publicKey.toBase58()
+            ? "bg-blue-600 text-white"
+            : "text-red-800"
+        } text-xs font-medium py-0.5 px-1.5 flex items-center justify-center `}
+      >
+        {user == publicKey.toBase58() ? "you" : "Creator"}
+      </div>
+    )
   );
 };
 

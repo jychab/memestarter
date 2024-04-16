@@ -282,6 +282,7 @@ export function Pool() {
           poolId={pool.pool}
           publicKey={publicKey}
           image={image}
+          poolCreator={pool.authority}
         />
       </div>
     )

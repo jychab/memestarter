@@ -7,8 +7,11 @@ import InputComment from "./InputComment";
 import DeleteButton from "./DeleteButton";
 import EditButton from "./EditButton";
 import { IUser, IReply, IComment } from "../../utils/types";
+import Avatar from "./Avatar";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type ReplyProps = {
+  poolCreator: string;
   poolId: string;
   currentUser: IUser;
   reply: IReply;
@@ -18,12 +21,14 @@ type ReplyProps = {
 const Reply = (props: ReplyProps) => {
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const poolCreator = props.poolCreator;
   const poolId = props.poolId;
   const reply = props.reply;
   const currentUser = props.currentUser;
   const isCurrentUser =
     reply.user.username == currentUser.username ? true : false;
   const commentId = props.commentId;
+  const { publicKey } = useWallet();
 
   const handleIsReplyingChange = () => {
     setIsReplying((prevIsReplying) => !prevIsReplying);
@@ -34,29 +39,19 @@ const Reply = (props: ReplyProps) => {
   };
 
   return (
-    <div className="md:ml-8 border-l-2 border-gray-300 pl-4 md:pl-8 flex flex-col gap-4">
-      <div className="p-4 flex flex-col md:flex-row gap-4 rounded-md">
-        <div className="hidden md:block">
-          <Vote
-            poolId={poolId}
-            replyIdToChangeVote={reply.id}
-            score={reply.score}
-            commentIdToChangeVote={commentId}
-          />
-        </div>
-        <div className="flex flex-col gap-4 w-full">
+    <div className="ml-8 border-l-2 border-gray-300 pl-4 md:pl-8 flex flex-col w-11/12">
+      <div className="flex items-start gap-4 w-full">
+        <Avatar
+          sourceImage={currentUser.image}
+          username={currentUser.username}
+        />
+        <div className="flex flex-col gap-2 rounded-md w-full">
           <UserDetail
-            commentId={commentId}
-            replyIdToDelete={reply.id}
             image={reply.user.image}
             username={reply.user.username}
-            currentUser={currentUser}
             createdAt={reply.createdAt}
-            isReplying={isReplying}
-            onIsReplyingChange={handleIsReplyingChange}
-            isEditing={isEditing}
-            onIsEditingChange={handleIsEditingChange}
             poolId={poolId}
+            poolCreator={poolCreator}
           />
           <Content
             replyIdToUpdate={reply.id}
@@ -68,19 +63,17 @@ const Reply = (props: ReplyProps) => {
             poolId={poolId}
             commentId={commentId}
           />
-        </div>
-        <div className="flex gap-4 justify-between">
-          <div className="block md:hidden">
+          <div className="flex gap-4 items-center">
             <Vote
+              disabled={!publicKey}
               poolId={poolId}
               replyIdToChangeVote={reply.id}
               score={reply.score}
               commentIdToChangeVote={commentId}
             />
-          </div>
-          <div className="flex items-center justify-center gap-4 md:hidden">
             <ReplyButton
-              hide={isCurrentUser}
+              disabled={!publicKey}
+              hide={isCurrentUser || !publicKey}
               isReplying={isReplying}
               onIsReplyingChange={handleIsReplyingChange}
             />

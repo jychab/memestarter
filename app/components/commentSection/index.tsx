@@ -1,18 +1,26 @@
 import { FC, useEffect, useState } from "react";
 import InputComment from "./InputComment";
 import Comment from "./Comment";
-import { IUser, IComment } from "../../utils/types";
+import { IUser, IComment, IReply } from "../../utils/types";
 import { PublicKey } from "@solana/web3.js";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  getCountFromServer,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 interface CommentsSectionProps {
   poolId: string;
+  poolCreator: string;
   publicKey: PublicKey | null;
   image?: string;
 }
 export const CommentsSection: FC<CommentsSectionProps> = ({
   poolId,
+  poolCreator,
   publicKey,
   image = "",
 }) => {
@@ -51,6 +59,7 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
             poolId={poolId}
             currentUser={currentUser}
             comment={value}
+            poolCreator={poolCreator}
           />
         );
       })}

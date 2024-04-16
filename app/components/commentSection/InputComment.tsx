@@ -24,10 +24,7 @@ const InputComment = (props: InputCommentProps) => {
   const replyId = props.replyId;
   const poolId = props.poolId;
 
-  const [commentValue, setCommentValue] = useState(
-    // replyingTo ? ("@" + replyingTo + " ") : ""
-    ""
-  );
+  const [commentValue, setCommentValue] = useState("");
 
   const handleChangeCommentValue = (
     e: React.ChangeEvent<HTMLTextAreaElement>
@@ -42,16 +39,10 @@ const InputComment = (props: InputCommentProps) => {
   return (
     <div
       className={
-        (action == "reply" ? "pl-12 border-l-2 border-gray-300 " : " ") +
-        "flex items-center justify-evenly gap-4 "
+        (action == "reply" ? "pl-12 " : " ") +
+        "flex items-center justify-between gap-4 p-4"
       }
     >
-      <div className="hidden md:block w-14 h-14 items-center justify-center">
-        <Avatar
-          sourceImage={currentUser.image}
-          username={currentUser.username}
-        />
-      </div>
       <textarea
         className="border border-gray-300 text-sm px-4 py-2 rounded-lg text-black w-full"
         placeholder="Add a comment..."

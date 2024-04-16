@@ -50,9 +50,6 @@ const ActionButton = (props: ActionButtonProps) => {
           break;
         case "reply":
           if (!commentId) break;
-          if (replyId) {
-            newReply.content = `@${replyId} ` + newReply.content;
-          }
           await handleReplyComment(poolId, newReply, commentId);
           onIsReplyingChange ? onIsReplyingChange() : null;
           break;
@@ -86,7 +83,7 @@ const ActionButton = (props: ActionButtonProps) => {
       image: currentUser.image,
       username: currentUser.username,
     },
-    replies: [],
+    numReplies: 0,
   };
 
   const newReply: IReply = {
