@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, FC } from "react";
 import {
   handleUpdateCommentVote,
   handleUpdateReplyVote,
@@ -17,41 +17,70 @@ type VoteProps = {
   replyIdToChangeVote?: string;
 };
 
-const Vote = (props: VoteProps) => {
+export const Vote: FC<VoteProps> = ({
+  disabled = false,
+  poolId,
+  score,
+  positiveScoreRecord,
+  negativeScoreRecord,
+  commentIdToChangeVote,
+  replyIdToChangeVote,
+}) => {
   const { publicKey, signMessage } = useWallet();
-  const positiveScoreRecord = props.positiveScoreRecord;
-  const negativeScoreRecord = props.negativeScoreRecord;
-  const disabled = props.disabled ? props.disabled : false;
-  const poolId = props.poolId;
-  const score = props.score;
-  const commentIdToChangeVote = props.commentIdToChangeVote;
-  const replyIdToChangeVote = props.replyIdToChangeVote;
+  const [loading, setLoading] = useState(false);
   const { handleLogin } = useLogin();
 
-  const handleClick = async (operation: string, buttonType: string) => {
-    if (!publicKey || !signMessage) return;
-    try {
-      await handleLogin(publicKey, signMessage);
-      if (!replyIdToChangeVote) {
-        await handleUpdateCommentVote(
-          publicKey.toBase58(),
-          poolId,
-          commentIdToChangeVote,
-          operation,
-          buttonType
-        );
-      } else {
-        await handleUpdateReplyVote(
-          publicKey.toBase58(),
-          poolId,
-          commentIdToChangeVote,
-          replyIdToChangeVote,
-          operation,
-          buttonType
-        );
+  const handleClick = useCallback(
+    async (operation: string, buttonType: string) => {
+      if (!publicKey || !signMessage || loading) return;
+      try {
+        setLoading(true);
+        await handleLogin(publicKey, signMessage);
+        if (!replyIdToChangeVote) {
+          await handleUpdateCommentVote(
+            publicKey.toBase58(),
+            poolId,
+            commentIdToChangeVote,
+            operation,
+            buttonType
+          );
+        } else {
+          await handleUpdateReplyVote(
+            publicKey.toBase58(),
+            poolId,
+            commentIdToChangeVote,
+            replyIdToChangeVote,
+            operation,
+            buttonType
+          );
+        }
+        setLoading(false);
+      } catch (error) {
+        toast.error(`${error}`);
       }
-    } catch (error) {
-      toast.error(`${error}`);
+    },
+    [
+      publicKey,
+      signMessage,
+      loading,
+      handleLogin,
+      poolId,
+      commentIdToChangeVote,
+      replyIdToChangeVote,
+    ]
+  );
+
+  const handleVote = (buttonType: string) => {
+    if (!publicKey) return;
+    const isPositive = buttonType === "positive";
+    const isScoreRecorded = isPositive
+      ? positiveScoreRecord.includes(publicKey?.toBase58())
+      : negativeScoreRecord.includes(publicKey?.toBase58());
+
+    if (!isScoreRecorded) {
+      handleClick("add", buttonType);
+    } else {
+      handleClick("sub", buttonType);
     }
   };
 
@@ -59,18 +88,12 @@ const Vote = (props: VoteProps) => {
     <div className="text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl">
       <button
         disabled={
-          disabled
-            ? true
-            : publicKey != null &&
-              positiveScoreRecord.includes(publicKey.toBase58())
+          disabled ||
+          loading ||
+          (publicKey != null &&
+            positiveScoreRecord.includes(publicKey.toBase58()))
         }
-        onClick={() => {
-          if (!publicKey || positiveScoreRecord.includes(publicKey.toBase58()))
-            return;
-          negativeScoreRecord.includes(publicKey.toBase58())
-            ? handleClick("sub", "negative")
-            : handleClick("add", "positive");
-        }}
+        onClick={() => handleVote("positive")}
         className="flex items-center justify-center"
       >
         <svg
@@ -91,18 +114,12 @@ const Vote = (props: VoteProps) => {
       <div>{score}</div>
       <button
         disabled={
-          disabled
-            ? true
-            : publicKey != null &&
-              negativeScoreRecord.includes(publicKey.toBase58())
+          disabled ||
+          loading ||
+          (publicKey != null &&
+            negativeScoreRecord.includes(publicKey.toBase58()))
         }
-        onClick={() => {
-          if (!publicKey || negativeScoreRecord.includes(publicKey.toBase58()))
-            return;
-          positiveScoreRecord.includes(publicKey.toBase58())
-            ? handleClick("sub", "positive")
-            : handleClick("add", "negative");
-        }}
+        onClick={() => handleVote("negative")}
         className="flex items-center justify-center"
       >
         <svg
