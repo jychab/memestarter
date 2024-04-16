@@ -66,6 +66,8 @@ const Reply = (props: ReplyProps) => {
               replyIdToChangeVote={reply.id}
               score={reply.score}
               commentIdToChangeVote={commentId}
+              positiveScoreRecord={reply.positiveScoreRecord}
+              negativeScoreRecord={reply.negativeScoreRecord}
             />
             <ReplyButton
               disabled={!publicKey}
