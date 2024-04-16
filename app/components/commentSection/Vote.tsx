@@ -1,4 +1,4 @@
-import React, { useState, useCallback, FC } from "react";
+import React, { useState } from "react";
 import {
   handleUpdateCommentVote,
   handleUpdateReplyVote,
@@ -17,70 +17,44 @@ type VoteProps = {
   replyIdToChangeVote?: string;
 };
 
-export const Vote: FC<VoteProps> = ({
-  disabled = false,
-  poolId,
-  score,
-  positiveScoreRecord,
-  negativeScoreRecord,
-  commentIdToChangeVote,
-  replyIdToChangeVote,
-}) => {
+const Vote = (props: VoteProps) => {
   const { publicKey, signMessage } = useWallet();
   const [loading, setLoading] = useState(false);
+  const positiveScoreRecord = props.positiveScoreRecord;
+  const negativeScoreRecord = props.negativeScoreRecord;
+  const disabled = props.disabled ? props.disabled : false;
+  const poolId = props.poolId;
+  const score = props.score;
+  const commentIdToChangeVote = props.commentIdToChangeVote;
+  const replyIdToChangeVote = props.replyIdToChangeVote;
   const { handleLogin } = useLogin();
 
-  const handleClick = useCallback(
-    async (operation: string, buttonType: string) => {
-      if (!publicKey || !signMessage || loading) return;
-      try {
-        setLoading(true);
-        await handleLogin(publicKey, signMessage);
-        if (!replyIdToChangeVote) {
-          await handleUpdateCommentVote(
-            publicKey.toBase58(),
-            poolId,
-            commentIdToChangeVote,
-            operation,
-            buttonType
-          );
-        } else {
-          await handleUpdateReplyVote(
-            publicKey.toBase58(),
-            poolId,
-            commentIdToChangeVote,
-            replyIdToChangeVote,
-            operation,
-            buttonType
-          );
-        }
-        setLoading(false);
-      } catch (error) {
-        toast.error(`${error}`);
+  const handleClick = async (operation: string, buttonType: string) => {
+    if (!publicKey || !signMessage || loading) return;
+    try {
+      setLoading(true);
+      await handleLogin(publicKey, signMessage);
+      if (!replyIdToChangeVote) {
+        await handleUpdateCommentVote(
+          publicKey.toBase58(),
+          poolId,
+          commentIdToChangeVote,
+          operation,
+          buttonType
+        );
+      } else {
+        await handleUpdateReplyVote(
+          publicKey.toBase58(),
+          poolId,
+          commentIdToChangeVote,
+          replyIdToChangeVote,
+          operation,
+          buttonType
+        );
       }
-    },
-    [
-      publicKey,
-      signMessage,
-      loading,
-      handleLogin,
-      poolId,
-      commentIdToChangeVote,
-      replyIdToChangeVote,
-    ]
-  );
-
-  const handleVote = (buttonType: string) => {
-    if (!publicKey) return;
-    const isPositive = buttonType === "positive";
-    const isScoreRecorded = isPositive
-      ? positiveScoreRecord.includes(publicKey?.toBase58())
-      : negativeScoreRecord.includes(publicKey?.toBase58());
-
-    if (!isScoreRecorded) {
-      handleClick("add", buttonType);
-    } else {
-      handleClick("sub", buttonType);
+      setLoading(false);
+    } catch (error) {
+      toast.error(`${error}`);
     }
   };
 
@@ -93,7 +67,13 @@ export const Vote: FC<VoteProps> = ({
           (publicKey != null &&
             positiveScoreRecord.includes(publicKey.toBase58()))
         }
-        onClick={() => handleVote("positive")}
+        onClick={() => {
+          if (!publicKey || positiveScoreRecord.includes(publicKey.toBase58()))
+            return;
+          negativeScoreRecord.includes(publicKey.toBase58())
+            ? handleClick("sub", "negative")
+            : handleClick("add", "positive");
+        }}
         className="flex items-center justify-center"
       >
         <svg
@@ -119,7 +99,13 @@ export const Vote: FC<VoteProps> = ({
           (publicKey != null &&
             negativeScoreRecord.includes(publicKey.toBase58()))
         }
-        onClick={() => handleVote("negative")}
+        onClick={() => {
+          if (!publicKey || negativeScoreRecord.includes(publicKey.toBase58()))
+            return;
+          positiveScoreRecord.includes(publicKey.toBase58())
+            ? handleClick("sub", "positive")
+            : handleClick("add", "negative");
+        }}
         className="flex items-center justify-center"
       >
         <svg
