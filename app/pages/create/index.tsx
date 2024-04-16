@@ -9,10 +9,12 @@ import { ReviewPane } from "../../sections/ReviewPane";
 import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
 import { createPool, uploadImage, uploadMetadata } from "../../utils/functions";
+import { useLogin } from "../../hooks/useLogin";
 
 function CreateCollection() {
   const { connection } = useConnection();
-  const { publicKey, signTransaction } = useWallet();
+  const { handleLogin } = useLogin();
+  const { publicKey, signTransaction, signMessage } = useWallet();
   const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -94,7 +96,13 @@ function CreateCollection() {
       }
       setPage(page + 1);
     } else {
-      if (!publicKey || picture === null || !signTransaction || loading) {
+      if (
+        !publicKey ||
+        picture === null ||
+        !signTransaction ||
+        loading ||
+        !signMessage
+      ) {
         return;
       }
       const amountOfSol = (await connection.getAccountInfo(publicKey))
@@ -112,6 +120,7 @@ function CreateCollection() {
         (parseInt(vestingSupply.replaceAll(",", "")) / 100) * totalSupplyNum;
       try {
         setLoading(true);
+        await handleLogin(publicKey, signMessage);
         const imageUrl = await uploadImage(picture);
         const uri = await uploadMetadata(
           name,

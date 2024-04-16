@@ -7,6 +7,7 @@ import {
   VersionedTransaction,
   TransactionMessage,
   Transaction,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 
 export async function getSimulationUnits(
@@ -46,14 +47,15 @@ export async function buildAndSendTransaction(
   ) => Promise<T>
 ) {
   const [microLamports, units, recentBlockhash] = await Promise.all([
-    100,
+    LAMPORTS_PER_SOL * 0.005,
     getSimulationUnits(connection, ixs, publicKey, []),
     connection.getLatestBlockhash(),
   ]);
+  console.log(`Priority Fees: ${microLamports / LAMPORTS_PER_SOL} Sol`);
   ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
   if (units) {
     // probably should add some margin of error to units
-    console.log(units);
+    console.log(`Compute Units: ${units}`);
     ixs.unshift(
       ComputeBudgetProgram.setComputeUnitLimit({ units: units * 1.1 })
     );
