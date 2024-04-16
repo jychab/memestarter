@@ -47,7 +47,7 @@ export async function buildAndSendTransaction(
   ) => Promise<T>
 ) {
   const [microLamports, units, recentBlockhash] = await Promise.all([
-    LAMPORTS_PER_SOL * 0.005,
+    LAMPORTS_PER_SOL * 0.001,
     getSimulationUnits(connection, ixs, publicKey, []),
     connection.getLatestBlockhash(),
   ]);

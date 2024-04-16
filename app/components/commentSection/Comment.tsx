@@ -96,6 +96,8 @@ const Comment = (props: CommentProps) => {
             />
             <div className="flex gap-4 items-center ">
               <Vote
+                positiveScoreRecord={comment.positiveScoreRecord}
+                negativeScoreRecord={comment.negativeScoreRecord}
                 disabled={!publicKey}
                 commentIdToChangeVote={comment.id}
                 poolId={poolId}

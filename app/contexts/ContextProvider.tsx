@@ -10,12 +10,11 @@ import {
   useNetworkConfiguration,
 } from "./NetworkConfigurationProvider";
 import React from "react";
-import { toast } from "react-toastify";
+import { HELIUS_ENDPOINT } from "../utils/constants";
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { networkConfiguration } = useNetworkConfiguration();
   const network = networkConfiguration as WalletAdapterNetwork;
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   const wallets = useMemo(() => [], [network]);
 
   const onError = useCallback((error: WalletError) => {
@@ -23,9 +22,7 @@ const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   return (
-    <ConnectionProvider
-      endpoint={`https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`}
-    >
+    <ConnectionProvider endpoint={HELIUS_ENDPOINT}>
       <WalletProvider wallets={wallets} onError={onError} autoConnect>
         {children}
       </WalletProvider>

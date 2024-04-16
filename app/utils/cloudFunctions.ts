@@ -3,8 +3,16 @@ import { IComment, IReply, UpdateMarketDataArgs } from "./types";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { PublicKey } from "@solana/web3.js";
 import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
-import { setDoc, doc, deleteDoc, increment } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  deleteDoc,
+  increment,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import { db } from "./firebase";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 export async function getCurrentPrice(): Promise<{
   data: {
@@ -15,9 +23,7 @@ export async function getCurrentPrice(): Promise<{
   success: boolean;
 }> {
   const getPrice = httpsCallable(getFunctions(), "getPrice");
-  return (
-    await getPrice({ address: "So11111111111111111111111111111111111111112" })
-  ).data as {
+  return (await getPrice({ address: NATIVE_MINT.toBase58() })).data as {
     data: {
       value: number;
       updateUnixTime: number;
@@ -108,13 +114,33 @@ export const handleDeleteComment = async (
 };
 
 export const handleUpdateCommentVote = async (
+  publicKey: string,
   poolId: string,
   commentId: string,
-  operation: string
+  operation: string,
+  buttonType: string
 ) => {
+  const scoreRecord =
+    buttonType == "positive"
+      ? {
+          positiveScoreRecord:
+            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
+        }
+      : {
+          negativeScoreRecord:
+            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
+        };
   await setDoc(
     doc(db, `Pool/${poolId}/Comments/${commentId}`),
-    { score: increment(operation == "add" ? 1 : -1) },
+    {
+      score: increment(
+        (operation == "add" && buttonType == "positive") ||
+          (operation != "add" && buttonType != "positive")
+          ? 1
+          : -1
+      ),
+      ...scoreRecord,
+    },
     { merge: true }
   );
 };
@@ -143,14 +169,34 @@ export const handleDeleteReply = async (
 };
 
 export const handleUpdateReplyVote = async (
+  publicKey: string,
   poolId: string,
   commentId: string,
   replyId: string,
-  operation: string
+  operation: string,
+  buttonType: string
 ) => {
+  const scoreRecord =
+    buttonType == "positive"
+      ? {
+          positiveScoreRecord:
+            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
+        }
+      : {
+          negativeScoreRecord:
+            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
+        };
   await setDoc(
     doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${replyId}`),
-    { score: increment(operation == "add" ? 1 : -1) },
+    {
+      score: increment(
+        (operation == "add" && buttonType == "positive") ||
+          (operation != "add" && buttonType != "positive")
+          ? 1
+          : -1
+      ),
+      ...scoreRecord,
+    },
     { merge: true }
   );
 };

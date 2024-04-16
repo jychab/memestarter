@@ -21,6 +21,8 @@ export interface IReply {
   user: IUser;
   createdAt: Timestamp;
   replyingTo: string;
+  negativeScoreRecord: Array<string>;
+  positiveScoreRecord: Array<string>;
 }
 export type IComment = {
   id: string;
@@ -29,6 +31,8 @@ export type IComment = {
   score: number;
   user: IUser;
   numReplies: number;
+  negativeScoreRecord: Array<string>;
+  positiveScoreRecord: Array<string>;
 };
 
 export enum Status {

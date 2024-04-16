@@ -89,6 +89,7 @@ export interface WithdrawEvent {
 }
 
 export interface Pool {
+  delegate: string | null;
   mintMetadata: DAS.GetAssetResponse;
   amountCoin: number;
   amountLpReceived: number;

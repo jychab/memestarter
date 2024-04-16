@@ -8,7 +8,6 @@ import {
   SYSTEM_PROGRAM_ID,
   MarketV2,
   TxVersion,
-  MAINNET_PROGRAM_ID,
 } from "@raydium-io/raydium-sdk";
 import { getAssociatedTokenAddressSync, NATIVE_MINT } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
@@ -25,16 +24,16 @@ import {
   InitializePoolArgs,
 } from "./types";
 import { SafePresale, IDL as SafePresaleIdl } from "./idl";
+import {
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+  OPENBOOK_MARKET_PROGRAM_ID,
+  PROGRAM_ID,
+  RAYDIUM_AMM_V4,
+  RAYDIUM_FEE_COLLECTOR,
+} from "./constants";
 
 export const program = (connection: Connection) =>
   new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
-
-export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
-  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-);
-export const PROGRAM_ID = new PublicKey(
-  "memep6GYetMx84qtBgB9p1rncn81HMmZZa1UoxauYGt"
-);
 
 export async function withdraw(args: WithdrawArgs, connection: Connection) {
   const [purchaseReceipt] = PublicKey.findProgramAddressSync(
@@ -230,8 +229,8 @@ export async function launchTokenAmm(
     quoteMint: NATIVE_MINT,
     baseDecimals: 6,
     quoteDecimals: WSOL.decimals,
-    programId: MAINNET_PROGRAM_ID.AmmV4,
-    marketProgramId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
+    programId: RAYDIUM_AMM_V4,
+    marketProgramId: OPENBOOK_MARKET_PROGRAM_ID,
   });
   const userTokenLp = getAssociatedTokenAddressSync(
     poolInfo.lpMint,
@@ -259,7 +258,7 @@ export async function launchTokenAmm(
     { pubkey: poolInfo.targetOrders, isSigner: false, isWritable: true },
     { pubkey: poolInfo.configId, isSigner: false, isWritable: false },
     {
-      pubkey: new PublicKey("3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"),
+      pubkey: RAYDIUM_FEE_COLLECTOR,
       isSigner: false,
       isWritable: true,
     },
@@ -304,7 +303,7 @@ export async function launchTokenAmm(
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       ammCoinMint: poolInfo.baseMint,
       ammPcMint: poolInfo.quoteMint,
-      raydiumAmmProgram: MAINNET_PROGRAM_ID.AmmV4,
+      raydiumAmmProgram: RAYDIUM_AMM_V4,
     })
     .remainingAccounts(remainingAccounts)
     .instruction();
@@ -327,7 +326,7 @@ export async function createMarket(
       },
       lotSize: args.lotSize,
       tickSize: args.tickSize,
-      dexProgramId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
+      dexProgramId: OPENBOOK_MARKET_PROGRAM_ID,
       makeTxVersion: TxVersion.V0,
     });
   return { innerTransactions, address };

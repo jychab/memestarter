@@ -55,6 +55,8 @@ const ActionButton = (props: ActionButtonProps) => {
               publicKey: publicKey.toBase58(),
             },
             numReplies: 0,
+            positiveScoreRecord: [],
+            negativeScoreRecord: [],
           };
           await handleAddComment(poolId, newComment);
           break;
@@ -69,6 +71,8 @@ const ActionButton = (props: ActionButtonProps) => {
             },
             createdAt: serverTimestamp() as Timestamp,
             replyingTo: replyingTo ?? "",
+            positiveScoreRecord: [],
+            negativeScoreRecord: [],
           };
           await handleReplyComment(poolId, newReply, commentId);
           onIsReplyingChange ? onIsReplyingChange() : null;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   handleUpdateCommentVote,
   handleUpdateReplyVote,
@@ -11,31 +11,43 @@ type VoteProps = {
   disabled?: boolean;
   poolId: string;
   score: number;
+  positiveScoreRecord: Array<string>;
+  negativeScoreRecord: Array<string>;
   commentIdToChangeVote: string;
   replyIdToChangeVote?: string;
 };
 
 const Vote = (props: VoteProps) => {
+  const { publicKey, signMessage } = useWallet();
+  const positiveScoreRecord = props.positiveScoreRecord;
+  const negativeScoreRecord = props.negativeScoreRecord;
   const disabled = props.disabled ? props.disabled : false;
   const poolId = props.poolId;
   const score = props.score;
   const commentIdToChangeVote = props.commentIdToChangeVote;
   const replyIdToChangeVote = props.replyIdToChangeVote;
   const { handleLogin } = useLogin();
-  const { publicKey, signMessage } = useWallet();
 
-  const handleClick = async (operation: string) => {
+  const handleClick = async (operation: string, buttonType: string) => {
     if (!publicKey || !signMessage) return;
     try {
       await handleLogin(publicKey, signMessage);
       if (!replyIdToChangeVote) {
-        await handleUpdateCommentVote(poolId, commentIdToChangeVote, operation);
+        await handleUpdateCommentVote(
+          publicKey.toBase58(),
+          poolId,
+          commentIdToChangeVote,
+          operation,
+          buttonType
+        );
       } else {
         await handleUpdateReplyVote(
+          publicKey.toBase58(),
           poolId,
           commentIdToChangeVote,
           replyIdToChangeVote,
-          operation
+          operation,
+          buttonType
         );
       }
     } catch (error) {
@@ -46,8 +58,19 @@ const Vote = (props: VoteProps) => {
   return (
     <div className="text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl">
       <button
-        disabled={disabled}
-        onClick={() => handleClick("add")}
+        disabled={
+          disabled
+            ? true
+            : publicKey != null &&
+              positiveScoreRecord.includes(publicKey.toBase58())
+        }
+        onClick={() => {
+          if (!publicKey || positiveScoreRecord.includes(publicKey.toBase58()))
+            return;
+          negativeScoreRecord.includes(publicKey.toBase58())
+            ? handleClick("sub", "negative")
+            : handleClick("add", "positive");
+        }}
         className="flex items-center justify-center"
       >
         <svg
@@ -55,7 +78,11 @@ const Vote = (props: VoteProps) => {
           width="16px"
           height="16px"
           viewBox="0 0 24 24"
-          fill="none"
+          fill={
+            publicKey && positiveScoreRecord.includes(publicKey.toBase58())
+              ? "black"
+              : "none"
+          }
           stroke="currentColor"
         >
           <polygon points="3 14 12 3 21 14 16 14 16 22 8 22 8 14 3 14" />
@@ -63,8 +90,19 @@ const Vote = (props: VoteProps) => {
       </button>
       <div>{score}</div>
       <button
-        disabled={disabled}
-        onClick={() => handleClick("sub")}
+        disabled={
+          disabled
+            ? true
+            : publicKey != null &&
+              negativeScoreRecord.includes(publicKey.toBase58())
+        }
+        onClick={() => {
+          if (!publicKey || negativeScoreRecord.includes(publicKey.toBase58()))
+            return;
+          positiveScoreRecord.includes(publicKey.toBase58())
+            ? handleClick("sub", "positive")
+            : handleClick("add", "negative");
+        }}
         className="flex items-center justify-center"
       >
         <svg
@@ -72,7 +110,11 @@ const Vote = (props: VoteProps) => {
           width="16px"
           height="16px"
           viewBox="0 0 24 24"
-          fill="none"
+          fill={
+            publicKey && negativeScoreRecord.includes(publicKey.toBase58())
+              ? "black"
+              : "none"
+          }
           stroke="currentColor"
           className="rotate-180"
         >
