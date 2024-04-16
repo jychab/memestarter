@@ -16,7 +16,7 @@ const UserDetail = (props: UserDetailProps) => {
     props.createdAt
       ? convertSecondsToNearestUnit(Date.now() / 1000 - props.createdAt.seconds)
           .split(" ")
-          .slice(0, 1)
+          .slice(0, 2)
           .join(" ") + " ago"
       : ""
   } `;

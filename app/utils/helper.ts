@@ -99,36 +99,36 @@ export function convertSecondsToNearestUnit(seconds: number) {
 
   // Determine the nearest unit
   if (seconds < minute) {
-    return `${seconds.toFixed(0)}s`;
+    return `${seconds.toFixed(0)} seconds`;
   } else if (seconds < hour) {
     const minutes = Math.floor(seconds / minute);
     const remainingSeconds = seconds % minute;
-    return `${minutes}min${
-      remainingSeconds > 0 ? ` ${Math.round(remainingSeconds)}s` : ""
+    return `${minutes} min${
+      remainingSeconds > 0 ? ` ${Math.round(remainingSeconds)} seconds` : ""
     }`;
   } else if (seconds < day) {
     const hours = Math.floor(seconds / hour);
     const remainingMinutes = (seconds % hour) / minute;
-    return `${hours}h${
-      remainingMinutes > 0 ? ` ${Math.round(remainingMinutes)}min` : ""
+    return `${hours} h${
+      remainingMinutes > 0 ? ` ${Math.round(remainingMinutes)} min` : ""
     }`;
   } else if (seconds < month) {
     const days = Math.floor(seconds / day);
     const remainingHours = (seconds % day) / hour;
-    return `${days}d${
-      remainingHours > 0 ? ` ${remainingHours.toFixed(0)}h` : ""
+    return `${days} d${
+      remainingHours > 0 ? ` ${remainingHours.toFixed(0)} h` : ""
     }`;
   } else if (seconds < year) {
     const months = Math.floor(seconds / month);
     const remainingDays = (seconds % month) / day;
-    return `${months} mo${
-      remainingDays > 0 ? ` ${remainingDays.toFixed(1)}d` : ""
+    return `${months} month${
+      remainingDays > 0 ? ` ${remainingDays.toFixed(1)} d` : ""
     }`;
   } else {
     const years = Math.floor(seconds / year);
     const remainingMonths = (seconds % year) / month;
-    return `${years} y${
-      remainingMonths > 0 ? ` ${remainingMonths.toFixed(1)}mo` : ""
+    return `${years} year${
+      remainingMonths > 0 ? ` ${remainingMonths.toFixed(1)} month` : ""
     }`;
   }
 }

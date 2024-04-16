@@ -72,16 +72,13 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         <span className="text-[10px]">{`unique backers`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
-        <span className="text-sm text-black">{`${
-          convertSecondsToNearestUnit(
-            presaleTimeLimit - Date.now() / 1000
-          ).split(" ")[0]
-        }`}</span>
-        <span className="text-[10px]">{`${
-          convertSecondsToNearestUnit(
-            presaleTimeLimit - Date.now() / 1000
-          ).split(" ")[1]
-        } to go`}</span>
+        <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
+          presaleTimeLimit - Date.now() / 1000
+        )
+          .split(" ")
+          .slice(0, 2)
+          .join(" ")}`}</span>
+        <span className="text-[10px]">{`to go`}</span>
       </div>
       <div className="col-span-4 flex flex-col gap-1">
         <div className="flex items-center gap-1">
