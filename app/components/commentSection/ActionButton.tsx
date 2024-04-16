@@ -46,10 +46,30 @@ const ActionButton = (props: ActionButtonProps) => {
       await handleLogin(publicKey, signMessage);
       switch (action) {
         case "send":
+          const newComment: IComment = {
+            id: crypto.randomUUID(),
+            content: commentValue,
+            createdAt: serverTimestamp() as Timestamp,
+            score: 0,
+            user: {
+              publicKey: publicKey.toBase58(),
+            },
+            numReplies: 0,
+          };
           await handleAddComment(poolId, newComment);
           break;
         case "reply":
           if (!commentId) break;
+          const newReply: IReply = {
+            id: crypto.randomUUID(),
+            content: commentValue,
+            score: 0,
+            user: {
+              publicKey: publicKey.toBase58(),
+            },
+            createdAt: serverTimestamp() as Timestamp,
+            replyingTo: replyingTo ?? "",
+          };
           await handleReplyComment(poolId, newReply, commentId);
           onIsReplyingChange ? onIsReplyingChange() : null;
           break;
@@ -72,30 +92,6 @@ const ActionButton = (props: ActionButtonProps) => {
     } catch (error) {
       toast.error(`${error}`);
     }
-  };
-
-  const newComment: IComment = {
-    id: crypto.randomUUID(),
-    content: commentValue,
-    createdAt: serverTimestamp() as Timestamp,
-    score: 0,
-    user: {
-      image: currentUser.image,
-      username: currentUser.username,
-    },
-    numReplies: 0,
-  };
-
-  const newReply: IReply = {
-    id: crypto.randomUUID(),
-    content: commentValue,
-    score: 0,
-    user: {
-      image: currentUser.image,
-      username: currentUser.username,
-    },
-    createdAt: serverTimestamp() as Timestamp,
-    replyingTo: replyingTo ?? "",
   };
 
   return (

@@ -6,42 +6,40 @@ import { PublicKey } from "@solana/web3.js";
 import {
   collection,
   getCountFromServer,
+  limit,
   onSnapshot,
   orderBy,
   query,
 } from "firebase/firestore";
 import { db } from "../../utils/firebase";
+import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
+import { getMetadata } from "../../utils/helper";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface CommentsSectionProps {
   poolId: string;
   poolCreator: string;
-  publicKey: PublicKey | null;
-  image?: string;
 }
 export const CommentsSection: FC<CommentsSectionProps> = ({
   poolId,
   poolCreator,
-  publicKey,
-  image = "",
 }) => {
-  const [currentUser, setCurrentUser] = useState<IUser>({
-    image: image,
-    username: publicKey ? publicKey.toBase58() : "Anon",
-  } as IUser);
   const [comments, setComments] = useState<IComment[]>([]);
+  const [numComments, setNumComments] = useState<number>(0);
+  const [maxComments, setMaxComments] = useState(10);
+  const { publicKey } = useWallet();
 
   useEffect(() => {
-    setCurrentUser({
-      image: image,
-      username: publicKey ? publicKey.toBase58() : "Anon",
-    } as IUser);
-  }, [publicKey, image]);
-
-  useEffect(() => {
+    const coll = collection(db, `Pool/${poolId}/Comments`);
+    getCountFromServer(coll).then((result) =>
+      setNumComments(result.data().count)
+    );
     const unsubscribe = onSnapshot(
       query(
         collection(db, `Pool/${poolId}/Comments`),
-        orderBy("score", "desc")
+        orderBy("score", "desc"),
+        orderBy("createdAt", "desc"),
+        limit(maxComments)
       ),
       (querySnapshot) => {
         setComments(querySnapshot.docs.map((doc) => doc.data() as IComment));
@@ -57,14 +55,26 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
           <Comment
             key={value.id}
             poolId={poolId}
-            currentUser={currentUser}
+            currentUser={{ publicKey: publicKey?.toBase58() }}
             comment={value}
             poolCreator={poolCreator}
           />
         );
       })}
       {publicKey && (
-        <InputComment currentUser={currentUser} action="send" poolId={poolId} />
+        <InputComment
+          currentUser={{ publicKey: publicKey?.toBase58() }}
+          action="send"
+          poolId={poolId}
+        />
+      )}
+      {maxComments < numComments && (
+        <button
+          onClick={() => setMaxComments(maxComments + 10)}
+          className="ml-8 pl-8 flex items-start"
+        >
+          <span className="text-blue-600 font-medium text-xs">{`Show more`}</span>
+        </button>
       )}
     </main>
   );

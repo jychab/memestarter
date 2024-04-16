@@ -38,7 +38,7 @@ const Comment = (props: CommentProps) => {
   const currentUser = props.currentUser;
   const numReplies = props.comment.numReplies;
   const isCurrentUser =
-    comment.user.username == currentUser.username ? true : false;
+    comment.user.publicKey == currentUser.publicKey ? true : false;
   const [replies, setReplies] = useState<IReply[]>([]);
   const [maxReplies, setMaxReplies] = useState(5);
   const { publicKey } = useWallet();
@@ -57,7 +57,7 @@ const Comment = (props: CommentProps) => {
         query(
           collection(db, `Pool/${poolId}/Comments/${comment.id}/Replies`),
           orderBy("score", "desc"),
-          orderBy("createdAt", "asc"),
+          orderBy("createdAt", "desc"),
           limit(maxReplies)
         ),
         (repliesSnapshot) => {
@@ -78,16 +78,12 @@ const Comment = (props: CommentProps) => {
         }`}
       >
         <div className="flex items-start gap-4">
-          <Avatar
-            sourceImage={currentUser.image}
-            username={currentUser.username}
-          />
+          <Avatar user={comment.user} />
           <div className="flex flex-col gap-2 w-full rounded-md">
             <UserDetail
               poolCreator={poolCreator}
               poolId={poolId}
-              image={comment.user.image}
-              username={comment.user.username}
+              username={comment.user.publicKey!}
               createdAt={comment.createdAt}
             />
             <Content
@@ -139,7 +135,7 @@ const Comment = (props: CommentProps) => {
         <InputComment
           onIsReplyingChange={handleIsReplyingChange}
           commentId={comment.id}
-          replyingTo={comment.user.username}
+          replyingTo={comment.user.publicKey!}
           currentUser={currentUser}
           action="reply"
           poolId={poolId}

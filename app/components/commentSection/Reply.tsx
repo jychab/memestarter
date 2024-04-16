@@ -6,7 +6,7 @@ import ReplyButton from "./ReplyButton";
 import InputComment from "./InputComment";
 import DeleteButton from "./DeleteButton";
 import EditButton from "./EditButton";
-import { IUser, IReply, IComment } from "../../utils/types";
+import { IUser, IReply } from "../../utils/types";
 import Avatar from "./Avatar";
 import { useWallet } from "@solana/wallet-adapter-react";
 
@@ -26,7 +26,7 @@ const Reply = (props: ReplyProps) => {
   const reply = props.reply;
   const currentUser = props.currentUser;
   const isCurrentUser =
-    reply.user.username == currentUser.username ? true : false;
+    reply.user.publicKey == currentUser.publicKey ? true : false;
   const commentId = props.commentId;
   const { publicKey } = useWallet();
 
@@ -39,16 +39,12 @@ const Reply = (props: ReplyProps) => {
   };
 
   return (
-    <div className="ml-8 border-l-2 border-gray-300 pl-4 md:pl-8 flex flex-col w-11/12">
+    <div className="ml-8 border-l-2 border-gray-300 pl-4 md:pl-8 flex flex-col w-full">
       <div className="flex items-start gap-4 w-full">
-        <Avatar
-          sourceImage={currentUser.image}
-          username={currentUser.username}
-        />
+        <Avatar user={reply.user} />
         <div className="flex flex-col gap-2 rounded-md w-full">
           <UserDetail
-            image={reply.user.image}
-            username={reply.user.username}
+            username={reply.user.publicKey!}
             createdAt={reply.createdAt}
             poolId={poolId}
             poolCreator={poolCreator}
@@ -95,7 +91,7 @@ const Reply = (props: ReplyProps) => {
         <InputComment
           onIsReplyingChange={handleIsReplyingChange}
           replyId={reply.id}
-          replyingTo={reply.user.username}
+          replyingTo={reply.user.publicKey!}
           currentUser={currentUser}
           action="reply"
           poolId={poolId}

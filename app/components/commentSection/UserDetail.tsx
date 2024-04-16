@@ -7,18 +7,17 @@ import { Timestamp } from "firebase/firestore";
 type UserDetailProps = {
   poolCreator: string;
   poolId: string;
-  image: string;
   username: string;
   createdAt: Timestamp;
 };
 const UserDetail = (props: UserDetailProps) => {
-  const image = props.image;
   const username = props.username;
   const createdAt = `${
     props.createdAt
-      ? convertSecondsToNearestUnit(
-          Date.now() / 1000 - props.createdAt.seconds
-        ) + " ago"
+      ? convertSecondsToNearestUnit(Date.now() / 1000 - props.createdAt.seconds)
+          .split(" ")
+          .slice(0, 1)
+          .join(" ") + " ago"
       : ""
   } `;
   const poolCreator = props.poolCreator;

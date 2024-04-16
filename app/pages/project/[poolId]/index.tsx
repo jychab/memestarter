@@ -36,7 +36,6 @@ export function Pool() {
   const { publicKey, signTransaction, signAllTransactions, signMessage } =
     useWallet();
   const { handleLogin } = useLogin();
-  const [image, setImage] = useState();
   const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
@@ -52,9 +51,6 @@ export function Pool() {
             setMint(data);
           }
         }
-      );
-      getMetadata(nft.content.json_uri).then((response) =>
-        setImage(response.image)
       );
       return () => unsubscribe();
     }
@@ -281,7 +277,7 @@ export function Pool() {
         <CommentsSection
           poolId={pool.pool}
           publicKey={publicKey}
-          image={image}
+          nft={nft}
           poolCreator={pool.authority}
         />
       </div>

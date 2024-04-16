@@ -49,7 +49,7 @@ const Content = (props: ContentProps) => {
         </div>
       ) : null}
       {isEditing ? (
-        <div className="flex flex-col md:flex-row items-end gap-4 rounded-md">
+        <div className="flex flex-col md:flex-row items-end md:items-center gap-4 w-10/12 rounded-md">
           <textarea
             className="border px-4 py-2 rounded-lg text-black w-full"
             placeholder="Add a comment..."

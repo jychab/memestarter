@@ -12,8 +12,7 @@ import {
 import { FieldValue, Timestamp } from "firebase/firestore";
 
 export interface IUser {
-  image: string;
-  username: string;
+  publicKey?: string;
 }
 export interface IReply {
   id: string;

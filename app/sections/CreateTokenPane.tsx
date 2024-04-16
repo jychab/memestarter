@@ -188,7 +188,6 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
             value={separateNumberWithComma(supply.replaceAll(",", ""))}
             onChange={(e) => {
               const amount = e.target.value.replaceAll(",", "");
-              console.log(amount);
               if (!amount || amount.match(/^\d+$/)) {
                 setSupply(e.target.value);
               }
