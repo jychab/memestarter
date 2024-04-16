@@ -274,12 +274,7 @@ export function Pool() {
           {publicKey && <span className="uppercase text-xs">Funding</span>}
           {status && publicKey && getButton}
         </div>
-        <CommentsSection
-          poolId={pool.pool}
-          publicKey={publicKey}
-          nft={nft}
-          poolCreator={pool.authority}
-        />
+        <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
       </div>
     )
   );
