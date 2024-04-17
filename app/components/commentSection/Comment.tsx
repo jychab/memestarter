@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { useWallet } from "@solana/wallet-adapter-react";
+import PinnedButton from "./PinnedButton";
 
 type CommentProps = {
   poolId: string;
@@ -103,6 +104,13 @@ const Comment = (props: CommentProps) => {
                 poolId={poolId}
                 score={comment.score}
               />
+              {publicKey && publicKey.toBase58() === poolCreator && (
+                <PinnedButton
+                  poolId={poolId}
+                  commentId={comment.id}
+                  pinned={comment.pinned}
+                />
+              )}
               <ReplyButton
                 disabled={!publicKey}
                 hide={isCurrentUser || !publicKey}

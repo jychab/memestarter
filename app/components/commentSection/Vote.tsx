@@ -36,7 +36,6 @@ const Vote = (props: VoteProps) => {
       await handleLogin(publicKey, signMessage);
       if (!replyIdToChangeVote) {
         await handleUpdateCommentVote(
-          publicKey.toBase58(),
           poolId,
           commentIdToChangeVote,
           operation,
@@ -44,7 +43,6 @@ const Vote = (props: VoteProps) => {
         );
       } else {
         await handleUpdateReplyVote(
-          publicKey.toBase58(),
           poolId,
           commentIdToChangeVote,
           replyIdToChangeVote,

@@ -1,3 +1,4 @@
+import {Timestamp} from "firebase-admin/firestore";
 import {DAS} from "helius-sdk";
 
 export enum Events {
@@ -15,6 +16,30 @@ export enum Status {
   Initialized = "Initialized",
   Ended = "Ended",
 }
+export interface IUser {
+  publicKey?: string;
+}
+export interface IReply {
+  id: string;
+  content: string;
+  score: number;
+  user: IUser;
+  createdAt: Timestamp;
+  replyingTo: string;
+  negativeScoreRecord: Array<string>;
+  positiveScoreRecord: Array<string>;
+}
+export type IComment = {
+  pinned: boolean;
+  id: string;
+  content: string;
+  createdAt: Timestamp;
+  score: number;
+  user: IUser;
+  numReplies: number;
+  negativeScoreRecord: Array<string>;
+  positiveScoreRecord: Array<string>;
+};
 
 export interface InitializedPoolEvent {
   delegate: string;

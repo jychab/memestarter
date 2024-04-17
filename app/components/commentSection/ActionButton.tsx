@@ -47,6 +47,7 @@ const ActionButton = (props: ActionButtonProps) => {
       switch (action) {
         case "send":
           const newComment: IComment = {
+            pinned: false,
             id: crypto.randomUUID(),
             content: commentValue,
             createdAt: serverTimestamp() as Timestamp,

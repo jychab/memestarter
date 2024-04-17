@@ -12,6 +12,7 @@ import {updatePoolStatus} from "./updatePoolStatus";
 import {enQueue} from "./enQueue";
 import {verifySignIn} from "./verifySignIn";
 import getPrice from "./getPrice";
+import {handleCommentsAndReplies} from "./commentsAndReplies";
 
 exports.programWebhook = onRequest(async (req, res) =>
   cors({origin: true})(req, res, async () => await programWebhook(req, res))
@@ -56,3 +57,7 @@ exports.updatePoolStatus = onTaskDispatched(
 exports.addToQueue = onSchedule("every day 00:00", async (_) => {
   enQueue();
 });
+
+exports.handleCommentsAndReplies = onCall(
+  async (data, context) => await handleCommentsAndReplies(data, context)
+);

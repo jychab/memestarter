@@ -25,6 +25,7 @@ export interface IReply {
   positiveScoreRecord: Array<string>;
 }
 export type IComment = {
+  pinned: boolean;
   id: string;
   content: string;
   createdAt: Timestamp;

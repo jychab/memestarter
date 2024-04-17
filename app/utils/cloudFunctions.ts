@@ -74,7 +74,8 @@ export const handleAddComment = async (
   poolId: string,
   newComment: IComment
 ) => {
-  await setDoc(doc(db, `Pool/${poolId}/Comments/${newComment.id}`), newComment);
+  const addComment = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  await addComment({ poolId, newComment, method: "handleAddComment" });
 };
 
 export const handleReplyComment = async (
@@ -82,15 +83,16 @@ export const handleReplyComment = async (
   newReply: IReply,
   commentId: string
 ) => {
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}`),
-    { numReplies: increment(1) },
-    { merge: true }
+  const replyComment = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
   );
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${newReply.id}`),
-    newReply
-  );
+  await replyComment({
+    poolId,
+    newReply,
+    commentId,
+    method: "handleReplyComment",
+  });
 };
 
 export const handleUpdateComment = async (
@@ -98,50 +100,63 @@ export const handleUpdateComment = async (
   updatedCommentContent: string,
   commentId: string
 ) => {
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}`),
-    { content: updatedCommentContent },
-    { merge: true }
+  const updateComment = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
   );
+  await updateComment({
+    poolId,
+    updatedCommentContent,
+    commentId,
+    method: "handleUpdateComment",
+  });
+};
+
+export const handleUpdatePinComment = async (
+  poolId: string,
+  commentId: string,
+  pin: boolean
+) => {
+  const updatePinComment = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
+  );
+  await updatePinComment({
+    poolId,
+    commentId,
+    pin,
+    method: "handleUpdatePinComment",
+  });
 };
 
 export const handleDeleteComment = async (
   poolId: string,
   commentId: string
 ) => {
-  await deleteDoc(doc(db, `Pool/${poolId}/Comments/${commentId}`));
+  const deleteComment = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
+  );
+  await deleteComment({ poolId, commentId, method: "handleDeleteComment" });
 };
 
 export const handleUpdateCommentVote = async (
-  publicKey: string,
   poolId: string,
   commentId: string,
   operation: string,
   buttonType: string
 ) => {
-  const scoreRecord =
-    buttonType == "positive"
-      ? {
-          positiveScoreRecord:
-            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
-        }
-      : {
-          negativeScoreRecord:
-            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
-        };
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}`),
-    {
-      score: increment(
-        (operation == "add" && buttonType == "positive") ||
-          (operation != "add" && buttonType != "positive")
-          ? 1
-          : -1
-      ),
-      ...scoreRecord,
-    },
-    { merge: true }
+  const updateCommentVote = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
   );
+  await updateCommentVote({
+    poolId,
+    commentId,
+    operation,
+    buttonType,
+    method: "handleUpdateCommentVote",
+  });
 };
 
 export const handleUpdateReply = async (
@@ -150,11 +165,14 @@ export const handleUpdateReply = async (
   commentId: string,
   replyId: string
 ) => {
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${replyId}`),
-    { content: updatedReplyContent },
-    { merge: true }
-  );
+  const updateReply = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  await updateReply({
+    poolId,
+    updatedReplyContent,
+    commentId,
+    replyId,
+    method: "handleUpdateReply",
+  });
 };
 
 export const handleDeleteReply = async (
@@ -162,40 +180,32 @@ export const handleDeleteReply = async (
   commentId: string,
   replyId: string
 ) => {
-  await deleteDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${replyId}`)
-  );
+  const deleteReply = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  await deleteReply({
+    poolId,
+    commentId,
+    replyId,
+    method: "handleDeleteReply",
+  });
 };
 
 export const handleUpdateReplyVote = async (
-  publicKey: string,
   poolId: string,
   commentId: string,
   replyId: string,
   operation: string,
   buttonType: string
 ) => {
-  const scoreRecord =
-    buttonType == "positive"
-      ? {
-          positiveScoreRecord:
-            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
-        }
-      : {
-          negativeScoreRecord:
-            operation == "add" ? arrayUnion(publicKey) : arrayRemove(publicKey),
-        };
-  await setDoc(
-    doc(db, `Pool/${poolId}/Comments/${commentId}/Replies/${replyId}`),
-    {
-      score: increment(
-        (operation == "add" && buttonType == "positive") ||
-          (operation != "add" && buttonType != "positive")
-          ? 1
-          : -1
-      ),
-      ...scoreRecord,
-    },
-    { merge: true }
+  const updateReplyVote = httpsCallable(
+    getFunctions(),
+    "handleCommentsAndReplies"
   );
+  await updateReplyVote({
+    poolId,
+    commentId,
+    replyId,
+    operation,
+    buttonType,
+    method: "handleUpdateReplyVote",
+  });
 };
