@@ -48,7 +48,10 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
 
   return (
     <main className="flex flex-col w-full gap-2 relative">
-      {comments?.map((value: IComment) => {
+      {(publicKey != null || (comments && comments.length > 0)) && (
+        <span className="text-gray-400 text-base">Comments</span>
+      )}
+      {comments.map((value: IComment) => {
         return (
           <Comment
             key={value.id}

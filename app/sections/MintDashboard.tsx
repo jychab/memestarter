@@ -91,8 +91,8 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }, [item]);
   useEffect(() => {
     if (collectionItem) {
-      setCollectionImage(item.content?.links?.image);
-      setCollectionName(item.content?.metadata.name);
+      setCollectionImage(collectionItem.content?.links?.image);
+      setCollectionName(collectionItem.content?.metadata.name);
     }
   }, [collectionItem]);
 
