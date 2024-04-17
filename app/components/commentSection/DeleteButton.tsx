@@ -1,6 +1,11 @@
-import Image from "next/image";
-import React, { useState } from "react";
-import DeleteModal from "./DeleteModal";
+import React from "react";
+import { toast } from "react-toastify";
+import {
+  handleDeleteReply,
+  handleDeleteComment,
+} from "../../utils/cloudFunctions";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useLogin } from "../../hooks/useLogin";
 
 type DeleteButtonProps = {
   poolId: string;
@@ -10,18 +15,25 @@ type DeleteButtonProps = {
 };
 
 const DeleteButton = (props: DeleteButtonProps) => {
-  const [showModal, setShowModal] = useState(false);
   const commentId = props.commentId;
+  const { handleLogin } = useLogin();
+  const { publicKey, signMessage } = useWallet();
   const replyIdToDelete = props.replyIdToDelete;
   const poolId = props.poolId;
   const show = props.show ? " " : "hidden ";
 
-  const handleShowModalChange = () => {
-    setShowModal((prevShowModal) => !prevShowModal);
-  };
-
-  const handleClick = () => {
-    setShowModal((prevShowModal) => !prevShowModal);
+  const handleClick = async () => {
+    if (!publicKey || !signMessage) return;
+    try {
+      await handleLogin(publicKey, signMessage);
+      if (replyIdToDelete) {
+        await handleDeleteReply(poolId, commentId, replyIdToDelete);
+      } else {
+        await handleDeleteComment(poolId, commentId);
+      }
+    } catch (error) {
+      toast.error(`${error}`);
+    }
   };
 
   return (
@@ -53,14 +65,6 @@ const DeleteButton = (props: DeleteButtonProps) => {
           />
         </svg>
       </button>
-      {showModal ? (
-        <DeleteModal
-          poolId={poolId}
-          replyIdToDelete={replyIdToDelete}
-          commentIdToDelete={commentId}
-          onShowModalChange={handleShowModalChange}
-        />
-      ) : null}
     </>
   );
 };

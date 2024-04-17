@@ -274,7 +274,10 @@ export function Pool() {
           {publicKey && <span className="uppercase text-xs">Funding</span>}
           {status && publicKey && getButton}
         </div>
-        <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
+        <div className="flex flex-col items-start w-full gap-4">
+          <span className="text-gray-400 text-base">Comments</span>
+          <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
+        </div>
       </div>
     )
   );

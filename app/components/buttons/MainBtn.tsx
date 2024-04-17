@@ -52,10 +52,14 @@ export const MainBtn: FC<MainBtnProps> = ({
           </div>
           {creatorFeeBasisPoints && (
             <div className="flex justify-between text-gray-400">
-              <span>{`Creator Fees:`}</span>
+              <span>{`Creator Fee:`}</span>
               <span>{creatorFeeBasisPoints / 100 + "%"}</span>
             </div>
           )}
+          <div className="flex justify-between text-gray-400">
+            <span>{`Platform Fee:`}</span>
+            <span>{`1%`}</span>
+          </div>
         </div>
       )}
       {setAmountToPurchase && (

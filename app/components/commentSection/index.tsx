@@ -12,8 +12,6 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "../../utils/firebase";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
-import { getMetadata } from "../../utils/helper";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 interface CommentsSectionProps {
@@ -46,7 +44,7 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
       }
     );
     return () => unsubscribe();
-  }, [poolId]);
+  }, [poolId, maxComments]);
 
   return (
     <main className="flex flex-col w-full gap-2 relative">

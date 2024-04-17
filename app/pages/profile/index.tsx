@@ -4,15 +4,9 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { MintDashboard } from "../../sections/MintDashboard";
 import { useLogin } from "../../hooks/useLogin";
 import { toast } from "react-toastify";
-import {
-  DasApiAsset,
-  DasApiAssetList,
-  DasApiMetadata,
-} from "@metaplex-foundation/digital-asset-standard-api";
 import useUmi from "../../hooks/useUmi";
 import { getCollectionMintAddress } from "../../utils/helper";
 import { sendTransactions } from "../../utils/transactions";
-import solanaLogo from "../../public/solanaLogoMark.png";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
@@ -25,35 +19,7 @@ import { useRouter } from "next/router";
 import { getCustomErrorMessage } from "../../utils/error";
 import { useData } from "../../hooks/useData";
 import { linkAsset, mintNft } from "../../utils/cloudFunctions";
-
-interface CustomAsset extends DasApiAsset {
-  image: string;
-}
-
-interface CustomDasApiAsset {
-  token_info: {
-    associated_token_address: string;
-    decimals: number;
-    supply: number;
-    token_program: string;
-  };
-  grouping: Array<{
-    group_key: string;
-    group_value: string;
-  }>;
-  content: {
-    json_uri: string;
-    files?: Array<{
-      uri?: string;
-      mime?: string;
-      [key: string]: unknown;
-    }>;
-    metadata: DasApiMetadata;
-    links?: {
-      [key: string]: unknown;
-    };
-  };
-}
+import { DAS } from "../../utils/types";
 
 function Profile() {
   const { handleLogin } = useLogin();
@@ -67,11 +33,11 @@ function Profile() {
   const [limit, setLimit] = useState(50);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [walletAssets, setWalletAssets] = useState<(CustomAsset | undefined)[]>(
-    Array(20).fill(undefined)
-  );
-  const [selectedItem, setSelectedItem] = useState<CustomAsset>();
-  const [collectionItem, setCollectionItem] = useState<DasApiAsset>();
+  const [walletAssets, setWalletAssets] = useState<
+    (DAS.GetAssetResponse | undefined)[]
+  >(Array(20).fill(undefined));
+  const [selectedItem, setSelectedItem] = useState<DAS.GetAssetResponse>();
+  const [collectionItem, setCollectionItem] = useState<DAS.GetAssetResponse>();
   const [currentUser, setCurrentUser] = useState<PublicKey>();
   const umi = useUmi();
 
@@ -79,17 +45,19 @@ function Profile() {
     if (selectedItem) {
       umi.rpc
         .getAsset(PubKey(getCollectionMintAddress(selectedItem)!))
-        .then((res) => setCollectionItem(res));
+        .then((res) =>
+          setCollectionItem(res as unknown as DAS.GetAssetResponse)
+        );
     }
   }, [selectedItem]);
 
-  async function loadAssets(walletData: DasApiAssetList) {
+  async function loadAssets(walletData: DAS.GetAssetResponseList) {
     const promises = walletData.items.map(async (item) => {
-      const customItem = item as unknown as CustomDasApiAsset;
+      const customItem = item;
       const tokenProgram = customItem.token_info.token_program;
       const supply = customItem.token_info.supply;
       const decimal = customItem.token_info.decimals;
-      const image = customItem.content.links!.image as string;
+      const image = customItem.content?.links!.image as string;
       const collectionMint = getCollectionMintAddress(item);
       try {
         if (
@@ -153,9 +121,9 @@ function Profile() {
           creatorVerified: true,
           limit: limit,
         })
-        .then((walletData: DasApiAssetList) => {
-          loadAssets(walletData);
-        });
+        .then((walletData) =>
+          loadAssets(walletData as unknown as DAS.GetAssetResponseList)
+        );
     }
   }, [publicKey, limit, nft]);
 
@@ -180,7 +148,9 @@ function Profile() {
         );
         await sendTransactions(connection, [transaction], signAllTransactions);
         toast.info("Linking...");
-        const asset = await umi.rpc.getAsset(PubKey(mint));
+        const asset = (await umi.rpc.getAsset(
+          PubKey(mint)
+        )) as unknown as DAS.GetAssetResponse;
         await linkAsset(asset);
         toast.success("Success");
       }
@@ -205,8 +175,8 @@ function Profile() {
         <div className="flex flex-col items-center justify-center text-black text-center p-8 gap-4 h-full">
           <span>You need to link a digital asset to your profile.</span>
           <span className="text-sm">Select one from your wallet below</span>
-          <span>or</span>
-          <button
+          {/* <span>or</span> */}
+          {/* <button
             onClick={handleMintNft}
             className=" rounded p-2 hover:text-blue-700 border border-gray-400 text-sm"
           >
@@ -240,7 +210,7 @@ function Profile() {
                 />
               </div>
             )}
-          </button>
+          </button> */}
         </div>
       )}
       {!nft && publicKey && (
@@ -260,16 +230,19 @@ function Profile() {
                     key={item ? item.id : index}
                     onClick={() => item && setSelectedItem(item)}
                   >
-                    {item && (
-                      <Image
-                        className={`rounded object-cover cursor-pointer`}
-                        key={item.id}
-                        fill={true}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        src={item.image}
-                        alt={""}
-                      />
-                    )}
+                    {item &&
+                      item.content &&
+                      item.content.links &&
+                      item.content.links.image && (
+                        <Image
+                          className={`rounded object-cover cursor-pointer`}
+                          key={item.id}
+                          fill={true}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          src={item.content.links.image}
+                          alt={""}
+                        />
+                      )}
                   </div>
                 ))}
             </div>

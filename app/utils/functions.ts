@@ -19,8 +19,7 @@ import {
   launchTokenAmm,
 } from "./instructions";
 import { sendTransactions, buildAndSendTransaction } from "./transactions";
-import { CreatePoolArgs, MarketDetails, PoolType } from "./types";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
+import { CreatePoolArgs, DAS, MarketDetails, PoolType } from "./types";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export async function launchToken(
@@ -115,7 +114,7 @@ export async function launchToken(
 
 export async function buyPresale(
   pool: PoolType,
-  nft: DasApiAsset,
+  nft: DAS.GetAssetResponse,
   amountToPurchase: string,
   publicKey: PublicKey,
   connection: Connection,

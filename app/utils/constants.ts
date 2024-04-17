@@ -11,6 +11,10 @@ export const HELIUS_ENDPOINT = `https://${
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod" ? "mainnet" : "devnet"
 }.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 
+export const FEE_COLLECTOR = new PublicKey(
+  "73hCTYpoZNdFiwbh2PrW99ykAyNcQVfUwPMUhu9ogNTg"
+);
+
 export const RAYDIUM_FEE_COLLECTOR =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
     ? new PublicKey("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5")

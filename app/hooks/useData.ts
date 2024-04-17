@@ -1,8 +1,8 @@
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { createContext, useContext } from "react";
+import { DAS } from "../utils/types";
 
 export interface DataContextState {
-  nft: DasApiAsset | undefined;
+  nft: DAS.GetAssetResponse | undefined;
 }
 
 export const DataContext = createContext<DataContextState>(

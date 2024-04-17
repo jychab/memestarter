@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
-import { MintType, PoolType, Status } from "../utils/types";
+import { DAS, MintType, PoolType, Status } from "../utils/types";
 import Image from "next/image";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import {
   query,
   onSnapshot,
@@ -25,8 +24,8 @@ import { useData } from "../hooks/useData";
 import { linkAsset, unlinkAsset } from "../utils/cloudFunctions";
 
 interface InventoryItemProps {
-  item: DasApiAsset;
-  collectionItem?: DasApiAsset;
+  item: DAS.GetAssetResponse;
+  collectionItem?: DAS.GetAssetResponse;
   setSelectedItem?: (item: any) => void;
 }
 enum ProjectType {
@@ -58,8 +57,8 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const [timer, setTimer] = useState<number>(Date.now());
 
   function isItemCurrentlyEquipped(
-    nft: DasApiAsset | undefined,
-    item: DasApiAsset | undefined
+    nft: DAS.GetAssetResponse | undefined,
+    item: DAS.GetAssetResponse | undefined
   ) {
     return nft && item && item.id === nft.id;
   }
@@ -86,32 +85,14 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }
   useEffect(() => {
     if (item) {
-      getMetadata(item.content.json_uri)
-        .then((response) => {
-          if (response) {
-            setImage(response.image);
-            setName(response.name);
-          }
-        })
-        .catch(() => {
-          setImage(undefined);
-          setName(undefined);
-        });
+      setImage(item.content?.links?.image);
+      setName(item.content?.metadata.name);
     }
   }, [item]);
   useEffect(() => {
     if (collectionItem) {
-      getMetadata(collectionItem.content.json_uri)
-        .then((response) => {
-          if (response) {
-            setCollectionImage(response.image);
-            setCollectionName(response.name);
-          }
-        })
-        .catch(() => {
-          setCollectionImage(undefined);
-          setCollectionName(undefined);
-        });
+      setCollectionImage(item.content?.links?.image);
+      setCollectionName(item.content?.metadata.name);
     }
   }, [collectionItem]);
 
@@ -151,7 +132,9 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     };
   }, [show]);
 
-  const handleLinkage = async (selectedItem: DasApiAsset | undefined) => {
+  const handleLinkage = async (
+    selectedItem: DAS.GetAssetResponse | undefined
+  ) => {
     if (!(publicKey && signMessage && selectedItem)) return;
     try {
       setLoading(true);

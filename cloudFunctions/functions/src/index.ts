@@ -6,7 +6,6 @@ import updatePool from "./updatePool";
 import linkAsset from "./linkAsset";
 import unlinkAsset from "./unlinkAsset";
 import updateMarketDetails from "./updateMarketDetails";
-import mintNft from "./mintNft";
 import {onTaskDispatched} from "firebase-functions/v2/tasks";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {updatePoolStatus} from "./updatePoolStatus";
@@ -39,7 +38,7 @@ exports.updateMarketDetails = onCall(
   async (data, context) => await updateMarketDetails(data, context)
 );
 
-exports.mintNft = onCall(async (_, context) => await mintNft(context));
+// exports.mintNft = onCall(async (_, context) => await mintNft(context));
 
 exports.updatePoolStatus = onTaskDispatched(
   {

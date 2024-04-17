@@ -1,8 +1,7 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { IComment, IReply, UpdateMarketDataArgs } from "./types";
+import { DAS, IComment, IReply, UpdateMarketDataArgs } from "./types";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { PublicKey } from "@solana/web3.js";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import {
   setDoc,
   doc,
@@ -60,7 +59,7 @@ export async function mintNft(publicKey: PublicKey) {
   return { tx, mint };
 }
 
-export async function linkAsset(asset: DasApiAsset) {
+export async function linkAsset(asset: DAS.GetAssetResponse) {
   const linkAssetFn = httpsCallable(getFunctions(), "linkAsset");
   await linkAssetFn({ nft: asset });
 }

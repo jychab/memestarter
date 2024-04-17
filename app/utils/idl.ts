@@ -52,6 +52,11 @@ export type SafePresale = {
           isSigner: true;
         },
         {
+          name: "feeCollector";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
@@ -1325,6 +1330,11 @@ export const IDL: SafePresale = {
           name: "payer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "feeCollector",
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "systemProgram",

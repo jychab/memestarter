@@ -7,11 +7,13 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import placeholder from "../../public/logo.png";
 import { useNetworkConfiguration } from "../../contexts/NetworkConfigurationProvider";
 import { useRouter } from "next/router";
+import { useData } from "../../hooks/useData";
 
 export const UserProfileBtn: FC = () => {
   const [expand, setExpand] = useState(false);
   const { signOut } = useLogin();
   const { publicKey, wallet } = useWallet();
+  const { nft } = useData();
   const { networkConfiguration } = useNetworkConfiguration();
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -51,9 +53,13 @@ export const UserProfileBtn: FC = () => {
         id="user-menu-button"
       >
         <Image
-          width={30}
-          height={30}
-          src={wallet ? wallet.adapter.icon : placeholder}
+          className="rounded-full"
+          width={35}
+          height={35}
+          src={
+            nft?.content?.links?.image ||
+            (wallet ? wallet.adapter.icon : placeholder)
+          }
           alt={""}
         />
       </button>

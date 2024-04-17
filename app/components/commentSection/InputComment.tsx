@@ -40,7 +40,7 @@ const InputComment = (props: InputCommentProps) => {
     <div
       className={
         (action == "reply" ? "pl-12 " : " ") +
-        "flex items-center justify-between gap-4 p-4"
+        "flex items-center justify-between gap-4"
       }
     >
       <textarea

@@ -25,6 +25,7 @@ import {
 } from "./types";
 import { SafePresale, IDL as SafePresaleIdl } from "./idl";
 import {
+  FEE_COLLECTOR,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   OPENBOOK_MARKET_PROGRAM_ID,
   PROGRAM_ID,
@@ -387,6 +388,7 @@ export async function buyPresaleIx(
       pool: args.poolId,
       nft: args.nft,
       payer: args.signer,
+      feeCollector: FEE_COLLECTOR,
       systemProgram: SystemProgram.programId,
     })
     .instruction();

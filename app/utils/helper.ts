@@ -1,6 +1,5 @@
 import { DAS, DetermineOptimalParams, PoolType, Status } from "./types";
 import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { DasApiAsset } from "@metaplex-foundation/digital-asset-standard-api";
 import { getCurrentPrice } from "./cloudFunctions";
 import { program } from "./instructions";
 
@@ -10,7 +9,7 @@ import { program } from "./instructions";
  * @return {string | undefined} The collection mint address if found, otherwise undefined.
  */
 export function getCollectionMintAddress(
-  item: DAS.GetAssetResponse | DasApiAsset
+  item: DAS.GetAssetResponse
 ): string | undefined {
   if (item.grouping) {
     const group = item.grouping?.find(
@@ -89,48 +88,30 @@ export function separateNumberWithComma(number: string) {
   return separatedNumber;
 }
 
-export function convertSecondsToNearestUnit(seconds: number) {
-  // Define constants for conversion
-  const minute = 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-  const month = day * 30; // Approximation for a month
-  const year = day * 365; // Approximation for a year
+export function convertSecondsToNearestUnit(seconds: number): string {
+  // Define units and their ratios
+  const units = [
+    { label: "year", ratio: 365 * 24 * 60 * 60 },
+    { label: "month", ratio: 30 * 24 * 60 * 60 },
+    { label: "day", ratio: 24 * 60 * 60 },
+    { label: "hour", ratio: 60 * 60 },
+    { label: "minute", ratio: 60 },
+    { label: "second", ratio: 1 },
+  ];
 
-  // Determine the nearest unit
-  if (seconds < minute) {
-    return `${seconds.toFixed(0)} seconds`;
-  } else if (seconds < hour) {
-    const minutes = Math.floor(seconds / minute);
-    const remainingSeconds = seconds % minute;
-    return `${minutes} min${
-      remainingSeconds > 0 ? ` ${Math.round(remainingSeconds)} seconds` : ""
-    }`;
-  } else if (seconds < day) {
-    const hours = Math.floor(seconds / hour);
-    const remainingMinutes = (seconds % hour) / minute;
-    return `${hours} h${
-      remainingMinutes > 0 ? ` ${Math.round(remainingMinutes)} min` : ""
-    }`;
-  } else if (seconds < month) {
-    const days = Math.floor(seconds / day);
-    const remainingHours = (seconds % day) / hour;
-    return `${days} d${
-      remainingHours > 0 ? ` ${remainingHours.toFixed(0)} h` : ""
-    }`;
-  } else if (seconds < year) {
-    const months = Math.floor(seconds / month);
-    const remainingDays = (seconds % month) / day;
-    return `${months} month${
-      remainingDays > 0 ? ` ${remainingDays.toFixed(1)} d` : ""
-    }`;
-  } else {
-    const years = Math.floor(seconds / year);
-    const remainingMonths = (seconds % year) / month;
-    return `${years} year${
-      remainingMonths > 0 ? ` ${remainingMonths.toFixed(1)} month` : ""
-    }`;
+  // Iterate over units to find the nearest one
+  for (const unit of units) {
+    if (seconds >= unit.ratio) {
+      const value = Math.floor(seconds / unit.ratio);
+      const remainingSeconds = seconds % unit.ratio;
+      const remainingTime = convertSecondsToNearestUnit(remainingSeconds);
+      return `${value} ${unit.label}${value !== 1 ? "s" : ""}${
+        remainingTime ? ` ${remainingTime}` : ""
+      }`;
+    }
   }
+
+  return ``; // If seconds is less than a second
 }
 
 export function formatLargeNumber(number: number) {
