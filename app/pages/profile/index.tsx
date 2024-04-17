@@ -127,39 +127,39 @@ function Profile() {
     }
   }, [publicKey, limit, nft]);
 
-  const handleMintNft = async () => {
-    try {
-      if (publicKey && signMessage && signAllTransactions && connection) {
-        setLoading(true);
-        const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-        if (
-          !amountOfSolInWallet ||
-          amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.5
-        ) {
-          toast.error("Insufficient Sol. You need at least 0.5 Sol.");
-          return;
-        }
-        await handleLogin(publicKey, signMessage);
-        toast.info("Minting...");
-        const { tx, mint } = await mintNft(publicKey);
-        const transactionBuffer = base64.decode(tx as string);
-        const transaction = toWeb3JsTransaction(
-          umi.transactions.deserialize(transactionBuffer)
-        );
-        await sendTransactions(connection, [transaction], signAllTransactions);
-        toast.info("Linking...");
-        const asset = (await umi.rpc.getAsset(
-          PubKey(mint)
-        )) as unknown as DAS.GetAssetResponse;
-        await linkAsset(asset);
-        toast.success("Success");
-      }
-    } catch (error) {
-      toast.error(`${getCustomErrorMessage(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleMintNft = async () => {
+  //   try {
+  //     if (publicKey && signMessage && signAllTransactions && connection) {
+  //       setLoading(true);
+  //       const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+  //       if (
+  //         !amountOfSolInWallet ||
+  //         amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.5
+  //       ) {
+  //         toast.error("Insufficient Sol. You need at least 0.5 Sol.");
+  //         return;
+  //       }
+  //       await handleLogin(publicKey, signMessage);
+  //       toast.info("Minting...");
+  //       const { tx, mint } = await mintNft(publicKey);
+  //       const transactionBuffer = base64.decode(tx as string);
+  //       const transaction = toWeb3JsTransaction(
+  //         umi.transactions.deserialize(transactionBuffer)
+  //       );
+  //       await sendTransactions(connection, [transaction], signAllTransactions);
+  //       toast.info("Linking...");
+  //       const asset = (await umi.rpc.getAsset(
+  //         PubKey(mint)
+  //       )) as unknown as DAS.GetAssetResponse;
+  //       await linkAsset(asset);
+  //       toast.success("Success");
+  //     }
+  //   } catch (error) {
+  //     toast.error(`${getCustomErrorMessage(error)}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center">
@@ -173,8 +173,10 @@ function Profile() {
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-black text-center p-8 gap-4 h-full">
-          <span>You need to link a digital asset to your profile.</span>
-          <span className="text-sm">Select one from your wallet below</span>
+          <span>You need to link a NFT to your profile.</span>
+          <span className="text-sm">
+            Choose one from the NFTs available in your wallet below.
+          </span>
           {/* <span>or</span> */}
           {/* <button
             onClick={handleMintNft}
