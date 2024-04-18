@@ -17,7 +17,6 @@ interface ReviewPaneProps {
   decimal: number;
   externalUrl?: string;
   totalSupply: number;
-  vestedSupply: number;
   creatorFees: number;
   vestingPeriod: number;
   presaleTime: number;
@@ -33,7 +32,6 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   name,
   symbol,
   totalSupply,
-  vestedSupply,
   vestingPeriod,
   externalUrl,
   creatorFees,
@@ -77,28 +75,23 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         {creatorFees && (
           <span className="col-span-2 sm:col-span-1">Creator Fees</span>
         )}
-
         <span className="col-span-4 sm:col-span-2 text-black">
           {creatorFees / 100 + "%"}
         </span>
 
-        <span className="col-span-2 sm:col-span-1">Vested Supply</span>
-        <span className="col-span-4 sm:col-span-2 text-black">
-          {((vestedSupply / totalSupply) * 100).toString() + "%"}
-        </span>
         <span className="col-span-2 sm:col-span-1">Vesting Period</span>
         <span className="col-span-4 sm:col-span-2 text-black">
           {convertSecondsToNearestUnit(vestingPeriod)}
         </span>
+
+        <span className="col-span-2 sm:col-span-1">Presale Duration</span>
+        <span className="col-span-4 sm:col-span-2 text-black">
+          {convertSecondsToNearestUnit(presaleTime)}
+        </span>
+
         <span className="col-span-2 sm:col-span-1">Presale Target</span>
         <span className="col-span-4 sm:col-span-2 text-black">
           {presaleTarget / LAMPORTS_PER_SOL + ` Sol`}
-        </span>
-
-        <span className="col-span-2 sm:col-span-1">Presale Duration</span>
-
-        <span className="col-span-4 sm:col-span-2 text-black">
-          {convertSecondsToNearestUnit(presaleTime)}
         </span>
 
         {maxAmountPerPurchase && (

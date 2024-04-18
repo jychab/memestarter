@@ -2,6 +2,7 @@ import { DAS, DetermineOptimalParams, PoolType, Status } from "./types";
 import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getCurrentPrice } from "./cloudFunctions";
 import { program } from "./instructions";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 /**
  * Retrieves the collection mint address from the provided asset response.
@@ -48,7 +49,11 @@ export function generateRandomU64() {
 }
 
 export function getStatus(pool: PoolType) {
-  if (pool.vestingEndingAt && Date.now() / 1000 > pool.vestingEndingAt) {
+  if (
+    pool.vestingStartedAt &&
+    pool.vestingPeriod &&
+    Date.now() / 1000 > pool.vestingStartedAt + pool.vestingPeriod
+  ) {
     return Status.VestingCompleted;
   } else if (pool.vestingStartedAt) {
     return Status.VestingInProgress;
@@ -176,11 +181,13 @@ export async function determineOptimalParameters(
   connection: Connection
 ) {
   const poolData = await program(connection).account.pool.fetch(args.pool);
-  const amountInSol = poolData.liquidityCollected / LAMPORTS_PER_SOL;
-  const response = await getCurrentPrice();
+  const amountInSol =
+    (poolData.liquidityCollected * (10000 - poolData.creatorFeeBasisPoints)) /
+    (LAMPORTS_PER_SOL * 10000);
+
+  const response = await getCurrentPrice(NATIVE_MINT.toBase58());
   const amountInUSD = amountInSol * response.data.value;
-  const amountOfCoin =
-    (poolData.totalSupply - poolData.vestedSupply) / 10 ** args.decimal;
+  const amountOfCoin = poolData.totalSupply / 10 ** args.decimal;
   const initialPrice = amountInUSD / amountOfCoin;
   const tickSize = initialPrice / 1000;
   const maxDecimals = 6;

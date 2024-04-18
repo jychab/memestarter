@@ -6,6 +6,7 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 interface MainBtnProps {
   handleClick?: (e: any) => Promise<void>;
   color: string;
+  show?: boolean;
   loading?: boolean;
   disabled?: boolean;
   text: string;
@@ -13,12 +14,12 @@ interface MainBtnProps {
   setAmountToPurchase?: (e: string) => void;
   maxAllowedPerPurchase?: number;
   amount?: number;
-  creatorFeeBasisPoints?: number;
 }
 
 export const MainBtn: FC<MainBtnProps> = ({
   handleClick,
   color,
+  show = false,
   loading = false,
   disabled = true,
   text,
@@ -26,11 +27,10 @@ export const MainBtn: FC<MainBtnProps> = ({
   setAmountToPurchase,
   maxAllowedPerPurchase,
   amount = 0,
-  creatorFeeBasisPoints,
 }) => {
   return (
     <div className="flex gap-4 items-center justify-center">
-      {(maxAllowedPerPurchase || amount || creatorFeeBasisPoints) && (
+      {show && (
         <div className="flex flex-col w-24 text-[10px]">
           {maxAllowedPerPurchase && (
             <div
@@ -50,12 +50,6 @@ export const MainBtn: FC<MainBtnProps> = ({
             <span>{`Current:`}</span>
             <span>{`${amount / LAMPORTS_PER_SOL} Sol`}</span>
           </div>
-          {creatorFeeBasisPoints && (
-            <div className="flex justify-between text-gray-400">
-              <span>{`Creator Fee:`}</span>
-              <span>{creatorFeeBasisPoints / 100 + "%"}</span>
-            </div>
-          )}
           <div className="flex justify-between text-gray-400">
             <span>{`Platform Fee:`}</span>
             <span>{`1%`}</span>

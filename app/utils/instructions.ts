@@ -83,48 +83,6 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
     })
     .instruction();
 }
-export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
-  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
-    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
-    program(connection).programId
-  );
-  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
-    args.nft,
-    args.signer,
-    true
-  );
-  const poolAuthorityLpTokenAccount = getAssociatedTokenAddressSync(
-    args.lpMint,
-    args.poolAuthority,
-    true
-  );
-  const signerLpTokenAccount = getAssociatedTokenAddressSync(
-    args.lpMint,
-    args.signer,
-    true
-  );
-  const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
-    args.lpMint,
-    purchaseReceipt,
-    true
-  );
-  return await program(connection)
-    .methods.withdrawLpToken()
-    .accounts({
-      purchaseReceipt: purchaseReceipt,
-      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
-      pool: args.poolId,
-      poolAuthorityLpTokenAccount: poolAuthorityLpTokenAccount,
-      userWallet: args.signer,
-      userLpTokenAccount: signerLpTokenAccount,
-      purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
-      lpMint: args.lpMint,
-      systemProgram: SystemProgram.programId,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .instruction();
-}
 export async function claim(args: ClaimArgs, connection: Connection) {
   const [purchaseReceipt] = PublicKey.findProgramAddressSync(
     [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
@@ -135,9 +93,14 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     args.nftOwner,
     true
   );
-  const nftOwnerRewardMintTokenAccount = getAssociatedTokenAddressSync(
-    args.mint,
+  const nftOwnerLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
     args.nftOwner,
+    true
+  );
+  const poolAuthorityLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolAuthority,
     true
   );
   const [nftMetadata] = PublicKey.findProgramAddressSync(
@@ -148,22 +111,24 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     ],
     MPL_TOKEN_METADATA_PROGRAM_ID
   );
-  const purchaseReceiptMintTokenAccount = getAssociatedTokenAddressSync(
-    args.mint,
+  const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
     purchaseReceipt,
     true
   );
   return await program(connection)
-    .methods.claimRewards()
+    .methods.withdrawLpTokens()
     .accounts({
+      purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
+      poolAuthority: args.poolAuthority,
+      poolAuthorityLpTokenAccount: poolAuthorityLpTokenAccount,
+      nftOwnerLpTokenAccount: nftOwnerLpTokenAccount,
       nftMetadata: nftMetadata,
       purchaseReceipt: purchaseReceipt,
       pool: args.poolId,
       nftOwner: args.nftOwner,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
-      purchaseReceiptMintTokenAccount: purchaseReceiptMintTokenAccount,
-      rewardMint: args.mint,
-      nftOwnerRewardMintTokenAccount: nftOwnerRewardMintTokenAccount,
+      lpMint: args.lpMint,
       payer: args.signer,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -179,19 +144,9 @@ export async function checkClaimElligibility(
     [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
     program(connection).programId
   );
-  const purchaseReceiptMintTokenAccount = getAssociatedTokenAddressSync(
-    args.mint,
-    purchaseReceipt,
-    true
-  );
   const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
     args.lpMint,
     purchaseReceipt,
-    true
-  );
-  const poolMintTokenAccount = getAssociatedTokenAddressSync(
-    args.mint,
-    args.poolId,
     true
   );
   const poolLpTokenAccount = getAssociatedTokenAddressSync(
@@ -199,7 +154,6 @@ export async function checkClaimElligibility(
     args.poolId,
     true
   );
-
   return await program(connection)
     .methods.checkClaimEllgibility()
     .accounts({
@@ -207,10 +161,7 @@ export async function checkClaimElligibility(
       pool: args.poolId,
       payer: args.signer,
       purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
-      purchaseReceiptMintTokenAccount: purchaseReceiptMintTokenAccount,
       poolLpTokenAccount: poolLpTokenAccount,
-      poolMintTokenAccount: poolMintTokenAccount,
-      rewardMint: args.mint,
       lpMint: args.lpMint,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -462,7 +413,6 @@ export async function initializePoolIx(
         presaleTarget: new BN(args.presaleTarget),
         creatorFeeBasisPoints: args.creatorFeesBasisPoints,
         vestingPeriod: args.vestingPeriod,
-        vestedSupply: new BN(args.vestedSupply),
         totalSupply: new BN(args.totalSupply),
         randomKey: new BN(randomKey),
         maxAmountPerPurchase: args.maxAmountPerPurchase

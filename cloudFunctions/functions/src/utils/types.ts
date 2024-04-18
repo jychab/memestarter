@@ -50,7 +50,6 @@ export interface InitializedPoolEvent {
   presaleTarget: string;
   presaleTimeLimit: string;
   creatorFeeBasisPoints: string;
-  vestedSupply: string;
   totalSupply: string;
   vestingPeriod: string;
   maxAmountPerPurchase: string | null;
@@ -74,16 +73,14 @@ export interface CheckClaimEvent {
   payer: string;
   pool: string;
   originalMint: string;
-  mintElligible: string;
   lpElligible: string;
-  lpElligibleAfterFees: string;
 }
 
-export interface ClaimRewardsEvent {
+export interface WithdrawLpTokenEvent {
   payer: string;
   pool: string;
   lastClaimedAt: string;
-  mintClaimed: string;
+  lpClaimed: string;
   originalMint: string;
   originalMintOwner: string;
 }
@@ -96,14 +93,6 @@ export interface LaunchTokenAmmEvent {
   amountLpReceived: string;
   lpMint: string;
   vestingStartedAt: string;
-  vestingEndingAt: string;
-}
-export interface WithdrawLpTokenEvent {
-  payer: string;
-  pool: string;
-  originalMint: string;
-  amountLpWithdrawn: string;
-  lpMint: string;
 }
 export interface WithdrawEvent {
   payer: string;
@@ -128,8 +117,6 @@ export interface Pool {
   presaleTarget: number;
   presaleTimeLimit: number;
   totalSupply: number;
-  vestedSupply: number;
-  vestingEndingAt: number;
   vestingPeriod: number;
   vestingStartedAt: number;
   createdAt: number;
@@ -142,9 +129,7 @@ export interface Mint {
   pool: string;
   amount: number;
   lpElligible: number;
-  mintClaimed: number;
-  mintElligible: number;
-  lpElligibleAfterFees: string;
+  lpClaimed: number;
   updatedAt: number;
   mintMetadata: DAS.GetAssetResponse;
 }

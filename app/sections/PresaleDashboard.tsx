@@ -13,12 +13,12 @@ interface PresaleDashboardProps {
   symbol: string;
   decimal: number;
   totalSupply: number;
-  vestedSupply: number;
   vestingPeriod: number;
   uniqueBackers: number;
   liquidityCollected: number;
   presaleTimeLimit: number;
   presaleTarget: number;
+  creatorFeeBasisPoints: number;
   description?: string;
   collectionsRequired?: CollectionDetails[] | null;
 }
@@ -29,9 +29,9 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   uniqueBackers,
   presaleTimeLimit,
   totalSupply,
+  creatorFeeBasisPoints,
   decimal,
   symbol,
-  vestedSupply,
   vestingPeriod,
   description,
   collectionsRequired,
@@ -72,13 +72,15 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         <span className="text-[10px]">{`unique backers`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
-        <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
-          presaleTimeLimit - Date.now() / 1000
-        )
-          .split(" ")
-          .slice(0, 2)
-          .join(" ")}`}</span>
-        <span className="text-[10px]">{`to go`}</span>
+        <span className="text-sm text-black">{`${
+          presaleTimeLimit - Date.now() / 1000 > 0
+            ? convertSecondsToNearestUnit(presaleTimeLimit - Date.now() / 1000)
+                .split(" ")
+                .slice(0, 2)
+                .join(" ")
+            : "Ended"
+        }`}</span>
+        <span className="text-[10px]">{`till presale end`}</span>
       </div>
       <div className="col-span-4 flex flex-col gap-1">
         <div className="flex items-center gap-1">
@@ -90,9 +92,9 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
       </div>
       <div className="col-span-3 flex flex-col gap-1">
         <span className="text-sm text-black">
-          {((vestedSupply / totalSupply) * 100).toString() + "%"}
+          {(creatorFeeBasisPoints / 100).toString() + "%"}
         </span>
-        <span className="text-[10px]">{`vested supply`}</span>
+        <span className="text-[10px]">{`creator fees`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
         <span className="text-sm text-black">{`${convertSecondsToNearestUnit(

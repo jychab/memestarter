@@ -21,7 +21,7 @@ export default async function getPrice(
   };
   try {
     const response = await fetch(
-      `https://public-api.birdeye.so/public/price?address=${data.address}`,
+      `https://public-api.birdeye.so/defi/price?address=${data.address}`,
       options
     );
     return await response.json();

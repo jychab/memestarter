@@ -38,16 +38,16 @@ export async function launchToken(
   let marketId;
   if (
     (!amountOfSolInWallet ||
-      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 3) &&
+      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 4) &&
     !docRef.exists()
   ) {
-    throw new Error("Insufficient Sol. You need at least 3 Sol.");
+    throw new Error("Insufficient Sol. You need at least 4 Sol.");
   } else if (
     (!amountOfSolInWallet ||
-      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
+      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 1.01) &&
     docRef.exists()
   ) {
-    throw new Error("Insufficient Sol. You need at least 0.2 Sol.");
+    throw new Error("Insufficient Sol. You need at least 1.01 Sol.");
   }
   if (!docRef.exists()) {
     toast.info("Determining optimal parameters...");
@@ -203,9 +203,6 @@ export async function createPool(
   if (args.totalSupply < 1000000) {
     throw new Error("Total supply cannot be lower than 1,000,000");
   }
-  if (args.vestedSupply > args.totalSupply) {
-    throw new Error("Vesting supply cannot be higher than Total supply");
-  }
   if (args.presaleDuration > 30 * 24 * 60 * 60) {
     throw new Error("Presale duration cannot be longer than a month");
   }
@@ -220,7 +217,6 @@ export async function createPool(
       presaleDuration: args.presaleDuration,
       presaleTarget: args.presaleTarget,
       vestingPeriod: args.vestingPeriod,
-      vestedSupply: args.vestedSupply,
       totalSupply: args.totalSupply,
       signer: args.publicKey,
       maxAmountPerPurchase: args.maxAmountPerPurchase,
