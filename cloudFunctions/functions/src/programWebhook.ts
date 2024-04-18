@@ -4,7 +4,6 @@ import {db, program, programEventAuthority} from "./utils";
 import * as anchor from "@coral-xyz/anchor";
 import {
   CheckClaimEvent,
-  ClaimRewardsEvent,
   CreatePurchaseAuthorisationEvent,
   Events,
   InitializedPoolEvent,
@@ -79,16 +78,13 @@ export default async function programWebhook(req: Request, res: Response) {
           case program.idl.events[3].name: // CheckClaimEvent
             processCheckClaimEvent(event, batch, tx);
             break;
-          case program.idl.events[4].name: // ClaimRewardsEvent
-            processClaimRewardsEvent(event, batch, tx);
+          case program.idl.events[4].name: // WithdrawLpTokenEvent
+            processWithdrawLpTokenEvent(event, batch, tx);
             break;
           case program.idl.events[5].name: // LaunchTokenAmmEvent
             processLaunchAmmEvent(event, batch, tx);
             break;
-          case program.idl.events[6].name: // WithdrawLpEvent
-            processWithdrawLpEvent(event, batch, tx);
-            break;
-          case program.idl.events[7].name: // WithdrawEvent
+          case program.idl.events[6].name: // WithdrawEvent
             processWithdrawEvent(event, batch, tx);
             break;
           default:
@@ -166,54 +162,6 @@ function processWithdrawEvent(
   );
 }
 
-function processWithdrawLpEvent(
-  event: anchor.Event<IdlEvent, Record<string, string>>,
-  batch: FirebaseFirestore.WriteBatch,
-  tx: any
-) {
-  const withdrawLpTokenEvent = JSON.parse(
-    JSON.stringify(event.data)
-  ) as WithdrawLpTokenEvent;
-  batch.set(
-    db.collection("Pool").doc(withdrawLpTokenEvent.pool),
-    {
-      amountLpWithdrawn: FieldValue.increment(
-        parseInt(withdrawLpTokenEvent.amountLpWithdrawn, 16)
-      ),
-      updatedAt: FieldValue.serverTimestamp(),
-    },
-    {merge: true}
-  );
-  batch.set(
-    db
-      .collection("Mint")
-      .doc(withdrawLpTokenEvent.originalMint)
-      .collection("Pool")
-      .doc(withdrawLpTokenEvent.pool),
-    {
-      lpClaimed: parseInt(withdrawLpTokenEvent.amountLpWithdrawn, 16),
-      updatedAt: FieldValue.serverTimestamp(),
-    },
-    {merge: true}
-  );
-  batch.set(
-    db
-      .collection("Users")
-      .doc(withdrawLpTokenEvent.payer)
-      .collection("Transactions")
-      .doc(tx.signature),
-    {
-      signature: tx.signature,
-      event: Events.WithdrawLpEvent,
-      eventData: {
-        ...withdrawLpTokenEvent,
-        amountLpWithdrawn: parseInt(withdrawLpTokenEvent.amountLpWithdrawn, 16),
-      },
-      updatedAt: FieldValue.serverTimestamp(),
-    }
-  );
-}
-
 function processLaunchAmmEvent(
   event: anchor.Event<IdlEvent, Record<string, string>>,
   batch: FirebaseFirestore.WriteBatch,
@@ -231,7 +179,6 @@ function processLaunchAmmEvent(
       amountPc: parseInt(launchTokenEventData.amountPc, 16),
       amountLpReceived: parseInt(launchTokenEventData.amountLpReceived, 16),
       vestingStartedAt: parseInt(launchTokenEventData.vestingStartedAt, 16),
-      vestingEndingAt: parseInt(launchTokenEventData.vestingEndingAt, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -251,21 +198,20 @@ function processLaunchAmmEvent(
         amountPc: parseInt(launchTokenEventData.amountPc, 16),
         amountLpReceived: parseInt(launchTokenEventData.amountLpReceived, 16),
         vestingStartedAt: parseInt(launchTokenEventData.vestingStartedAt, 16),
-        vestingEndingAt: parseInt(launchTokenEventData.vestingEndingAt, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
   );
 }
 
-function processClaimRewardsEvent(
+function processWithdrawLpTokenEvent(
   event: anchor.Event<IdlEvent, Record<string, string>>,
   batch: FirebaseFirestore.WriteBatch,
   tx: any
 ) {
   const claimEventData = JSON.parse(
     JSON.stringify(event.data)
-  ) as ClaimRewardsEvent;
+  ) as WithdrawLpTokenEvent;
   batch.set(
     db
       .collection("Mint")
@@ -273,9 +219,7 @@ function processClaimRewardsEvent(
       .collection("Pool")
       .doc(claimEventData.pool),
     {
-      mintClaimed: FieldValue.increment(
-        parseInt(claimEventData.mintClaimed, 16)
-      ),
+      lpClaimed: FieldValue.increment(parseInt(claimEventData.lpClaimed, 16)),
       lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -285,7 +229,7 @@ function processClaimRewardsEvent(
     db.collection("Pool").doc(claimEventData.pool),
     {
       totalClaimed: FieldValue.increment(
-        parseInt(claimEventData.mintClaimed, 16)
+        parseInt(claimEventData.lpClaimed, 16)
       ),
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -304,7 +248,7 @@ function processClaimRewardsEvent(
         eventData: {
           ...claimEventData,
           lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
-          mintClaimed: parseInt(claimEventData.mintClaimed, 16),
+          lpClaimed: parseInt(claimEventData.lpClaimed, 16),
         },
         updatedAt: FieldValue.serverTimestamp(),
       }
@@ -322,7 +266,7 @@ function processClaimRewardsEvent(
       eventData: {
         ...claimEventData,
         lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
-        mintClaimed: parseInt(claimEventData.mintClaimed, 16),
+        lpClaimed: parseInt(claimEventData.lpClaimed, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -344,9 +288,7 @@ function processCheckClaimEvent(
       .collection("Pool")
       .doc(checkClaimData.pool),
     {
-      mintElligible: parseInt(checkClaimData.mintElligible, 16),
       lpElligible: parseInt(checkClaimData.lpElligible, 16),
-      lpElligibleAfterFees: parseInt(checkClaimData.lpElligibleAfterFees, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -362,9 +304,7 @@ function processCheckClaimEvent(
       event: Events.CheckClaimEvent,
       eventData: {
         ...checkClaimData,
-        mintElligible: parseInt(checkClaimData.mintElligible, 16),
         lpElligible: parseInt(checkClaimData.lpElligible, 16),
-        lpElligibleAfterFees: parseInt(checkClaimData.lpElligibleAfterFees, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -482,7 +422,6 @@ function processIntializePoolEvent(
     decimal: parseInt(poolEventData.decimal, 16),
     presaleTarget: parseInt(poolEventData.presaleTarget, 16),
     presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
-    vestedSupply: parseInt(poolEventData.vestedSupply, 16),
     totalSupply: parseInt(poolEventData.totalSupply, 16),
     vestingPeriod: parseInt(poolEventData.vestingPeriod),
     maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?
@@ -505,7 +444,6 @@ function processIntializePoolEvent(
         decimal: parseInt(poolEventData.decimal, 16),
         presaleTarget: parseInt(poolEventData.presaleTarget, 16),
         presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
-        vestedSupply: parseInt(poolEventData.vestedSupply, 16),
         totalSupply: parseInt(poolEventData.totalSupply, 16),
         vestingPeriod: parseInt(poolEventData.vestingPeriod),
         maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?

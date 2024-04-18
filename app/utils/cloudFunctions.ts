@@ -13,7 +13,7 @@ import {
 import { db } from "./firebase";
 import { NATIVE_MINT } from "@solana/spl-token";
 
-export async function getCurrentPrice(): Promise<{
+export async function getCurrentPrice(address: string): Promise<{
   data: {
     value: number;
     updateUnixTime: number;
@@ -22,7 +22,7 @@ export async function getCurrentPrice(): Promise<{
   success: boolean;
 }> {
   const getPrice = httpsCallable(getFunctions(), "getPrice");
-  return (await getPrice({ address: NATIVE_MINT.toBase58() })).data as {
+  return (await getPrice({ address: address })).data as {
     data: {
       value: number;
       updateUnixTime: number;

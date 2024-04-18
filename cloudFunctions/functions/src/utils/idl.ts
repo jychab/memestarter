@@ -90,7 +90,7 @@ export type SafePresale = {
       ];
     },
     {
-      name: "claimRewards";
+      name: "withdrawLpTokens";
       accounts: [
         {
           name: "purchaseReceipt";
@@ -98,7 +98,7 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "purchaseReceiptMintTokenAccount";
+          name: "purchaseReceiptLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -108,12 +108,22 @@ export type SafePresale = {
           isSigner: false;
         },
         {
+          name: "poolAuthorityLpTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "poolAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "nftOwnerNftTokenAccount";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "nftOwnerRewardMintTokenAccount";
+          name: "nftOwnerLpTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -128,8 +138,8 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "rewardMint";
-          isMut: true;
+          name: "lpMint";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -275,80 +285,6 @@ export type SafePresale = {
       ];
     },
     {
-      name: "withdrawLpToken";
-      accounts: [
-        {
-          name: "purchaseReceipt";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "nftOwnerNftTokenAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "pool";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "poolAuthorityLpTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userWallet";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "userLpTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "purchaseReceiptLpTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "lpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-          docs: ["Program to create the position manager state account"];
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-          docs: ["Program to create mint account and mint tokens"];
-        },
-        {
-          name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
-          docs: ["Program to create an ATA for receiving position NFT"];
-        },
-        {
-          name: "eventAuthority";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "program";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
       name: "withdraw";
       accounts: [
         {
@@ -441,23 +377,8 @@ export type SafePresale = {
           isSigner: false;
         },
         {
-          name: "purchaseReceiptMintTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "poolLpTokenAccount";
           isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "poolMintTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "rewardMint";
-          isMut: false;
           isSigner: false;
         },
         {
@@ -619,10 +540,6 @@ export type SafePresale = {
             type: "bool";
           },
           {
-            name: "launched";
-            type: "bool";
-          },
-          {
             name: "delegate";
             type: {
               option: "publicKey";
@@ -663,10 +580,6 @@ export type SafePresale = {
             type: "u16";
           },
           {
-            name: "vestedSupply";
-            type: "u64";
-          },
-          {
             name: "totalSupply";
             type: "u64";
           },
@@ -684,12 +597,6 @@ export type SafePresale = {
           },
           {
             name: "vestingStartedAt";
-            type: {
-              option: "i64";
-            };
-          },
-          {
-            name: "vestingPeriodEnd";
             type: {
               option: "i64";
             };
@@ -749,14 +656,8 @@ export type SafePresale = {
             type: "publicKey";
           },
           {
-            name: "mintClaimed";
+            name: "lpClaimed";
             type: "u64";
-          },
-          {
-            name: "mintElligible";
-            type: {
-              option: "u64";
-            };
           },
           {
             name: "lastClaimedAt";
@@ -807,10 +708,6 @@ export type SafePresale = {
             type: {
               option: "u64";
             };
-          },
-          {
-            name: "vestedSupply";
-            type: "u64";
           },
           {
             name: "totalSupply";
@@ -877,11 +774,6 @@ export type SafePresale = {
         {
           name: "creatorFeeBasisPoints";
           type: "u16";
-          index: false;
-        },
-        {
-          name: "vestedSupply";
-          type: "u64";
           index: false;
         },
         {
@@ -977,24 +869,14 @@ export type SafePresale = {
           index: false;
         },
         {
-          name: "mintElligible";
-          type: "u64";
-          index: false;
-        },
-        {
           name: "lpElligible";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "lpElligibleAfterFees";
           type: "u64";
           index: false;
         }
       ];
     },
     {
-      name: "ClaimRewardsEvent";
+      name: "WithdrawLpTokenEvent";
       fields: [
         {
           name: "payer";
@@ -1007,7 +889,7 @@ export type SafePresale = {
           index: false;
         },
         {
-          name: "mintClaimed";
+          name: "lpClaimed";
           type: "u64";
           index: false;
         },
@@ -1064,41 +946,6 @@ export type SafePresale = {
         {
           name: "vestingStartedAt";
           type: "i64";
-          index: false;
-        },
-        {
-          name: "vestingEndingAt";
-          type: "i64";
-          index: false;
-        }
-      ];
-    },
-    {
-      name: "WithdrawLpTokenEvent";
-      fields: [
-        {
-          name: "payer";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "pool";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "originalMint";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "amountLpWithdrawn";
-          type: "u64";
-          index: false;
-        },
-        {
-          name: "lpMint";
-          type: "publicKey";
           index: false;
         }
       ];
@@ -1232,46 +1079,41 @@ export type SafePresale = {
     },
     {
       code: 6019;
-      name: "VestingSupplyLargerThanTotalSupply";
-      msg: "Vesting Supply cannot be larger than Total Supply";
-    },
-    {
-      code: 6020;
       name: "CreatorBasisPointsExceedMaximumAmount";
       msg: "Creator Fees Basis Points cannot exceed 10000";
     },
     {
-      code: 6021;
+      code: 6020;
       name: "NumberCannotBeZero";
       msg: "Amount cannot be zero";
     },
     {
-      code: 6022;
+      code: 6021;
       name: "AmountPurchaseExceeded";
       msg: "Purchase amount exceeded";
     },
     {
-      code: 6023;
+      code: 6022;
       name: "CheckClaimFirstBeforeClaiming";
       msg: "Check elligibility first";
     },
     {
-      code: 6024;
+      code: 6023;
       name: "ClaimedAlreadyChecked";
       msg: "Already checked";
     },
     {
-      code: 6025;
+      code: 6024;
       name: "InvalidSigner";
       msg: "Signer must be owner of nft";
     },
     {
-      code: 6026;
+      code: 6025;
       name: "PurchaseAuthorisationRecordMissing";
       msg: "Purchase authorisation record is missing";
     },
     {
-      code: 6027;
+      code: 6026;
       name: "UnauthorisedCollection";
       msg: "Collection is not authorised";
     }
@@ -1370,7 +1212,7 @@ export const IDL: SafePresale = {
       ],
     },
     {
-      name: "claimRewards",
+      name: "withdrawLpTokens",
       accounts: [
         {
           name: "purchaseReceipt",
@@ -1378,7 +1220,7 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "purchaseReceiptMintTokenAccount",
+          name: "purchaseReceiptLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1388,12 +1230,22 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
+          name: "poolAuthorityLpTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "poolAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "nftOwnerNftTokenAccount",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "nftOwnerRewardMintTokenAccount",
+          name: "nftOwnerLpTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1408,8 +1260,8 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "rewardMint",
-          isMut: true,
+          name: "lpMint",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1555,80 +1407,6 @@ export const IDL: SafePresale = {
       ],
     },
     {
-      name: "withdrawLpToken",
-      accounts: [
-        {
-          name: "purchaseReceipt",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "nftOwnerNftTokenAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "pool",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "poolAuthorityLpTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userWallet",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "userLpTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "purchaseReceiptLpTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-          docs: ["Program to create the position manager state account"],
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-          docs: ["Program to create mint account and mint tokens"],
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-          docs: ["Program to create an ATA for receiving position NFT"],
-        },
-        {
-          name: "eventAuthority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "program",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
       name: "withdraw",
       accounts: [
         {
@@ -1721,23 +1499,8 @@ export const IDL: SafePresale = {
           isSigner: false,
         },
         {
-          name: "purchaseReceiptMintTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "poolLpTokenAccount",
           isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "poolMintTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "rewardMint",
-          isMut: false,
           isSigner: false,
         },
         {
@@ -1899,10 +1662,6 @@ export const IDL: SafePresale = {
             type: "bool",
           },
           {
-            name: "launched",
-            type: "bool",
-          },
-          {
             name: "delegate",
             type: {
               option: "publicKey",
@@ -1943,10 +1702,6 @@ export const IDL: SafePresale = {
             type: "u16",
           },
           {
-            name: "vestedSupply",
-            type: "u64",
-          },
-          {
             name: "totalSupply",
             type: "u64",
           },
@@ -1964,12 +1719,6 @@ export const IDL: SafePresale = {
           },
           {
             name: "vestingStartedAt",
-            type: {
-              option: "i64",
-            },
-          },
-          {
-            name: "vestingPeriodEnd",
             type: {
               option: "i64",
             },
@@ -2029,14 +1778,8 @@ export const IDL: SafePresale = {
             type: "publicKey",
           },
           {
-            name: "mintClaimed",
+            name: "lpClaimed",
             type: "u64",
-          },
-          {
-            name: "mintElligible",
-            type: {
-              option: "u64",
-            },
           },
           {
             name: "lastClaimedAt",
@@ -2087,10 +1830,6 @@ export const IDL: SafePresale = {
             type: {
               option: "u64",
             },
-          },
-          {
-            name: "vestedSupply",
-            type: "u64",
           },
           {
             name: "totalSupply",
@@ -2157,11 +1896,6 @@ export const IDL: SafePresale = {
         {
           name: "creatorFeeBasisPoints",
           type: "u16",
-          index: false,
-        },
-        {
-          name: "vestedSupply",
-          type: "u64",
           index: false,
         },
         {
@@ -2257,24 +1991,14 @@ export const IDL: SafePresale = {
           index: false,
         },
         {
-          name: "mintElligible",
-          type: "u64",
-          index: false,
-        },
-        {
           name: "lpElligible",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "lpElligibleAfterFees",
           type: "u64",
           index: false,
         },
       ],
     },
     {
-      name: "ClaimRewardsEvent",
+      name: "WithdrawLpTokenEvent",
       fields: [
         {
           name: "payer",
@@ -2287,7 +2011,7 @@ export const IDL: SafePresale = {
           index: false,
         },
         {
-          name: "mintClaimed",
+          name: "lpClaimed",
           type: "u64",
           index: false,
         },
@@ -2344,41 +2068,6 @@ export const IDL: SafePresale = {
         {
           name: "vestingStartedAt",
           type: "i64",
-          index: false,
-        },
-        {
-          name: "vestingEndingAt",
-          type: "i64",
-          index: false,
-        },
-      ],
-    },
-    {
-      name: "WithdrawLpTokenEvent",
-      fields: [
-        {
-          name: "payer",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "pool",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "originalMint",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "amountLpWithdrawn",
-          type: "u64",
-          index: false,
-        },
-        {
-          name: "lpMint",
-          type: "publicKey",
           index: false,
         },
       ],
@@ -2512,46 +2201,41 @@ export const IDL: SafePresale = {
     },
     {
       code: 6019,
-      name: "VestingSupplyLargerThanTotalSupply",
-      msg: "Vesting Supply cannot be larger than Total Supply",
-    },
-    {
-      code: 6020,
       name: "CreatorBasisPointsExceedMaximumAmount",
       msg: "Creator Fees Basis Points cannot exceed 10000",
     },
     {
-      code: 6021,
+      code: 6020,
       name: "NumberCannotBeZero",
       msg: "Amount cannot be zero",
     },
     {
-      code: 6022,
+      code: 6021,
       name: "AmountPurchaseExceeded",
       msg: "Purchase amount exceeded",
     },
     {
-      code: 6023,
+      code: 6022,
       name: "CheckClaimFirstBeforeClaiming",
       msg: "Check elligibility first",
     },
     {
-      code: 6024,
+      code: 6023,
       name: "ClaimedAlreadyChecked",
       msg: "Already checked",
     },
     {
-      code: 6025,
+      code: 6024,
       name: "InvalidSigner",
       msg: "Signer must be owner of nft",
     },
     {
-      code: 6026,
+      code: 6025,
       name: "PurchaseAuthorisationRecordMissing",
       msg: "Purchase authorisation record is missing",
     },
     {
-      code: 6027,
+      code: 6026,
       name: "UnauthorisedCollection",
       msg: "Collection is not authorised",
     },

@@ -13,8 +13,6 @@ interface CustomisePrelaunchSettingsPaneProps {
   setVestingPeriod: React.Dispatch<React.SetStateAction<number>>;
   presaleDuration: number;
   setPresaleDuration: React.Dispatch<React.SetStateAction<number>>;
-  vestingSupply: string;
-  setVestingSupply: React.Dispatch<React.SetStateAction<string>>;
   creatorFees: string;
   setCreatorFees: React.Dispatch<React.SetStateAction<string>>;
   collectionsRequired: CollectionDetails[];
@@ -33,7 +31,6 @@ export const CustomisePrelaunchSettingsPane: FC<
 > = ({
   vestingPeriod,
   presaleDuration,
-  vestingSupply,
   creatorFees,
   presaleTarget,
   maxAmountPerPurchase,
@@ -44,7 +41,6 @@ export const CustomisePrelaunchSettingsPane: FC<
   setPresaleDuration,
   setCreatorFees,
   setVestingPeriod,
-  setVestingSupply,
 }) => {
   const [maximumAllowedPerPurchase, setMaximumAmountPerPurchase] = useState(
     maxAmountPerPurchase !== ""
@@ -78,35 +74,16 @@ export const CustomisePrelaunchSettingsPane: FC<
           required
         />
       </div>
-      <div className="grid grid-cols-2 gap-4 items-center">
-        <label
-          htmlFor="vesting-supply"
-          className="text-sm font-medium text-gray-400"
-        >
-          Vesting Supply
-        </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          id="vesting-supply"
-          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
-          placeholder={vestingSupply.toString()}
-          value={vestingSupply.replaceAll("%", "") + "%"}
-          onChange={(e) => {
-            const amount = e.target.value.replaceAll("%", "");
-            if (!amount || amount.match(/^\d{1,}(\.\d{0,4})?$/)) {
-              setVestingSupply(e.target.value);
-            }
-          }}
-          required
-        />
-      </div>
       <DurationPicker
         title={"Vesting Period"}
         period={vestingPeriod}
         setPeriod={setVestingPeriod}
       />
-
+      <DurationPicker
+        title={"Presale Duration"}
+        period={presaleDuration}
+        setPeriod={setPresaleDuration}
+      />
       <div className="grid grid-cols-2 gap-4 items-center">
         <label
           htmlFor="presale-target"
@@ -131,11 +108,6 @@ export const CustomisePrelaunchSettingsPane: FC<
           </label>
         </div>
       </div>
-      <DurationPicker
-        title={"Presale Duration"}
-        period={presaleDuration}
-        setPeriod={setPresaleDuration}
-      />
       <div className="grid grid-cols-2 items-center gap-4">
         <span className="text-sm font-medium text-gray-400">
           Set Max Allowed Per Purchase (Optional)

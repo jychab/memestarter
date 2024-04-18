@@ -33,7 +33,6 @@ function CreateCollection() {
   const [vestingPeriod, setVestingPeriod] = useState<number>(
     3 * 30 * 24 * 60 * 60
   );
-  const [vestingSupply, setVestingSupply] = useState<string>("20"); //in percentage -> need to convert to number
   const [presaleDuration, setPresaleDuration] = useState<number>(
     3 * 24 * 60 * 60
   );
@@ -53,7 +52,6 @@ function CreateCollection() {
     setExternalUrl("");
     setCreatorFees("5");
     setSupply("1000000000");
-    setVestingSupply("20");
     setVestingPeriod(3 * 30 * 24 * 60 * 60);
     setPresaleDuration(30 * 24 * 60 * 60);
     setPresaleTarget("50");
@@ -116,8 +114,6 @@ function CreateCollection() {
       const presaleTargetLamports =
         parseFloat(presaleTarget) * LAMPORTS_PER_SOL;
       const totalSupplyNum = parseInt(supply.replaceAll(",", ""));
-      const vestingSupplyNum =
-        (parseInt(vestingSupply.replaceAll(",", "")) / 100) * totalSupplyNum;
       try {
         setLoading(true);
         await handleLogin(publicKey, signMessage);
@@ -143,7 +139,6 @@ function CreateCollection() {
             presaleDuration: presaleDuration,
             presaleTarget: presaleTargetLamports,
             vestingPeriod: vestingPeriod,
-            vestedSupply: vestingSupplyNum,
             totalSupply: totalSupplyNum,
             signer: publicKey,
             maxAmountPerPurchase:
@@ -223,8 +218,6 @@ function CreateCollection() {
               setPresaleDuration={setPresaleDuration}
               vestingPeriod={vestingPeriod}
               setVestingPeriod={setVestingPeriod}
-              vestingSupply={vestingSupply}
-              setVestingSupply={setVestingSupply}
               creatorFees={creatorFees}
               setCreatorFees={setCreatorFees}
             />
@@ -245,11 +238,6 @@ function CreateCollection() {
               decimal={decimals}
               externalUrl={externalUrl}
               totalSupply={parseInt(supply.replaceAll(",", ""))}
-              vestedSupply={
-                (parseInt(vestingSupply.replaceAll("%", "")) *
-                  parseInt(supply.replaceAll(",", ""))) /
-                100
-              }
               creatorFees={parseFloat(creatorFees.replaceAll("%", "")) * 100}
               vestingPeriod={vestingPeriod}
               presaleTime={presaleDuration}

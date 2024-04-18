@@ -2,27 +2,17 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { MintDashboard } from "../../sections/MintDashboard";
-import { useLogin } from "../../hooks/useLogin";
-import { toast } from "react-toastify";
 import useUmi from "../../hooks/useUmi";
 import { getCollectionMintAddress } from "../../utils/helper";
-import { sendTransactions } from "../../utils/transactions";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
-import {
-  fromWeb3JsPublicKey,
-  toWeb3JsTransaction,
-} from "@metaplex-foundation/umi-web3js-adapters";
+import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { publicKey as PubKey } from "@metaplex-foundation/umi";
 import { useRouter } from "next/router";
-import { getCustomErrorMessage } from "../../utils/error";
 import { useData } from "../../hooks/useData";
-import { linkAsset, mintNft } from "../../utils/cloudFunctions";
 import { DAS } from "../../utils/types";
 
 function Profile() {
-  const { handleLogin } = useLogin();
   const { nft } = useData();
   const { publicKey, signMessage, signAllTransactions } = useWallet();
   const { connection } = useConnection();
@@ -31,7 +21,6 @@ function Profile() {
   const [currentLength, setCurrentLength] = useState<number>();
   const [endOfPage, setEndofPage] = useState<number>();
   const [limit, setLimit] = useState(50);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [walletAssets, setWalletAssets] = useState<
     (DAS.GetAssetResponse | undefined)[]

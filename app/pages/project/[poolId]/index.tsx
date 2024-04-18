@@ -25,6 +25,8 @@ import PresaleDashboard from "../../../sections/PresaleDashboard";
 import { MainPane } from "../../../sections/MainPane";
 import { buyPresale, launchToken } from "../../../utils/functions";
 import { CommentsSection } from "../../../components/commentSection";
+import VestingDashboard from "../../../sections/VestingDashboard";
+import { getCurrentPrice } from "../../../utils/cloudFunctions";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,7 @@ export function Pool() {
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const [mint, setMint] = useState<MintType>();
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
+  const [price, setPrice] = useState<number>();
   const { publicKey, signTransaction, signAllTransactions, signMessage } =
     useWallet();
   const { handleLogin } = useLogin();
@@ -64,15 +67,17 @@ export function Pool() {
       );
       const unsubscribe = onSnapshot(doc(db, `Pool/${poolId}`), (doc) => {
         if (doc.exists()) {
-          setPool(doc.data() as PoolType);
+          const poolData = doc.data() as PoolType;
+          setPool(poolData);
+          setStatus(getStatus(poolData));
         }
       });
       return () => unsubscribe();
     }
   }, [poolId]);
-  useEffect(() => {
+  useCallback(() => {
     if (pool) {
-      setStatus(getStatus(pool));
+      getCurrentPrice(pool.mint).then((res) => setPrice(res.data.value));
     }
   }, [pool]);
 
@@ -144,51 +149,60 @@ export function Pool() {
   }, [pool, nft, amountToPurchase, publicKey, connection, signTransaction]);
 
   const getButton = useMemo(() => {
-    if (!status || !publicKey || !pool) return null;
+    if (!status || !pool) return null;
     if (
       status === Status.PresaleInProgress ||
       status === Status.PresaleTargetMet
     ) {
+      if (!publicKey) {
+        return (
+          <MainBtn
+            color={"text-green-100 bg-green-700 hover:bg-green-800"}
+            text={"Presale In Progress"}
+          />
+        );
+      }
       if (!nft) {
         return (
           <div className="flex items-center justify-start">
             <Link
               href={"/profile"}
-              className="text-blue-600 hover:text-blue-800 text-sm sm:text-base rounded"
+              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm rounded"
             >
               {"You need to set up your profile first!"}
             </Link>
           </div>
         );
-      }
-      if (
-        pool.collectionsRequired === null ||
-        (pool.collectionsRequired &&
-          pool.collectionsRequired.find(
-            (item) => item.mintAddress === getCollectionMintAddress(nft)
-          ) !== undefined)
-      ) {
+      } else {
+        if (
+          pool.collectionsRequired === null ||
+          (pool.collectionsRequired &&
+            pool.collectionsRequired.find(
+              (item) => item.mintAddress === getCollectionMintAddress(nft)
+            ) !== undefined)
+        ) {
+          return (
+            <MainBtn
+              handleClick={buy}
+              color={"text-green-100 bg-green-700 hover:bg-green-800"}
+              loading={loading}
+              disabled={false}
+              amount={mint?.amount}
+              maxAllowedPerPurchase={pool.maxAmountPerPurchase}
+              amountToPurchase={amountToPurchase}
+              setAmountToPurchase={setAmountToPurchase}
+              show={true}
+              text={loading ? "" : "Fund"}
+            />
+          );
+        }
         return (
           <MainBtn
-            handleClick={buy}
-            color={"text-green-100 bg-green-700 hover:bg-green-800"}
-            loading={loading}
-            disabled={false}
-            amount={mint?.amount}
-            maxAllowedPerPurchase={pool.maxAmountPerPurchase}
-            amountToPurchase={amountToPurchase}
-            setAmountToPurchase={setAmountToPurchase}
-            text={loading ? "" : "Fund"}
-            creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+            color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
+            text={"Not part of whitelisted collection"}
           />
         );
       }
-      return (
-        <MainBtn
-          color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
-          text={"Not part of whitelisted collection"}
-        />
-      );
     } else if (status === Status.Expired) {
       return (
         <MainBtn
@@ -211,7 +225,7 @@ export function Pool() {
         />
       );
     } else if (status === Status.ReadyToLaunch) {
-      if (publicKey?.toBase58() === pool.authority) {
+      if (publicKey && publicKey.toBase58() === pool.authority) {
         return (
           <MainBtn
             handleClick={launch}
@@ -258,12 +272,12 @@ export function Pool() {
             status == Status.PresaleTargetMet ||
             status == Status.ReadyToLaunch) && (
             <PresaleDashboard
+              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
               collectionsRequired={pool.collectionsRequired}
               uniqueBackers={uniqueBackers}
               symbol={pool.symbol}
               decimal={pool.decimal}
               totalSupply={pool.totalSupply}
-              vestedSupply={pool.vestedSupply}
               vestingPeriod={pool.vestingPeriod}
               liquidityCollected={pool.liquidityCollected}
               presaleTimeLimit={pool.presaleTimeLimit}
@@ -271,8 +285,27 @@ export function Pool() {
               description={pool.description}
             />
           )}
-          {publicKey && <span className="uppercase text-xs">Funding</span>}
-          {status && publicKey && getButton}
+          {(status == Status.VestingInProgress ||
+            status == Status.VestingCompleted) && (
+            <VestingDashboard
+              price={price}
+              symbol={pool.symbol}
+              decimal={pool.decimal}
+              totalSupply={pool.totalSupply}
+              vestingPeriod={pool.vestingPeriod}
+              uniqueBackers={uniqueBackers}
+              vestingStartedAt={pool.vestingStartedAt}
+              totalClaimed={pool.totalClaimed}
+              amountLpReceived={pool.amountLpReceived}
+            />
+          )}
+          {publicKey &&
+            (status == Status.PresaleInProgress ||
+              status == Status.PresaleTargetMet ||
+              status == Status.ReadyToLaunch) && (
+              <span className="uppercase text-xs">Funding</span>
+            )}
+          {getButton}
         </div>
         <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
       </div>

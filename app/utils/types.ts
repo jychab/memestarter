@@ -83,7 +83,6 @@ export interface InitializePoolArgs {
   presaleDuration: number;
   presaleTarget: number;
   vestingPeriod: number;
-  vestedSupply: number;
   totalSupply: number;
   signer: PublicKey;
   maxAmountPerPurchase: number | null;
@@ -116,7 +115,8 @@ export interface ClaimArgs {
   nftOwner: PublicKey;
   nft: PublicKey;
   poolId: PublicKey;
-  mint: PublicKey;
+  lpMint: PublicKey;
+  poolAuthority: PublicKey;
 }
 
 export interface CheckClaimElligbilityArgs {
@@ -160,7 +160,6 @@ export interface PoolType {
   mintMetadata: DAS.GetAssetResponse;
   amountCoin: number;
   amountLpReceived: number;
-  amountLpWithdrawn: number;
   amountWsolWithdrawn: number;
   amountPc: number;
   authority: string;
@@ -173,8 +172,6 @@ export interface PoolType {
   presaleTarget: number;
   presaleTimeLimit: number;
   totalSupply: number;
-  vestedSupply: number;
-  vestingEndingAt: number;
   vestingPeriod: number;
   vestingStartedAt: number;
   createdAt: Timestamp | number | null;
@@ -195,9 +192,6 @@ export interface MintType {
   lastClaimedAt: number;
   lpElligible: number;
   lpClaimed: number;
-  mintClaimed: number;
-  lpElligibleAfterFees: number;
-  mintElligible: number;
   updatedAt: Timestamp | number | null;
 }
 

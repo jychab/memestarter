@@ -21,16 +21,10 @@ export const LaunchedTable: FC<LaunchedTableProps> = ({ pool, timer }) => {
               Your Earnings
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Total Supply
+              Unlocked Lp (%)
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Circulating Supply
-            </th>
-            <th scope="col" className="w-24 text-center p-2">
-              Locked
-            </th>
-            <th scope="col" className="w-24 text-center p-2">
-              Unlocked
+              Claimed Lp (%)
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Vesting End

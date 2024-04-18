@@ -14,7 +14,7 @@ export interface LoginProviderProps {
 
 export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const { publicKey, disconnect } = useWallet();
+  const { publicKey, disconnect, signMessage } = useWallet();
 
   const signOut = async () => {
     if (auth) {
@@ -26,23 +26,36 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    if (user == null) {
+      if (publicKey && signMessage) {
+        handleLogin(publicKey, signMessage);
+      } else {
+        signInAnonymously(auth);
+      }
+    }
+  }, [user, publicKey]);
+
   const handleLogin = async (
     publicKey: PublicKey,
     signMessage: (message: Uint8Array) => Promise<Uint8Array>
   ) => {
     if ((user && publicKey.toBase58() !== user.uid) || !user) {
       try {
-        const currentUser = await signInAnonymously(auth);
-        const sessionKey = await currentUser.user.getIdToken();
+        let currentUser = user;
+        if (!currentUser) {
+          currentUser = (await signInAnonymously(auth)).user;
+        }
+        const sessionKey = await currentUser.getIdToken();
         const message = createLoginMessage(sessionKey.slice(0, 32));
         const output = await signMessage(new TextEncoder().encode(message));
         const token = await verifyAndGetToken(publicKey, output);
         // Sign in with Firebase Authentication using a custom token.
-        const user = await signInWithCustomToken(auth, token);
-        setUser(user.user);
+        const newUser = await signInWithCustomToken(auth, token);
+        setUser(newUser.user);
       } catch (error) {
         signOut();
-        throw Error(error as string);
+        console.log(error);
       }
     }
   };

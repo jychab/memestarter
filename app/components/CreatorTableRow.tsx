@@ -29,7 +29,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
     useWallet();
   const { connection } = useConnection();
   const { handleLogin } = useLogin();
-  const [unlockedMint, setUnlockedMint] = useState<number>();
+  const [unlockedLp, setUnlockedLp] = useState<number>();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,12 +42,15 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
     if (
       project.vestingStartedAt &&
       project.vestingPeriod &&
-      project.vestedSupply &&
+      project.amountLpReceived &&
       timer
     ) {
-      setUnlockedMint(
-        ((timer / 1000 - project.vestingStartedAt) * project.vestedSupply) /
-          project.vestingPeriod
+      setUnlockedLp(
+        Math.min(
+          ((timer / 1000 - project.vestingStartedAt) * 100) /
+            project.vestingPeriod,
+          100
+        )
       );
     }
   }, [timer, project]);
@@ -94,17 +97,15 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
     const {
       name,
       totalClaimed,
-      vestedSupply,
-      totalSupply,
+      amountLpReceived,
       creatorFeeBasisPoints,
       liquidityCollected,
-      symbol,
       presaleTarget,
       presaleTimeLimit,
       decimal,
-      vestingEndingAt,
-      amountLpWithdrawn,
       amountWsolWithdrawn,
+      vestingStartedAt,
+      vestingPeriod,
       image,
       pool,
     } = project;
@@ -139,12 +140,12 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
               (LAMPORTS_PER_SOL * 10000)
             } 
                Sol ${
-                 amountLpWithdrawn
-                   ? `& ${
-                       (amountLpWithdrawn * creatorFeeBasisPoints) /
+                 totalClaimed
+                   ? `& ${(
+                       (totalClaimed * creatorFeeBasisPoints) /
                        (10000 * 10 ** decimal)
-                     } 
-                      ${symbol}`
+                     ).toFixed(2)} 
+                      LP token`
                    : ""
                }`}
           </td>
@@ -181,42 +182,30 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
-            {formatLargeNumber(totalSupply / 10 ** decimal)}
+            {`${(unlockedLp ? unlockedLp : 0).toFixed(2)}%`}
           </td>
         )}
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
-            {formatLargeNumber(
-              (totalSupply - vestedSupply + (totalClaimed ? totalClaimed : 0)) /
-                10 ** decimal
-            )}
-          </td>
-        )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
-          <td scope="row" className="p-2 text-center">
-            {formatLargeNumber(
-              (vestedSupply - (unlockedMint ? unlockedMint : 0)) / 10 ** decimal
-            )}
-          </td>
-        )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
-          <td scope="row" className="p-2 text-center">
-            {formatLargeNumber(
-              (unlockedMint ? unlockedMint : 0) / 10 ** decimal
-            )}
+            {`${(totalClaimed && amountLpReceived
+              ? (totalClaimed / amountLpReceived) * 100
+              : 0
+            ).toFixed(2)}%`}
           </td>
         )}
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) &&
           timer && (
             <td scope="row" className="p-2 text-center">
-              {convertSecondsToNearestUnit(vestingEndingAt - timer / 1000)
-                .split(" ")
-                .slice(0, 2)
-                .join(" ")}
+              {vestingStartedAt + vestingPeriod > timer / 1000
+                ? convertSecondsToNearestUnit(
+                    vestingStartedAt + vestingPeriod - timer / 1000
+                  )
+                    .split(" ")
+                    .slice(0, 2)
+                    .join(" ")
+                : "Ended"}
             </td>
           )}
         {status === Status.Expired && (
@@ -267,5 +256,5 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
         </td>
       </tr>
     );
-  }, [project, timer, status, unlockedMint, loading, router, launch]);
+  }, [project, timer, status, unlockedLp, loading, router, launch]);
 };

@@ -24,12 +24,6 @@ export const CompletedTable: FC<CompletedTableProps> = ({
               Funded By You
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Mint Unlocked
-            </th>
-            <th scope="col" className="w-24 text-center p-2">
-              Mint Claimed
-            </th>
-            <th scope="col" className="w-24 text-center p-2">
               Lp Unlocked
             </th>
             <th scope="col" className="w-24 text-center p-2">

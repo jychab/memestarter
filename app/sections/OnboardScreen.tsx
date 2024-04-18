@@ -39,11 +39,9 @@ export const OnboardingScreen: FC = () => {
             <span className="col-span-1">2.</span>
             <span className="col-span-9">{`Choose a project and invest in their presale before it ends.`}</span>
             <span className="col-span-1">3.</span>
-            <span className="col-span-9">{`When the presale finishes, you can collect the tokens you've invested in and trade them on any decentralized exchange (DEX).`}</span>
+            <span className="col-span-9">{`When the presale finishes, you can collect the vested liquidity tokens and exchange them on Raydium.`}</span>
             <span className="col-span-1">4.</span>
             <span className="col-span-9">{`If the project doesn't reach its funding goal during the presale, you get your money back.`}</span>
-            <span className="col-span-1">5.</span>
-            <span className="col-span-9">{`Once the vesting period is over, you can retrieve the tokens you used to provide liquidity.`}</span>
           </div>
         </div>
       </div>
