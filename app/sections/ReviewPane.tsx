@@ -69,7 +69,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           </div>
         )}
         <span className="col-span-2 sm:col-span-1">Total Supply</span>
-        <span className="col-span-4 sm:col-span-2 text-black">
+        <span className="col-span-4 sm:col-span-5 text-black">
           {formatLargeNumber(totalSupply) + ` ${symbol}`}
         </span>
         {creatorFees && (
@@ -78,22 +78,18 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         <span className="col-span-4 sm:col-span-2 text-black">
           {creatorFees / 100 + "%"}
         </span>
-
-        <span className="col-span-2 sm:col-span-1">Vesting Period</span>
-        <span className="col-span-4 sm:col-span-2 text-black">
-          {convertSecondsToNearestUnit(vestingPeriod)}
-        </span>
-
-        <span className="col-span-2 sm:col-span-1">Presale Duration</span>
-        <span className="col-span-4 sm:col-span-2 text-black">
-          {convertSecondsToNearestUnit(presaleTime)}
-        </span>
-
         <span className="col-span-2 sm:col-span-1">Presale Target</span>
         <span className="col-span-4 sm:col-span-2 text-black">
           {presaleTarget / LAMPORTS_PER_SOL + ` Sol`}
         </span>
-
+        <span className="col-span-2 sm:col-span-1">Presale Duration</span>
+        <span className="col-span-4 sm:col-span-2 text-black">
+          {convertSecondsToNearestUnit(presaleTime)}
+        </span>
+        <span className="col-span-2 sm:col-span-1">Vesting Period</span>
+        <span className="col-span-4 sm:col-span-2 text-black">
+          {convertSecondsToNearestUnit(vestingPeriod)}
+        </span>
         {maxAmountPerPurchase && (
           <span className="col-span-2 sm:col-span-1">
             Max Allowed Per Purchase

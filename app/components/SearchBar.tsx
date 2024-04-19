@@ -53,7 +53,7 @@ export const SearchBar: FC<SearchBarProps> = ({ handleSelectedItem }) => {
         ref={searchText}
         onChange={handleChange}
         className="border text-xs rounded-lg block w-full max-w-48 p-2 border-gray-300 text-black focus:outline-none"
-        placeholder={"Search"}
+        placeholder={"Search Collections"}
       />
       <ul
         hidden={!(searchItems && searchItems.length > 0)}

@@ -22,7 +22,7 @@ export const Chip: FC<AttributeProps> = ({
     </div>
 
     <button
-      className={`${textColor} hover:${textColor}/50 focus:outline-none`}
+      className={`${bgColor} hover:${textColor}/50 focus:outline-none`}
       hidden={!dismiss}
       onClick={dismiss}
     >

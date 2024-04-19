@@ -168,7 +168,7 @@ function CreateCollection() {
               {page === 1 && (
                 <p>
                   Step 1 of 3:
-                  <span className="text-base"> Design Your Own Token</span>
+                  <span className="text-base"> Design Your Project Token</span>
                 </p>
               )}
               {page === 2 && (
@@ -176,7 +176,7 @@ function CreateCollection() {
                   Step 2 of 3:
                   <span className="text-base">
                     {" "}
-                    Customize Your Presale Launch
+                    Customize Your Presale Settings
                   </span>
                 </p>
               )}

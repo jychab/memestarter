@@ -1,13 +1,16 @@
 import React, { FC, useEffect, useRef, useState } from "react";
 import { Period } from "../sections/CustomisePrelaunchSettingsPane";
+import { Tooltip } from "./Tooltip";
 
 interface DurationPickerProps {
   title: string;
+  tooltip?: string;
   period: number;
   setPeriod: React.Dispatch<React.SetStateAction<number>>;
 }
 export const DurationPicker: FC<DurationPickerProps> = ({
   title,
+  tooltip = "",
   period,
   setPeriod,
 }) => {
@@ -67,13 +70,16 @@ export const DurationPicker: FC<DurationPickerProps> = ({
 
   return (
     <div className="grid grid-cols-2 gap-4 items-center">
-      <label htmlFor="time" className="text-sm font-medium text-gray-400">
-        {title}
-      </label>
+      <div className="flex items-center gap-2">
+        <label htmlFor={title} className="text-sm font-medium text-gray-400">
+          {title}
+        </label>
+        <Tooltip content={tooltip} />
+      </div>
       <div className="flex">
         <input
           type="number"
-          id="time"
+          id={title}
           className="rounded-none rounded-s-lg w-14 text-center leading-none text-sm p-2 border border-gray-300 text-black"
           value={value}
           onChange={(e) => setValue(e.target.value)}
