@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { db } from "../utils/firebase";
 import { PoolType } from "../utils/types";
 import CardItem from "../components/CardItem";
+import { OnboardingScreen } from "../sections/OnboardScreen";
 
 enum SortCriteria {
   presaleTimeLimit = "Ending Soon",
@@ -172,110 +173,113 @@ function Projects() {
   }, [showSort]);
 
   return (
-    <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
-      <div className="flex gap-4">
-        <div className="flex items-center justify-start">
-          <div className="relative">
-            <button
-              id="dropdown-type-button"
-              onClick={() => setShowFilter(!showFilter)}
-              className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
-              type="button"
-            >
-              {filterCriteria}
-              <svg
-                className="w-2.5 h-2.5 ms-2.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 10 6"
+    <>
+      <OnboardingScreen />
+      <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
+        <div className="flex gap-4">
+          <div className="flex items-center justify-start">
+            <div className="relative">
+              <button
+                id="dropdown-type-button"
+                onClick={() => setShowFilter(!showFilter)}
+                className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
+                type="button"
               >
-                <path stroke="currentColor" d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <div
-              id="dropdown-type"
-              hidden={!showFilter}
-              ref={filterDropDownRef}
-              className="z-20 mt-2 absolute rounded w-28"
-            >
-              <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
-                {Object.values(FilterCriteria).map((value, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="inline-flex w-full px-4 py-2 text-sm "
-                      onClick={() => {
-                        setFilterCriteria(value);
-                        setShowFilter(false);
-                      }}
-                    >
-                      {value}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                {filterCriteria}
+                <svg
+                  className="w-2.5 h-2.5 ms-2.5"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 10 6"
+                >
+                  <path stroke="currentColor" d="m1 1 4 4 4-4" />
+                </svg>
+              </button>
+              <div
+                id="dropdown-type"
+                hidden={!showFilter}
+                ref={filterDropDownRef}
+                className="z-20 mt-2 absolute rounded w-28"
+              >
+                <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
+                  {Object.values(FilterCriteria).map((value, index) => (
+                    <li key={index}>
+                      <button
+                        type="button"
+                        className="inline-flex w-full px-4 py-2 text-sm "
+                        onClick={() => {
+                          setFilterCriteria(value);
+                          setShowFilter(false);
+                        }}
+                      >
+                        {value}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-start">
+            <div className="relative">
+              <button
+                id="dropdown-type-button"
+                onClick={() => setShowSort(!showSort)}
+                className="relative flex-shrink-0 z-10 w-48 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
+                type="button"
+              >
+                {`Sort: ${sortCriteria}`}
+                <svg
+                  className="w-2.5 h-2.5 ms-2.5"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 10 6"
+                >
+                  <path stroke="currentColor" d="m1 1 4 4 4-4" />
+                </svg>
+              </button>
+              <div
+                id="dropdown-type"
+                hidden={!showSort}
+                ref={sortDropDownRef}
+                className="z-20 mt-2 absolute rounded w-48"
+              >
+                <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
+                  {Object.values(SortCriteria).map((value, index) => (
+                    <li key={index}>
+                      <button
+                        type="button"
+                        className="inline-flex w-full px-4 py-2 text-sm "
+                        onClick={() => {
+                          setSortCriteria(value);
+                          setShowSort(false);
+                        }}
+                      >
+                        {value}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-start">
-          <div className="relative">
-            <button
-              id="dropdown-type-button"
-              onClick={() => setShowSort(!showSort)}
-              className="relative flex-shrink-0 z-10 w-48 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
-              type="button"
-            >
-              {`Sort: ${sortCriteria}`}
-              <svg
-                className="w-2.5 h-2.5 ms-2.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 10 6"
-              >
-                <path stroke="currentColor" d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <div
-              id="dropdown-type"
-              hidden={!showSort}
-              ref={sortDropDownRef}
-              className="z-20 mt-2 absolute rounded w-48"
-            >
-              <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
-                {Object.values(SortCriteria).map((value, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="inline-flex w-full px-4 py-2 text-sm "
-                      onClick={() => {
-                        setSortCriteria(value);
-                        setShowSort(false);
-                      }}
-                    >
-                      {value}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {projects &&
+            projects.length > 0 &&
+            projects.map((project) => (
+              <CardItem pool={project} key={project.pool} timer={timer} />
+            ))}
         </div>
+        {loading && (
+          <span className="text-black flex items-center justify-center">
+            Loading...
+          </span>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        {projects &&
-          projects.length > 0 &&
-          projects.map((project) => (
-            <CardItem pool={project} key={project.pool} timer={timer} />
-          ))}
-      </div>
-      {loading && (
-        <span className="text-black flex items-center justify-center">
-          Loading...
-        </span>
-      )}
-    </div>
+    </>
   );
 }
 

@@ -1,11 +1,16 @@
-import { FC, useState } from "react";
+import { useLocalStorage } from "@solana/wallet-adapter-react";
+import { FC, useEffect, useState } from "react";
 
 export const OnboardingScreen: FC = () => {
-  const [hidden, setHidden] = useState(false);
-  return (
+  const [hydrated, setHydrated] = useState<boolean>(false);
+  const [hidden, setHidden] = useLocalStorage("onboarding", false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  return hydrated ? (
     !hidden && (
-      <div className="fixed z-50 w-full h-full flex bg-transparent items-center justify-center">
-        <div className="absolute flex flex-col gap-4 border w-5/6 max-w-screen-sm border-gray-400 bg-white rounded p-4">
+      <div className="fixed z-50 w-full h-full flex bg-transparent items-start justify-center">
+        <div className="absolute flex flex-col gap-4 border w-5/6 max-w-screen-sm border-gray-400 bg-white text-black rounded p-4">
           <div className="flex items-center justify-between">
             <span className="text-base">How does it work?</span>
             <button onClick={() => setHidden(true)}>
@@ -46,5 +51,7 @@ export const OnboardingScreen: FC = () => {
         </div>
       </div>
     )
+  ) : (
+    <span>{"Loading..."}</span>
   );
 };

@@ -100,7 +100,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
           vestingPeriod
         )}`}</span>
-        <span className="text-[10px]">{`vesting period`}</span>
+        <span className="text-[10px]">{`vesting duration`}</span>
       </div>
       {description && (
         <span className="uppercase text-xs col-span-10">About</span>

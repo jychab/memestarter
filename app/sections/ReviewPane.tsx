@@ -86,7 +86,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         <span className="col-span-4 sm:col-span-2 text-black">
           {convertSecondsToNearestUnit(presaleTime)}
         </span>
-        <span className="col-span-2 sm:col-span-1">Vesting Period</span>
+        <span className="col-span-2 sm:col-span-1">Vesting Duration</span>
         <span className="col-span-4 sm:col-span-2 text-black">
           {convertSecondsToNearestUnit(vestingPeriod)}
         </span>
