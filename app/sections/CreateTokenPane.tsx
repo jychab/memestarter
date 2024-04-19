@@ -128,7 +128,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
         <div className="relative z-0 w-full group">
           <input
             type="text"
-            maxLength={10}
+            maxLength={200}
             name="floating_externalUrl"
             id="floating_externalUrl"
             className="block py-2.5 px-0 w-full text-sm bg-transparent border-0 border-b-2 appearance-none text-black border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer"

@@ -38,6 +38,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
         <div className="group cursor overflow-hidden rounded shadow-xl duration-200 hover:-translate-y-4">
           <div className="relative w-40 h-40 lg:w-60 lg:h-60 overflow-hidden">
             <Image
+              priority={true}
               className={`rounded object-cover cursor-pointer`}
               fill={true}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

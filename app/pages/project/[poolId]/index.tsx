@@ -61,12 +61,12 @@ export function Pool() {
 
   useEffect(() => {
     if (poolId) {
-      const coll = collection(db, `Pool/${poolId}/Mint`);
-      getCountFromServer(coll).then((result) =>
-        setUniqueBackers(result.data().count)
-      );
       const unsubscribe = onSnapshot(doc(db, `Pool/${poolId}`), (doc) => {
         if (doc.exists()) {
+          const coll = collection(db, `Pool/${poolId}/Mint`);
+          getCountFromServer(coll).then((result) =>
+            setUniqueBackers(result.data().count)
+          );
           const poolData = doc.data() as PoolType;
           setPool(poolData);
           setStatus(getStatus(poolData));

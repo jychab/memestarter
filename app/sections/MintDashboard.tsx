@@ -326,14 +326,17 @@ export const MintDashboard: FC<InventoryItemProps> = ({
           )}
         </div>
         <div className="flex gap-4">
-          <div className="relative h-40 w-40">
-            <Image
-              className={`rounded object-cover`}
-              fill={true}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              src={image || ""}
-              alt={""}
-            />
+          <div className="relative h-32 w-32 md:h-40 md:w-40">
+            {image && (
+              <Image
+                priority={true}
+                className={`rounded object-cover`}
+                fill={true}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                src={image}
+                alt={""}
+              />
+            )}
           </div>
           <div className="flex flex-col w-1/2 lg:w-3/4 gap-2">
             <div className="flex flex-col w-full">

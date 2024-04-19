@@ -49,19 +49,29 @@ export const UserProfileBtn: FC = () => {
       <button
         type="button"
         onClick={() => setExpand(!expand)}
-        className="flex rounded md:me-0"
+        className="flex rounded md:me-0 relative w-10 h-10"
         id="user-menu-button"
       >
-        <Image
-          className="rounded-full"
-          width={35}
-          height={35}
-          src={
-            nft?.content?.links?.image ||
-            (wallet ? wallet.adapter.icon : placeholder)
-          }
-          alt={""}
-        />
+        {nft ? (
+          <Image
+            className={`rounded-full object-cover cursor-pointer`}
+            fill={true}
+            priority={true}
+            sizes="33vw"
+            quality={100}
+            src={nft.content?.links?.image || placeholder}
+            alt={""}
+          />
+        ) : (
+          <Image
+            className={`rounded-full object-cover cursor-pointer`}
+            fill={true}
+            priority={true}
+            sizes="33vw"
+            src={wallet ? wallet.adapter.icon : placeholder}
+            alt={""}
+          />
+        )}
       </button>
       <div
         ref={dialogRef}

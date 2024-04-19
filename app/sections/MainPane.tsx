@@ -22,6 +22,7 @@ export const MainPane: FC<MainPaneProps> = ({
     <div className="flex gap-4 overflow-x-auto ">
       <div className="relative h-40 w-40 lg:w-60 lg:h-60">
         <Image
+          priority={true}
           className={`rounded object-cover cursor-pointer`}
           fill={true}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
