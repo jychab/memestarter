@@ -62,7 +62,7 @@ export interface CreateMarketArgs {
 export interface BuyPresaleArgs {
   amount: number;
   nft: PublicKey;
-  nftCollection: PublicKey;
+  nftCollection?: PublicKey;
   poolId: PublicKey;
   signer: PublicKey;
 }

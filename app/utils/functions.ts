@@ -130,16 +130,20 @@ export async function buyPresale(
   ) {
     throw Error(`Insufficient Sol. You need at least ${amountToPurchase} Sol.`);
   }
-  const nftCollection = getCollectionMintAddress(nft);
-  if (!nftCollection) {
-    throw Error("NFT has no collection");
+  let nftCollection;
+  if (pool.collectionsRequired) {
+    const collectionMintAddress = getCollectionMintAddress(nft);
+    if (!collectionMintAddress) {
+      throw Error("NFT has no collection");
+    }
+    nftCollection = new PublicKey(collectionMintAddress);
   }
 
   const ix = await buyPresaleIx(
     {
       amount: parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
       nft: new PublicKey(nft.id),
-      nftCollection: new PublicKey(nftCollection),
+      nftCollection: nftCollection,
       poolId: new PublicKey(pool.pool),
       signer: publicKey,
     },

@@ -291,6 +291,7 @@ export async function buyPresaleIx(
     [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
     program(connection).programId
   );
+
   const poolAndWSOLATA = getAssociatedTokenAddressSync(
     NATIVE_MINT,
     args.poolId,
@@ -311,12 +312,7 @@ export async function buyPresaleIx(
   );
 
   let purchaseAuthorisationRecord: PublicKey | null = null;
-  const poolData = await program(connection).account.pool.fetchNullable(
-    args.poolId
-  );
-  if (poolData === null) {
-    throw Error("Pool does not exist!");
-  } else if (poolData.requiresCollection) {
+  if (args.nftCollection) {
     [purchaseAuthorisationRecord] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorisation"),
@@ -326,6 +322,7 @@ export async function buyPresaleIx(
       program(connection).programId
     );
   }
+
   return await program(connection)
     .methods.buyPresale(new BN(args.amount))
     .accounts({
