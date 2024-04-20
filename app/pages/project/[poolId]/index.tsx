@@ -36,9 +36,8 @@ export function Pool() {
   const [mint, setMint] = useState<MintType>();
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
   const [price, setPrice] = useState<number>();
-  const { publicKey, signTransaction, signAllTransactions, signMessage } =
-    useWallet();
-  const { handleLogin } = useLogin();
+  const { publicKey, signTransaction, signMessage } = useWallet();
+  const { user, handleLogin } = useLogin();
   const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
@@ -76,33 +75,31 @@ export function Pool() {
     }
   }, [poolId]);
   useCallback(() => {
-    if (pool) {
+    if (
+      pool &&
+      status &&
+      (status == Status.VestingInProgress || status == Status.VestingCompleted)
+    ) {
       getCurrentPrice(pool.mint).then((res) => setPrice(res.data.value));
     }
-  }, [pool]);
+  }, [status, pool]);
 
   const launch = useCallback(async () => {
     if (
       !(
+        user &&
         publicKey &&
         connection &&
         pool &&
         signMessage &&
-        signTransaction &&
-        signAllTransactions
+        signTransaction
       )
     )
       return;
     try {
       setLoading(true);
       await handleLogin(publicKey, signMessage);
-      await launchToken(
-        pool,
-        connection,
-        publicKey,
-        signTransaction,
-        signAllTransactions
-      );
+      await launchToken(pool, connection, publicKey, signTransaction);
       toast.success("Success!");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
@@ -110,12 +107,15 @@ export function Pool() {
       setLoading(false);
     }
   }, [
+    user,
     publicKey,
     connection,
     pool,
+    loading,
+    setLoading,
     signMessage,
     signTransaction,
-    signAllTransactions,
+    handleLogin,
   ]);
 
   const buy = useCallback(async () => {

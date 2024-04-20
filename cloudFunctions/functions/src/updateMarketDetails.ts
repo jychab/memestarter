@@ -5,15 +5,18 @@ import {Pool} from "./utils/types";
 interface UpdateMarket {
   poolId: string;
   marketDetails: {
-    marketId: string;
-    requestQueue: string;
-    eventQueue: string;
-    bids: string;
-    asks: string;
-    baseVault: string;
-    quoteVault: string;
-    baseMint: string;
-    quoteMint: string;
+    created: boolean;
+    vaultSignerNonce?: number;
+    marketId?: string;
+    marketSeed?: string;
+    requestQueue?: string;
+    eventQueue?: string;
+    bids?: string;
+    asks?: string;
+    baseVault?: string;
+    quoteVault?: string;
+    baseMint?: string;
+    quoteMint?: string;
   };
 }
 
@@ -38,6 +41,6 @@ export default async function updateMarketDetails(
     );
   }
   await db
-    .doc(`Pool/${data.poolId}/Market/${data.marketDetails.baseMint}`)
+    .doc(`Pool/${data.poolId}/Market/${data.marketDetails.marketId}`)
     .set(data.marketDetails);
 }

@@ -8,13 +8,13 @@ type UserDetailProps = {
   poolCreator: string;
   poolId: string;
   username: string;
-  createdAt: Timestamp;
+  createdAt: number;
 };
 const UserDetail = (props: UserDetailProps) => {
   const username = props.username;
   const createdAt = `${
     props.createdAt
-      ? convertSecondsToNearestUnit(Date.now() / 1000 - props.createdAt.seconds)
+      ? convertSecondsToNearestUnit((Date.now() - props.createdAt) / 1000)
           .split(" ")
           .slice(0, 2)
           .join(" ") + " ago"

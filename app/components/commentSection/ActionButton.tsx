@@ -50,7 +50,7 @@ const ActionButton = (props: ActionButtonProps) => {
             pinned: false,
             id: crypto.randomUUID(),
             content: commentValue,
-            createdAt: serverTimestamp() as Timestamp,
+            createdAt: Date.now(),
             score: 0,
             user: {
               publicKey: publicKey.toBase58(),
@@ -70,7 +70,7 @@ const ActionButton = (props: ActionButtonProps) => {
             user: {
               publicKey: publicKey.toBase58(),
             },
-            createdAt: serverTimestamp() as Timestamp,
+            createdAt: Date.now(),
             replyingTo: replyingTo ?? "",
             positiveScoreRecord: [],
             negativeScoreRecord: [],

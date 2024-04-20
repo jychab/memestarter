@@ -11,16 +11,15 @@ const UserLabel = (props: UserLabelProps) => {
   const user = props.commentUser;
   const creator = props.creator;
   return (
-    publicKey &&
-    (user == publicKey.toBase58() || creator == publicKey.toBase58()) && (
+    ((publicKey && user == publicKey.toBase58()) || creator == user) && (
       <div
         className={`uppercase rounded ${
-          user == publicKey.toBase58()
+          publicKey && user == publicKey.toBase58()
             ? "bg-blue-600 text-white"
             : "text-red-800"
         } text-xs font-medium py-0.5 px-1.5 flex items-center justify-center `}
       >
-        {user == publicKey.toBase58() ? "you" : "Creator"}
+        {publicKey && user == publicKey.toBase58() ? "you" : "Creator"}
       </div>
     )
   );

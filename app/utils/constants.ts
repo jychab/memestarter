@@ -1,4 +1,8 @@
-import { DEVNET_PROGRAM_ID, MAINNET_PROGRAM_ID } from "@raydium-io/raydium-sdk";
+import {
+  DEVNET_PROGRAM_ID,
+  LOOKUP_TABLE_CACHE,
+  MAINNET_PROGRAM_ID,
+} from "@raydium-io/raydium-sdk";
 import { PublicKey } from "@solana/web3.js";
 
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
@@ -29,3 +33,8 @@ export const OPENBOOK_MARKET_PROGRAM_ID =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
     ? MAINNET_PROGRAM_ID.OPENBOOK_MARKET
     : DEVNET_PROGRAM_ID.OPENBOOK_MARKET;
+
+export const LOOKUP_TABLE =
+  process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
+    ? LOOKUP_TABLE_CACHE
+    : undefined;

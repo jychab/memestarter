@@ -19,7 +19,7 @@ export interface IReply {
   content: string;
   score: number;
   user: IUser;
-  createdAt: Timestamp;
+  createdAt: number;
   replyingTo: string;
   negativeScoreRecord: Array<string>;
   positiveScoreRecord: Array<string>;
@@ -28,7 +28,7 @@ export type IComment = {
   pinned: boolean;
   id: string;
   content: string;
-  createdAt: Timestamp;
+  createdAt: number;
   score: number;
   user: IUser;
   numReplies: number;
@@ -133,15 +133,18 @@ export interface UpdateMarketDataArgs {
   marketDetails: MarketDetails;
 }
 export interface MarketDetails {
+  created: boolean;
+  vaultSignerNonce?: number;
   marketId: string;
-  requestQueue: string;
-  eventQueue: string;
-  bids: string;
-  asks: string;
-  baseVault: string;
-  quoteVault: string;
-  baseMint: string;
-  quoteMint: string;
+  marketSeed?: string;
+  requestQueue?: string;
+  eventQueue?: string;
+  bids?: string;
+  asks?: string;
+  baseVault?: string;
+  quoteVault?: string;
+  baseMint?: string;
+  quoteMint?: string;
 }
 
 export interface DetermineOptimalParams {

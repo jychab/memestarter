@@ -25,8 +25,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status>();
-  const { publicKey, signTransaction, signMessage, signAllTransactions } =
-    useWallet();
+  const { publicKey, signTransaction, signMessage } = useWallet();
   const { connection } = useConnection();
   const { handleLogin } = useLogin();
   const [unlockedLp, setUnlockedLp] = useState<number>();
@@ -56,27 +55,12 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
   }, [timer, project]);
 
   const launch = useCallback(async () => {
-    if (
-      !(
-        publicKey &&
-        connection &&
-        project &&
-        signMessage &&
-        signTransaction &&
-        signAllTransactions
-      )
-    )
+    if (!(publicKey && connection && project && signMessage && signTransaction))
       return;
     try {
       setLoading(true);
       await handleLogin(publicKey, signMessage);
-      await launchToken(
-        project,
-        connection,
-        publicKey,
-        signTransaction,
-        signAllTransactions
-      );
+      await launchToken(project, connection, publicKey, signTransaction);
       toast.success("Success!");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
@@ -88,8 +72,8 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
     project,
     connection,
     signMessage,
-    signAllTransactions,
     signTransaction,
+    handleLogin,
   ]);
 
   return useMemo(() => {

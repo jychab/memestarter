@@ -43,7 +43,8 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
       project.vestingPeriod &&
       project.decimal &&
       timer &&
-      project.vestingStartedAt
+      project.vestingStartedAt &&
+      project.lpElligible
     ) {
       if (
         project.lastClaimedAt &&

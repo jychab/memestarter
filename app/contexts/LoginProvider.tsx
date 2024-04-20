@@ -3,7 +3,6 @@ import { LoginContext } from "../hooks/useLogin";
 import { User, signInAnonymously, signInWithCustomToken } from "firebase/auth";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { auth } from "../utils/firebase";
-import { toast } from "react-toastify";
 import { createLoginMessage } from "../utils/helper";
 import { PublicKey } from "@solana/web3.js";
 import { verifyAndGetToken } from "../utils/cloudFunctions";
@@ -64,6 +63,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     <LoginContext.Provider
       value={{
         signOut,
+        user,
         handleLogin,
       }}
     >

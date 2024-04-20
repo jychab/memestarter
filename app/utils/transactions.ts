@@ -57,7 +57,9 @@ export async function buildAndSendTransaction(
     // probably should add some margin of error to units
     console.log(`Compute Units: ${units}`);
     ixs.unshift(
-      ComputeBudgetProgram.setComputeUnitLimit({ units: units * 1.1 })
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: Math.max(units * 1.1, 10000),
+      })
     );
   }
   let tx = new VersionedTransaction(
@@ -76,24 +78,4 @@ export async function buildAndSendTransaction(
     blockhash: recentBlockhash.blockhash,
     lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
   });
-}
-export async function sendTransactions(
-  connection: Connection,
-  txs: VersionedTransaction[],
-  signAllTransactions: <T extends VersionedTransaction | Transaction>(
-    transactions: T[]
-  ) => Promise<T[]>
-) {
-  const recentBlockhash = await connection.getLatestBlockhash();
-  const signedTxs = await signAllTransactions(txs);
-  for (let signedTx of signedTxs) {
-    const txId = await connection.sendTransaction(
-      signedTx as VersionedTransaction
-    );
-    await connection.confirmTransaction({
-      signature: txId,
-      blockhash: recentBlockhash.blockhash,
-      lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
-    });
-  }
 }
