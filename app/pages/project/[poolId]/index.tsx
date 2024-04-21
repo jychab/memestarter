@@ -74,13 +74,15 @@ export function Pool() {
       return () => unsubscribe();
     }
   }, [poolId]);
-  useCallback(() => {
+  useEffect(() => {
     if (
       pool &&
       status &&
       (status == Status.VestingInProgress || status == Status.VestingCompleted)
     ) {
-      getCurrentPrice(pool.mint).then((res) => setPrice(res.data.value));
+      getCurrentPrice(pool.mint).then((res) => {
+        setPrice(res.data.value);
+      });
     }
   }, [status, pool]);
 

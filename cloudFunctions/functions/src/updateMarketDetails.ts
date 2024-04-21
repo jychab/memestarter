@@ -42,5 +42,5 @@ export default async function updateMarketDetails(
   }
   await db
     .doc(`Pool/${data.poolId}/Market/${data.marketDetails.marketId}`)
-    .set(data.marketDetails);
+    .set(data.marketDetails, {merge: true});
 }

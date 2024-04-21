@@ -148,14 +148,12 @@ export function createLoginMessage(sessionKey: string) {
 function countDecimalPlaces(number: number) {
   // Convert number to string
   var numStr = number.toString();
-
   // If number is in scientific notation
   if (numStr.indexOf("e") !== -1) {
     // Extract exponent part
     var exponent = parseInt(numStr.split("e")[1]);
-
     // Return the negative exponent as the number of decimal places
-    return -exponent;
+    return -exponent - 1;
   }
   // Find the position of the decimal point
   var decimalPosition = numStr.indexOf(".");
@@ -163,7 +161,6 @@ function countDecimalPlaces(number: number) {
   if (decimalPosition === -1) {
     return 0;
   }
-
   // Look for the first non-zero digit after the decimal point
   var nonZeroIndex = decimalPosition + 1;
   while (nonZeroIndex < numStr.length && numStr.charAt(nonZeroIndex) === "0") {
@@ -184,7 +181,6 @@ export async function determineOptimalParameters(
   const amountInSol =
     (poolData.liquidityCollected * (10000 - poolData.creatorFeeBasisPoints)) /
     (LAMPORTS_PER_SOL * 10000);
-
   const response = await getCurrentPrice(NATIVE_MINT.toBase58());
   const amountInUSD = amountInSol * response.data.value;
   const amountOfCoin = poolData.totalSupply / 10 ** args.decimal;
@@ -195,4 +191,45 @@ export async function determineOptimalParameters(
   const orderSizeDecimals = Math.min(maxDecimals - tickDecimals, 6);
   const optimalOrderSize = 1 / Math.pow(10, orderSizeDecimals);
   return { tickSize: tickSize, orderSize: optimalOrderSize };
+}
+
+function getFirstFourNonZeroDigits(number: number) {
+  // Convert the number to a string
+  let numberString = number.toString();
+
+  // Initialize result string
+  let result = "";
+
+  // Flag to track if we've encountered any non-zero digit yet
+  let nonZeroFound = false;
+
+  // Iterate through each character in the string
+  for (let i = 0; i < numberString.length; i++) {
+    // Check if the character is a non-zero digit and if we haven't found any non-zero digit yet
+    if (numberString[i] !== "0" && !nonZeroFound) {
+      nonZeroFound = true; // Set the flag to true
+    }
+    // If we've found a non-zero digit, append it to the result
+    if (nonZeroFound && numberString[i] !== ".") {
+      result += numberString[i];
+    }
+    // Break the loop if we have found four non-zero digits
+    if (result.length === 4) break;
+  }
+
+  return result;
+}
+
+export function convertToCustomFormat(number: number) {
+  const integerPart = getFirstFourNonZeroDigits(number);
+  const decimalPlaces = countDecimalPlaces(number);
+  let result = "";
+  if (decimalPlaces) {
+    result += "0.0";
+    result += decimalPlaces
+      .toString()
+      .replace(/\d/g, (m) => "₀₁₂₃₄₅₆₇₈₉"[parseInt(m)]);
+  }
+  result += integerPart;
+  return result;
 }

@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 import {
   convertSecondsToNearestUnit,
+  convertToCustomFormat,
   formatLargeNumber,
 } from "../utils/helper";
 
@@ -34,14 +35,16 @@ export const VestingDashboard: FC<VestingDashboardProps> = ({
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">
             {price
-              ? formatLargeNumber((price * totalSupply) / 10 ** decimal)
+              ? "$" + formatLargeNumber((price * totalSupply) / 10 ** decimal)
               : 0}
           </span>
         </div>
         <span className="text-[10px]">{`market cap`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
-        <span className="text-sm text-black">{`${price ? price : 0}`}</span>
+        <span className="text-sm text-black">{`${
+          price ? "$" + convertToCustomFormat(price) : 0
+        }`}</span>
         <span className="text-[10px]">{`price`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
