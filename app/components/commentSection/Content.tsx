@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import ActionButton from "./ActionButton";
-import { IUser } from "../../utils/types";
 
 type ContentProps = {
   poolId: string;
   content: string;
   replyingTo?: string;
   isEditing: boolean;
-  currentUser: IUser;
+  currentUser?: string;
   commentId: string;
   onIsEditingChange: () => void;
   replyIdToUpdate?: string;
@@ -62,7 +61,6 @@ const Content = (props: ContentProps) => {
               replyId={replyIdToUpdate}
               onIsEditingChange={onIsEditingChange}
               commentId={commentId}
-              currentUser={currentUser}
               commentValue={commentValue}
               action="update"
               poolId={poolId}

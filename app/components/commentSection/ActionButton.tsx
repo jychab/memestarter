@@ -1,12 +1,11 @@
 import React from "react";
-import { IComment, IReply, IUser } from "../../utils/types";
+import { IComment, IReply } from "../../utils/types";
 import {
   handleAddComment,
   handleReplyComment,
   handleUpdateComment,
   handleUpdateReply,
 } from "../../utils/cloudFunctions";
-import { FieldValue, Timestamp, serverTimestamp } from "firebase/firestore";
 import { useLogin } from "../../hooks/useLogin";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "react-toastify";
@@ -14,7 +13,6 @@ import { toast } from "react-toastify";
 type ActionButtonProps = {
   poolId: string;
   action: string;
-  currentUser: IUser;
   commentValue: string;
   replyingTo?: string;
   replyId?: string;
@@ -28,7 +26,6 @@ type ActionButtonProps = {
 const ActionButton = (props: ActionButtonProps) => {
   const poolId = props.poolId;
   const action = props.action;
-  const currentUser = props.currentUser;
   const commentValue = props.commentValue;
   const replyingTo = props.replyingTo;
   const commentId = props.commentId;
@@ -52,9 +49,7 @@ const ActionButton = (props: ActionButtonProps) => {
             content: commentValue,
             createdAt: Date.now(),
             score: 0,
-            user: {
-              publicKey: publicKey.toBase58(),
-            },
+            user: publicKey.toBase58(),
             numReplies: 0,
             positiveScoreRecord: [],
             negativeScoreRecord: [],
@@ -67,9 +62,7 @@ const ActionButton = (props: ActionButtonProps) => {
             id: crypto.randomUUID(),
             content: commentValue,
             score: 0,
-            user: {
-              publicKey: publicKey.toBase58(),
-            },
+            user: publicKey.toBase58(),
             createdAt: Date.now(),
             replyingTo: replyingTo ?? "",
             positiveScoreRecord: [],

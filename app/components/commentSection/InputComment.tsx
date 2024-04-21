@@ -1,13 +1,10 @@
 "use client";
 
-import React, { ChangeEventHandler, useState } from "react";
+import React, { useState } from "react";
 import ActionButton from "./ActionButton";
-import Avatar from "./Avatar";
-import { IUser, IReply, IComment } from "../../utils/types";
 
 type InputCommentProps = {
   poolId: string;
-  currentUser: IUser;
   action: string;
   replyingTo?: string;
   commentId?: string;
@@ -16,7 +13,6 @@ type InputCommentProps = {
 };
 
 const InputComment = (props: InputCommentProps) => {
-  const currentUser = props.currentUser;
   const action = props.action;
   const replyingTo = props.replyingTo;
   const commentId = props.commentId;
@@ -56,7 +52,6 @@ const InputComment = (props: InputCommentProps) => {
         onIsReplyingChange={onIsReplyingChange}
         replyingTo={replyingTo}
         commentId={commentId}
-        currentUser={currentUser}
         commentValue={commentValue}
         action={action}
       />

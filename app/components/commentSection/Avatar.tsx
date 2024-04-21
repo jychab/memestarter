@@ -2,12 +2,12 @@ import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import logo from "../../public/logo.png";
 import { useRouter } from "next/router";
-import { DAS, IUser } from "../../utils/types";
+import { DAS } from "../../utils/types";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 
 type AvatarProps = {
-  user: IUser;
+  user: string;
 };
 
 const Avatar = (props: AvatarProps) => {
@@ -15,7 +15,7 @@ const Avatar = (props: AvatarProps) => {
   const [nft, setNft] = useState<DAS.GetAssetResponse>();
   useEffect(() => {
     if (user && !nft) {
-      getDoc(doc(db, `Users/${user.publicKey}`)).then((res) => {
+      getDoc(doc(db, `Users/${user}`)).then((res) => {
         if (res.exists()) {
           setNft((res.data() as { nft: DAS.GetAssetResponse }).nft);
         } else {

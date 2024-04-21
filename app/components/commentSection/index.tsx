@@ -1,8 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import InputComment from "./InputComment";
 import Comment from "./Comment";
-import { IUser, IComment, IReply } from "../../utils/types";
-import { PublicKey } from "@solana/web3.js";
+import { IComment } from "../../utils/types";
 import {
   collection,
   getCountFromServer,
@@ -56,19 +55,13 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
           <Comment
             key={value.id}
             poolId={poolId}
-            currentUser={{ publicKey: publicKey?.toBase58() }}
+            currentUser={publicKey?.toBase58()}
             comment={value}
             poolCreator={poolCreator}
           />
         );
       })}
-      {publicKey && (
-        <InputComment
-          currentUser={{ publicKey: publicKey?.toBase58() }}
-          action="send"
-          poolId={poolId}
-        />
-      )}
+      {publicKey && <InputComment action="send" poolId={poolId} />}
       {maxComments < numComments && (
         <button
           onClick={() => setMaxComments(maxComments + 10)}

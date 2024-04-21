@@ -16,14 +16,12 @@ export enum Status {
   Initialized = "Initialized",
   Ended = "Ended",
 }
-export interface IUser {
-  publicKey?: string;
-}
+
 export interface IReply {
   id: string;
   content: string;
   score: number;
-  user: IUser;
+  user: string;
   createdAt: Timestamp;
   replyingTo: string;
   negativeScoreRecord: Array<string>;
@@ -35,7 +33,7 @@ export type IComment = {
   content: string;
   createdAt: Timestamp;
   score: number;
-  user: IUser;
+  user: string;
   numReplies: number;
   negativeScoreRecord: Array<string>;
   positiveScoreRecord: Array<string>;

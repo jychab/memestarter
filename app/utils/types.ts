@@ -11,14 +11,11 @@ import {
 } from "./enums";
 import { FieldValue, Timestamp } from "firebase/firestore";
 
-export interface IUser {
-  publicKey?: string;
-}
 export interface IReply {
   id: string;
   content: string;
   score: number;
-  user: IUser;
+  user: string;
   createdAt: number;
   replyingTo: string;
   negativeScoreRecord: Array<string>;
@@ -30,7 +27,7 @@ export type IComment = {
   content: string;
   createdAt: number;
   score: number;
-  user: IUser;
+  user: string;
   numReplies: number;
   negativeScoreRecord: Array<string>;
   positiveScoreRecord: Array<string>;

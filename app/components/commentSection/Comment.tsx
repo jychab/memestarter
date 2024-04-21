@@ -9,7 +9,7 @@ import Reply from "./Reply";
 import InputComment from "./InputComment";
 import DeleteButton from "./DeleteButton";
 import EditButton from "./EditButton";
-import { IUser, IComment, IReply } from "../../utils/types";
+import { IComment, IReply } from "../../utils/types";
 import Avatar from "./Avatar";
 import {
   onSnapshot,
@@ -25,7 +25,7 @@ import PinnedButton from "./PinnedButton";
 type CommentProps = {
   poolId: string;
   poolCreator: string;
-  currentUser: IUser;
+  currentUser?: string;
   comment: IComment;
 };
 
@@ -38,8 +38,7 @@ const Comment = (props: CommentProps) => {
   const comment = props.comment;
   const currentUser = props.currentUser;
   const numReplies = props.comment.numReplies;
-  const isCurrentUser =
-    comment.user.publicKey == currentUser.publicKey ? true : false;
+  const isCurrentUser = comment.user == currentUser ? true : false;
   const [replies, setReplies] = useState<IReply[]>([]);
   const [maxReplies, setMaxReplies] = useState(5);
   const { publicKey } = useWallet();
@@ -84,7 +83,7 @@ const Comment = (props: CommentProps) => {
             <UserDetail
               poolCreator={poolCreator}
               poolId={poolId}
-              username={comment.user.publicKey!}
+              username={comment.user}
               createdAt={comment.createdAt}
             />
             <Content
@@ -145,8 +144,7 @@ const Comment = (props: CommentProps) => {
         <InputComment
           onIsReplyingChange={handleIsReplyingChange}
           commentId={comment.id}
-          replyingTo={comment.user.publicKey!}
-          currentUser={currentUser}
+          replyingTo={comment.user}
           action="reply"
           poolId={poolId}
         />
