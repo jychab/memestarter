@@ -10,8 +10,7 @@ export default async function handler(
     return res.status(403).json({ message: "Method not allowed!" });
   }
   const { id } = req.query;
-  const storageRef = ref(getStorage(), id as string);
-  const url = await getDownloadURL(storageRef);
+  const url = `https://firebasestorage.googleapis.com/v0/b/memestarter-ca939.appspot.com/o/${id}?alt=media`;
   const { data } = await axios.get(url);
   res.status(200).json(data);
 }
