@@ -194,6 +194,7 @@ export async function launchToken(
   toast.info("Launching Token...");
   const ix4 = await launchTokenAmm(
     {
+      decimals: pool.decimal,
       marketId: new PublicKey(marketId),
       mint: new PublicKey(pool.mint),
       signer: publicKey,

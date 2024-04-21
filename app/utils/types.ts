@@ -47,6 +47,7 @@ export enum Status {
 export interface LaunchTokenAmmArgs {
   marketId: PublicKey;
   mint: PublicKey;
+  decimals: number;
   signer: PublicKey;
   poolAuthority: PublicKey;
   poolId: PublicKey;

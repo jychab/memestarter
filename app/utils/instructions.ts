@@ -197,7 +197,7 @@ export async function launchTokenAmm(
     marketId: args.marketId,
     baseMint: args.mint,
     quoteMint: NATIVE_MINT,
-    baseDecimals: 6,
+    baseDecimals: args.decimals,
     quoteDecimals: WSOL.decimals,
     programId: RAYDIUM_AMM_V4,
     marketProgramId: OPENBOOK_MARKET_PROGRAM_ID,
