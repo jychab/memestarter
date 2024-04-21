@@ -94,7 +94,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({
       pool,
     } = project;
     return (
-      <tr className="text-[10px] sm:text-xs text-black hover:bg-gray-100">
+      <tr className="text-xs text-black hover:bg-gray-100">
         <td
           onClick={() => router.push(`/project/${pool}`)}
           scope="row"

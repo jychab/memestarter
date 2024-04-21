@@ -34,8 +34,14 @@ import {
 } from "./instructions";
 import { buildAndSendTransaction } from "./transactions";
 import { CreatePoolArgs, DAS, MarketDetails, PoolType } from "./types";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  uploadString,
+} from "firebase/storage";
+import { DOMAIN_API_URL, OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
 import { BN } from "@coral-xyz/anchor";
 
 export async function launchToken(
@@ -261,15 +267,12 @@ export async function uploadMetadata(
     image,
     externalUrl,
   };
-  const blob = new Blob([JSON.stringify(payload)], {
-    type: "application/json",
-  });
   const storage = getStorage();
   const uuid = crypto.randomUUID();
   const reference = ref(storage, uuid);
   // 'file' comes from the Blob or File API
-  await uploadBytes(reference, blob);
-  const uri = await getDownloadURL(reference);
+  await uploadString(reference, JSON.stringify(payload));
+  const uri = `${DOMAIN_API_URL}/metadata/${uuid}`;
   return uri;
 }
 
@@ -279,7 +282,7 @@ export async function uploadImage(picture: Blob) {
   const reference = ref(storage, uuid);
   // 'file' comes from the Blob or File API
   await uploadBytes(reference, picture);
-  const imageUrl = await getDownloadURL(reference);
+  const imageUrl = `${DOMAIN_API_URL}/images/${uuid}`;
   return imageUrl;
 }
 

@@ -263,10 +263,10 @@ export function Pool() {
       <div className="flex flex-1 flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
         <div className="flex flex-col gap-4 rounded border w-full shadow-sm p-4 text-gray-400 font-medium">
           <MainPane
+            lpMint={pool.lpMint}
             image={pool.image}
             name={pool.name}
             symbol={pool.symbol}
-            decimals={pool.decimal}
             authority={pool.authority}
             mint={pool.mint}
           />

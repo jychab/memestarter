@@ -38,3 +38,5 @@ export const LOOKUP_TABLE =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
     ? LOOKUP_TABLE_CACHE
     : undefined;
+
+export const DOMAIN_API_URL = "www.memestarter.app/api";

@@ -28,10 +28,10 @@ enum FilterCriteria {
 function Projects() {
   const [projects, setProjects] = useState<PoolType[]>();
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
-    SortCriteria.presaleTimeLimit
+    SortCriteria.liquidity
   );
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(
-    FilterCriteria.ongoing
+    FilterCriteria.all
   );
   const filterDropDownRef = useRef<HTMLDivElement>(null);
   const [showFilter, setShowFilter] = useState(false);

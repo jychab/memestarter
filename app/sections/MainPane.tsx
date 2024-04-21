@@ -5,9 +5,10 @@ interface MainPaneProps {
   image: string;
   name: string;
   symbol: string;
-  decimals: number;
+  decimals?: number;
   authority?: string;
   mint?: string;
+  lpMint?: string;
 }
 
 export const MainPane: FC<MainPaneProps> = ({
@@ -17,13 +18,14 @@ export const MainPane: FC<MainPaneProps> = ({
   decimals,
   authority,
   mint,
+  lpMint,
 }) => {
   return (
     <div className="flex gap-4 overflow-x-auto ">
       <div className="relative h-40 w-40 lg:w-60 lg:h-60">
         <Image
           priority={true}
-          className={`rounded object-cover cursor-pointer`}
+          className={`rounded object-cover`}
           fill={true}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           src={image}
@@ -31,16 +33,20 @@ export const MainPane: FC<MainPaneProps> = ({
         />
       </div>
       <div className="flex w-1/2 flex-col text-xs gap-2 ">
-        <span>Name</span>
-        <span className=" text-black">{name}</span>
-        <span>Symbol</span>
-        <span className="text-black">{symbol}</span>
-        <span>Decimals</span>
-        <span className=" text-black">{decimals}</span>
+        <div className="grid grid-cols-3 gap-2">
+          <span className="col-span-2">Name</span>
+          <span>Symbol</span>
+          <span className="col-span-2 text-black">{name}</span>
+          <span className="text-black">{symbol}</span>
+        </div>
+        {decimals && <span>Decimals</span>}
+        {decimals && <span className=" text-black">{decimals}</span>}
         {authority && <span>Creator</span>}
         {authority && <span className="truncate text-black">{authority}</span>}
         {mint && <span>Mint Address</span>}
         {mint && <span className="truncate text-black">{mint}</span>}
+        {lpMint && <span>LP Token Address</span>}
+        {lpMint && <span className="truncate text-black">{lpMint}</span>}
       </div>
     </div>
   );
