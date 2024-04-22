@@ -48,8 +48,6 @@ import {
   RAYDIUM_AMM_V4,
   RAYDIUM_FEE_COLLECTOR,
 } from "./constants";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
 
 export const program = (connection: Connection) =>
   new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
