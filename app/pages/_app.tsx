@@ -3,6 +3,7 @@ import Layout from "../sections/Layout";
 import type { AppProps } from "next/app";
 import { ContextProvider } from "../contexts/ContextProvider";
 import "../styles/globals.css";
+import "../styles/styles.scss";
 import React from "react";
 import { DataProvider } from "../contexts/DataProvider";
 export default function App({ Component, pageProps }: AppProps) {

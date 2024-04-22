@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { toast } from "react-toastify";
 import {
   handleDeleteReply,
@@ -22,7 +22,7 @@ const DeleteButton = (props: DeleteButtonProps) => {
   const poolId = props.poolId;
   const show = props.show ? " " : "hidden ";
 
-  const handleClick = async () => {
+  const handleClick = useCallback(async () => {
     if (!publicKey || !signMessage) return;
     try {
       await handleLogin(publicKey, signMessage);
@@ -34,7 +34,7 @@ const DeleteButton = (props: DeleteButtonProps) => {
     } catch (error) {
       toast.error(`${error}`);
     }
-  };
+  }, [handleLogin, publicKey, signMessage, replyIdToDelete, commentId, poolId]);
 
   return (
     <>

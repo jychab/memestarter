@@ -34,8 +34,8 @@ const Avatar = (props: AvatarProps) => {
     >
       <Image
         className={`rounded-full border border-gray-400`}
-        width={50}
-        height={50}
+        width={40}
+        height={40}
         src={(nft?.content?.links?.image as string) || logo}
         alt={"Username"}
       />

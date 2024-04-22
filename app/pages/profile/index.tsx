@@ -38,7 +38,7 @@ function Profile() {
           setCollectionItem(res as unknown as DAS.GetAssetResponse)
         );
     }
-  }, [selectedItem]);
+  }, [selectedItem, umi.rpc]);
 
   async function loadAssets(walletData: DAS.GetAssetResponseList) {
     const promises = walletData.items.map(async (item) => {
@@ -114,7 +114,7 @@ function Profile() {
           loadAssets(walletData as unknown as DAS.GetAssetResponseList)
         );
     }
-  }, [publicKey, limit, nft]);
+  }, [publicKey, limit, nft, currentUser, umi.rpc]);
 
   // const handleMintNft = async () => {
   //   try {

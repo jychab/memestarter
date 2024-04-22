@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { IComment, IReply } from "../../utils/types";
 import {
   handleAddComment,
@@ -37,7 +37,7 @@ const ActionButton = (props: ActionButtonProps) => {
   const { handleLogin } = useLogin();
   const { publicKey, signMessage } = useWallet();
 
-  const handleClick = async () => {
+  const handleClick = useCallback(async () => {
     if (!publicKey || !signMessage) return;
     try {
       await handleLogin(publicKey, signMessage);
@@ -90,7 +90,21 @@ const ActionButton = (props: ActionButtonProps) => {
     } catch (error) {
       toast.error(`${error}`);
     }
-  };
+  }, [
+    poolId,
+    publicKey,
+    content,
+    commentId,
+    replyingTo,
+    replyId,
+    commentValue,
+    action,
+    handleLogin,
+    onIsEditingChange,
+    onIsReplyingChange,
+    resetCommentValue,
+    signMessage,
+  ]);
 
   return (
     <button

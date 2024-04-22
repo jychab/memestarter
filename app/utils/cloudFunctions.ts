@@ -2,16 +2,6 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { DAS, IComment, IReply, UpdateMarketDataArgs } from "./types";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { PublicKey } from "@solana/web3.js";
-import {
-  setDoc,
-  doc,
-  deleteDoc,
-  increment,
-  arrayUnion,
-  arrayRemove,
-} from "firebase/firestore";
-import { db } from "./firebase";
-import { NATIVE_MINT } from "@solana/spl-token";
 
 export async function getCurrentPrice(address: string): Promise<{
   data: {
@@ -67,6 +57,17 @@ export async function linkAsset(asset: DAS.GetAssetResponse) {
 export async function unlinkAsset() {
   const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
   await unlinkAsset();
+}
+
+export async function saveAdditionalInfo(poolId: string, content: string) {
+  const saveAdditionalInfo = httpsCallable(
+    getFunctions(),
+    "saveAdditionalInfo"
+  );
+  await saveAdditionalInfo({
+    poolId,
+    content,
+  });
 }
 
 //comments section

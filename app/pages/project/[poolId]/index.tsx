@@ -24,9 +24,10 @@ import { useData } from "../../../hooks/useData";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
 import { MainPane } from "../../../sections/MainPane";
 import { buyPresale, launchToken } from "../../../utils/functions";
-import { CommentsSection } from "../../../components/commentSection";
 import VestingDashboard from "../../../sections/VestingDashboard";
 import { getCurrentPrice } from "../../../utils/cloudFunctions";
+import { InfoSection } from "../../../sections/InfoSection";
+import { CommentsSection } from "../../../sections/CommentsSection";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export function Pool() {
   const [amountToPurchase, setAmountToPurchase] = useState<string>("");
   const [price, setPrice] = useState<number>();
   const { publicKey, signTransaction, signMessage } = useWallet();
-  const { user, handleLogin } = useLogin();
+  const { handleLogin } = useLogin();
   const { nft } = useData();
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
@@ -87,16 +88,7 @@ export function Pool() {
   }, [status, pool]);
 
   const launch = useCallback(async () => {
-    if (
-      !(
-        user &&
-        publicKey &&
-        connection &&
-        pool &&
-        signMessage &&
-        signTransaction
-      )
-    )
+    if (!(publicKey && connection && pool && signMessage && signTransaction))
       return;
     try {
       setLoading(true);
@@ -109,11 +101,9 @@ export function Pool() {
       setLoading(false);
     }
   }, [
-    user,
     publicKey,
     connection,
     pool,
-    loading,
     setLoading,
     signMessage,
     signTransaction,
@@ -290,6 +280,7 @@ export function Pool() {
           {(status == Status.VestingInProgress ||
             status == Status.VestingCompleted) && (
             <VestingDashboard
+              description={pool.description}
               price={price}
               symbol={pool.symbol}
               decimal={pool.decimal}
@@ -309,6 +300,11 @@ export function Pool() {
             )}
           {getButton}
         </div>
+        <InfoSection
+          poolCreator={pool.authority}
+          content={pool.additionalInfo || ""}
+          poolId={pool.pool}
+        />
         <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
       </div>
     )

@@ -157,6 +157,7 @@ export interface CollectionDetails {
 }
 
 export interface PoolType {
+  additionalInfo?: string;
   decimal: number;
   mintMetadata: DAS.GetAssetResponse;
   amountCoin: number;

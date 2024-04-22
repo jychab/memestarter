@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
-import InputComment from "./InputComment";
-import Comment from "./Comment";
-import { IComment } from "../../utils/types";
+import InputComment from "../components/comments/InputComment";
+import Comment from "../components/comments/Comment";
+import { IComment } from "../utils/types";
 import {
   collection,
   getCountFromServer,
@@ -10,7 +10,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { db } from "../../utils/firebase";
+import { db } from "../utils/firebase";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 interface CommentsSectionProps {
@@ -34,6 +34,7 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
     const unsubscribe = onSnapshot(
       query(
         collection(db, `Pool/${poolId}/Comments`),
+        orderBy("pinned", "desc"),
         orderBy("score", "desc"),
         orderBy("createdAt", "desc"),
         limit(maxComments)
@@ -46,7 +47,7 @@ export const CommentsSection: FC<CommentsSectionProps> = ({
   }, [poolId, maxComments]);
 
   return (
-    <main className="flex flex-col w-full gap-2 relative">
+    <main className="flex flex-col w-full gap-4 relative">
       {(publicKey != null || (comments && comments.length > 0)) && (
         <span className="text-gray-400 text-base">Comments</span>
       )}

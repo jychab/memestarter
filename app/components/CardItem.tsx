@@ -47,7 +47,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
             />
             {pool.authority === publicKey?.toBase58() && (
               <div className="absolute right-2 top-2 lg:right-4 lg:top-4 ">
-                <Chip k={"YOURS"} />
+                <Chip k={"YOURS"} textColor="text-white" />
               </div>
             )}
           </div>

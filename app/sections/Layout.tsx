@@ -15,7 +15,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       </Head>
       <div className="bg-white">
         <Navbar />
-        <main className="flex text-white justify-center p-6 w-full min-h-screen">
+        <main className="flex justify-center p-6 w-full min-h-screen">
           <ToastContainer
             className="mb-16"
             position="bottom-left"

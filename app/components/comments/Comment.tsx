@@ -71,15 +71,11 @@ const Comment = (props: CommentProps) => {
   }, [showReplies, comment, maxReplies, poolId]);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <div
-        className={`flex flex-col p-4 gap-4 rounded ${
-          showReplies ? "border border-gray-300" : ""
-        }`}
-      >
+    <div className="flex flex-col gap-2 w-full">
+      <div className={`flex flex-col gap-2 rounded`}>
         <div className="flex items-start gap-4">
           <Avatar user={comment.user} />
-          <div className="flex flex-col gap-2 w-full rounded-md">
+          <div className="flex flex-col w-full gap-2 rounded-md">
             <UserDetail
               poolCreator={poolCreator}
               poolId={poolId}

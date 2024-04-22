@@ -1,4 +1,11 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { DAS, MintType, PoolType, Status } from "../utils/types";
 import Image from "next/image";
 import {
@@ -132,28 +139,29 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     };
   }, [show]);
 
-  const handleLinkage = async (
-    selectedItem: DAS.GetAssetResponse | undefined
-  ) => {
-    if (!(publicKey && signMessage && selectedItem)) return;
-    try {
-      setLoading(true);
-      await handleLogin(publicKey, signMessage);
-      if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
-        await unlinkAsset();
-      } else {
-        await linkAsset(selectedItem);
+  const handleLinkage = useCallback(
+    async (selectedItem: DAS.GetAssetResponse | undefined) => {
+      if (!(publicKey && signMessage && selectedItem)) return;
+      try {
+        setLoading(true);
+        await handleLogin(publicKey, signMessage);
+        if (isItemCurrentlyEquipped(nft, selectedItem) || nft) {
+          await unlinkAsset();
+        } else {
+          await linkAsset(selectedItem);
+        }
+        toast.success("Success");
+      } catch (error) {
+        toast.error(`${getCustomErrorMessage(error)}`);
+      } finally {
+        setLoading(false);
+        if (setSelectedItem) {
+          setSelectedItem(undefined);
+        }
       }
-      toast.success("Success");
-    } catch (error) {
-      toast.error(`${getCustomErrorMessage(error)}`);
-    } finally {
-      setLoading(false);
-      if (setSelectedItem) {
-        setSelectedItem(undefined);
-      }
-    }
-  };
+    },
+    [handleLogin, publicKey, signMessage, nft, setSelectedItem]
+  );
 
   // Define useMemo for expensive computation of projects
   const fundedProjects = useMemo(() => {

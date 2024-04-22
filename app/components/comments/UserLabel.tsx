@@ -15,9 +15,9 @@ const UserLabel = (props: UserLabelProps) => {
       <div
         className={`uppercase rounded ${
           publicKey && user == publicKey.toBase58()
-            ? "bg-blue-600 text-white"
+            ? "text-blue-800"
             : "text-red-800"
-        } text-xs font-medium py-0.5 px-1.5 flex items-center justify-center `}
+        } text-xs font-medium flex items-center justify-center `}
       >
         {publicKey && user == publicKey.toBase58() ? "you" : "Creator"}
       </div>

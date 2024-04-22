@@ -119,7 +119,7 @@ function Projects() {
   }, [loading, endReached]);
 
   useEffect(() => {
-    if (!(itemsLimit && sortCriteria && filterCriteria)) return;
+    if (!itemsLimit) return;
     setLoading(true);
     const projectQuery = createQuery(itemsLimit);
     const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
@@ -135,7 +135,7 @@ function Projects() {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [itemsLimit, sortCriteria, filterCriteria]);
+  }, [itemsLimit, createQuery]);
 
   const handleClickOutside = <T extends HTMLElement>(
     event: MouseEvent,

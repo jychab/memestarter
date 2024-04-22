@@ -13,6 +13,7 @@ import {enQueue} from "./enQueue";
 import {verifySignIn} from "./verifySignIn";
 import getPrice from "./getPrice";
 import {handleCommentsAndReplies} from "./commentsAndReplies";
+import {saveAdditionalInfo} from "./saveInfo";
 
 exports.programWebhook = onRequest(async (req, res) =>
   cors({origin: true})(req, res, async () => await programWebhook(req, res))
@@ -60,4 +61,8 @@ exports.addToQueue = onSchedule("every day 00:00", async (_) => {
 
 exports.handleCommentsAndReplies = onCall(
   async (data, context) => await handleCommentsAndReplies(data, context)
+);
+
+exports.saveAdditionalInfo = onCall(
+  async (data, context) => await saveAdditionalInfo(data, context)
 );

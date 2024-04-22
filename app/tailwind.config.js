@@ -12,5 +12,9 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [require("tailwindcss-animated"), require("tailwind-scrollbar")],
+  plugins: [
+    require("tailwindcss-animated"),
+    require("tailwind-scrollbar"),
+    require("@tailwindcss/typography"),
+  ],
 };

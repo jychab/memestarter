@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   handleUpdateCommentVote,
   handleUpdateReplyVote,
@@ -29,32 +29,43 @@ const Vote = (props: VoteProps) => {
   const replyIdToChangeVote = props.replyIdToChangeVote;
   const { handleLogin } = useLogin();
 
-  const handleClick = async (operation: string, buttonType: string) => {
-    if (!publicKey || !signMessage || loading) return;
-    try {
-      setLoading(true);
-      await handleLogin(publicKey, signMessage);
-      if (!replyIdToChangeVote) {
-        await handleUpdateCommentVote(
-          poolId,
-          commentIdToChangeVote,
-          operation,
-          buttonType
-        );
-      } else {
-        await handleUpdateReplyVote(
-          poolId,
-          commentIdToChangeVote,
-          replyIdToChangeVote,
-          operation,
-          buttonType
-        );
+  const handleClick = useCallback(
+    async (operation: string, buttonType: string) => {
+      if (!publicKey || !signMessage || loading) return;
+      try {
+        setLoading(true);
+        await handleLogin(publicKey, signMessage);
+        if (!replyIdToChangeVote) {
+          await handleUpdateCommentVote(
+            poolId,
+            commentIdToChangeVote,
+            operation,
+            buttonType
+          );
+        } else {
+          await handleUpdateReplyVote(
+            poolId,
+            commentIdToChangeVote,
+            replyIdToChangeVote,
+            operation,
+            buttonType
+          );
+        }
+        setLoading(false);
+      } catch (error) {
+        toast.error(`${error}`);
       }
-      setLoading(false);
-    } catch (error) {
-      toast.error(`${error}`);
-    }
-  };
+    },
+    [
+      loading,
+      handleLogin,
+      poolId,
+      commentIdToChangeVote,
+      replyIdToChangeVote,
+      publicKey,
+      signMessage,
+    ]
+  );
 
   return (
     <div className="text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl">
