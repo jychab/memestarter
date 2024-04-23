@@ -39,4 +39,4 @@ export const LOOKUP_TABLE =
     ? LOOKUP_TABLE_CACHE
     : undefined;
 
-export const DOMAIN_API_URL = "www.memestarter.app/api";
+export const DOMAIN_API_URL = "https://www.memestarter.app/api";
