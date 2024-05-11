@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { updateMarketData } from "./cloudFunctions";
-import { db } from "./firebase";
+import { db, storage } from "./firebase";
 import { determineOptimalParameters, getCollectionMintAddress } from "./helper";
 import {
   buyPresaleIx,
@@ -34,13 +34,7 @@ import {
 } from "./instructions";
 import { buildAndSendTransaction } from "./transactions";
 import { CreatePoolArgs, DAS, MarketDetails, PoolType } from "./types";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  uploadString,
-} from "firebase/storage";
+import { ref, uploadBytes, uploadString } from "firebase/storage";
 import { DOMAIN_API_URL, OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
 import { BN } from "@coral-xyz/anchor";
 
@@ -97,6 +91,7 @@ export async function launchToken(
         connection,
         publicKey,
         new PublicKey(pool.mint),
+        new PublicKey(pool.quoteMint),
         vaultOwner
       );
       await buildAndSendTransaction(
@@ -165,11 +160,12 @@ export async function launchToken(
 
     toast.info("Creating Market Part 3...");
     const { tickSize, orderSize } = await determineOptimalParameters(
-      { pool: pool.pool, decimal: pool.decimal },
+      { pool: pool.pool, quoteMint: pool.quoteMint, decimal: pool.decimal },
       connection
     );
     const { instructions: ix3 } = await createMarketPart3(
       new PublicKey(pool.mint),
+      new PublicKey(pool.quoteMint),
       pool.decimal,
       orderSize,
       tickSize,
@@ -203,6 +199,7 @@ export async function launchToken(
       decimals: pool.decimal,
       marketId: new PublicKey(marketId),
       mint: new PublicKey(pool.mint),
+      quoteMint: new PublicKey(pool.quoteMint),
       signer: publicKey,
       poolAuthority: new PublicKey(pool.authority),
       poolId: new PublicKey(pool.pool),
@@ -223,12 +220,12 @@ export async function buyPresale(
   ) => Promise<T>
 ) {
   const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+  const amount = parseFloat(amountToPurchase);
   if (
     !amountOfSolInWallet ||
-    amountOfSolInWallet.lamports <
-      parseFloat(amountToPurchase) * LAMPORTS_PER_SOL
+    amountOfSolInWallet.lamports < amount * LAMPORTS_PER_SOL * 1.01
   ) {
-    throw Error(`Insufficient Sol. You need at least ${amountToPurchase} Sol.`);
+    throw Error(`Insufficient Sol. You need at least ${amount * 1.01} Sol.`);
   }
   let nftCollection;
   if (pool.collectionsRequired) {
@@ -241,7 +238,8 @@ export async function buyPresale(
 
   const ix = await buyPresaleIx(
     {
-      amount: parseFloat(amountToPurchase) * LAMPORTS_PER_SOL,
+      quoteMint: new PublicKey(pool.quoteMint),
+      amount: amount * LAMPORTS_PER_SOL,
       nft: new PublicKey(nft.id),
       nftCollection: nftCollection,
       poolId: new PublicKey(pool.pool),
@@ -250,7 +248,7 @@ export async function buyPresale(
     connection
   );
 
-  await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
+  await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
 }
 
 export async function uploadMetadata(
@@ -267,7 +265,6 @@ export async function uploadMetadata(
     image,
     externalUrl,
   };
-  const storage = getStorage();
   const uuid = crypto.randomUUID();
   const reference = ref(storage, uuid);
   // 'file' comes from the Blob or File API
@@ -277,7 +274,6 @@ export async function uploadMetadata(
 }
 
 export async function uploadImage(picture: Blob) {
-  const storage = getStorage();
   const uuid = crypto.randomUUID();
   const reference = ref(storage, uuid);
   // 'file' comes from the Blob or File API
@@ -293,6 +289,9 @@ export async function createPool(
     transaction: T
   ) => Promise<T>
 ) {
+  if (args.initialSupply < 0) {
+    throw new Error("Liquidity Pool Supply cannot be higher than total supply");
+  }
   if (args.creatorFeesBasisPoints > 5000) {
     throw new Error("Creator Fees cannot be higher than 50%");
   }
@@ -301,15 +300,13 @@ export async function createPool(
       "Presale Target is too low. It needs to be higher than 1 Sol."
     );
   }
-  if (args.totalSupply < 1000000) {
-    throw new Error("Total supply cannot be lower than 1,000,000");
-  }
   if (args.presaleDuration > 30 * 24 * 60 * 60) {
     throw new Error("Presale duration cannot be longer than a month");
   }
   let ix = [];
   const { instruction, poolId } = await initializePoolIx(
     {
+      quoteMint: args.quoteMint,
       name: args.name,
       symbol: args.symbol,
       decimal: args.decimal,
@@ -318,7 +315,8 @@ export async function createPool(
       presaleDuration: args.presaleDuration,
       presaleTarget: args.presaleTarget,
       vestingPeriod: args.vestingPeriod,
-      totalSupply: args.totalSupply,
+      initialSupply: args.initialSupply,
+      liquidityPoolSupply: args.liquidityPoolSupply,
       signer: args.publicKey,
       maxAmountPerPurchase: args.maxAmountPerPurchase,
       requiresCollection: args.requiresCollection,

@@ -1,12 +1,13 @@
 import {Timestamp} from "firebase-admin/firestore";
 import {DAS} from "helius-sdk";
-
 export enum Events {
   IntializedPoolEvent = "InitializedPoolEvent",
   PurchasedPresaleEvent = "PurchasedPresaleEvent",
   CheckClaimEvent = "CheckClaimEvent",
+  ClaimRewardsForCreatorEvent = "ClaimRewardsForCreatorEvent",
   ClaimRewardsEvent = "ClaimRewardsEvent",
   LaunchTokenAmmEvent = "LaunchTokenAmmEvent",
+  WithdrawLpForCreatorEvent = "WithdrawLpForCreatorEvent",
   WithdrawLpEvent = "WithdrawLpEvent",
   WithdrawEvent = "WithdrawEvent",
 }
@@ -44,11 +45,14 @@ export interface InitializedPoolEvent {
   authority: string;
   pool: string;
   mint: string;
-  decimal: string;
+  quoteMint: string;
   presaleTarget: string;
   presaleTimeLimit: string;
   creatorFeeBasisPoints: string;
-  totalSupply: string;
+  liquidityPoolSupply: string;
+  initialSupply: string;
+  initialSupplyForCreator: string;
+  decimal: string;
   vestingPeriod: string;
   maxAmountPerPurchase: string | null;
   requiresCollection: string;
@@ -72,6 +76,28 @@ export interface CheckClaimEvent {
   pool: string;
   originalMint: string;
   lpElligible: string;
+  mintElligible: string;
+}
+
+export interface ClaimRewardEvent {
+  payer: string;
+  pool: string;
+  originalMint: string;
+  originalMintOwner: string;
+  mintElligible: string;
+}
+
+export interface ClaimRewardForCreatorEvent {
+  payer: string;
+  pool: string;
+  mintElligible: string;
+}
+
+export interface WithdrawLpTokenForCreatorEvent {
+  payer: string;
+  pool: string;
+  lastClaimedAt: string;
+  lpClaimed: string;
 }
 
 export interface WithdrawLpTokenEvent {
@@ -96,38 +122,70 @@ export interface WithdrawEvent {
   payer: string;
   pool: string;
   originalMint: string;
-  amountWsolWithdrawn: string;
+  amountWithdrawn: string;
   originalMintOwner: string;
 }
 
-export interface Pool {
-  delegate: string | null;
+export interface PoolType {
+  // overall claim settings
+  totalLpClaimed: number;
+  totalMintClaimed: number;
+  // token metadata
+  name: string;
+  symbol: string;
+  decimal: number;
+  description: string;
+  image: string;
+  valid: boolean;
   mintMetadata: DAS.GetAssetResponse;
+  // liquidity pool info
   amountCoin: number;
   amountLpReceived: number;
+  totalAmountWithdrawn: number;
   amountPc: number;
+  // pool settings
   authority: string;
-  creatorFeeBasisPoints: string;
+  creatorFeeBasisPoints: number;
   liquidityCollected: number;
   lpMint: string;
   mint: string;
+  quoteMint: string;
   pool: string;
   presaleTarget: number;
   presaleTimeLimit: number;
   totalSupply: number;
+  liquidityPoolSupply: number;
+  initialSupply: number;
   vestingPeriod: number;
   vestingStartedAt: number;
-  createdAt: number;
-  updatedAt: number;
+  maxAmountPerPurchase: number;
   collectionsRequired: any[];
+  // pool authority claim progress
+  initialSupplyForCreator: number;
+  initialSupplyClaimedByCreator: number;
+  lpClaimedByCreator: number;
+  lpLastClaimedByCreator: number;
+  // others
+  createdAt: Timestamp | number | null;
+  updatedAt: Timestamp | number | null;
+  additionalInfo?: string;
 }
 
-export interface Mint {
+export interface MintType {
   originalMint: string;
   pool: string;
   amount: number;
+  amountWithdrawn: number;
+  lastClaimedAt: number;
+  mintElligible: number;
+  mintClaimed: number;
   lpElligible: number;
   lpClaimed: number;
-  updatedAt: number;
-  mintMetadata: DAS.GetAssetResponse;
+  updatedAt: Timestamp | number | null;
+}
+
+export interface CollectionDetails {
+  name: string;
+  image: string;
+  mintAddress: string;
 }

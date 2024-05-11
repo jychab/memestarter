@@ -7,8 +7,13 @@ import { Tooltip } from "../components/Tooltip";
 import { ComboBox } from "../components/ComboBox";
 import { getDocs, query, collection } from "@firebase/firestore";
 import { db } from "../utils/firebase";
+import { separateNumberWithComma } from "../utils/helper";
 
 interface CustomisePrelaunchSettingsPaneProps {
+  liquidityPoolSupplyInPercentage: string;
+  setLiquidityPoolSupplyInPercentage: React.Dispatch<
+    React.SetStateAction<string>
+  >;
   presaleTarget: string;
   setPresaleTarget: React.Dispatch<React.SetStateAction<string>>;
   maxAmountPerPurchase: string;
@@ -23,6 +28,10 @@ interface CustomisePrelaunchSettingsPaneProps {
   setCollectionsRequired: React.Dispatch<
     React.SetStateAction<CollectionDetails[]>
   >;
+  decimals: number;
+  setDecimals: React.Dispatch<React.SetStateAction<number>>;
+  supply: string;
+  setSupply: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export enum Period {
@@ -39,12 +48,18 @@ export const CustomisePrelaunchSettingsPane: FC<
   presaleTarget,
   maxAmountPerPurchase,
   collectionsRequired,
+  liquidityPoolSupplyInPercentage,
+  setLiquidityPoolSupplyInPercentage,
   setCollectionsRequired,
   setMaxAmountPerPurchase,
   setPresaleTarget,
   setPresaleDuration,
   setCreatorFees,
   setVestingPeriod,
+  decimals,
+  setDecimals,
+  supply,
+  setSupply,
 }) => {
   const [maximumAllowedPerPurchase, setMaximumAmountPerPurchase] = useState(
     maxAmountPerPurchase !== ""
@@ -80,12 +95,9 @@ export const CustomisePrelaunchSettingsPane: FC<
             Creator Fees
           </label>
           <Tooltip
-            content={
-              "This percentage represents the share you receive from both the presale funds and the liquidity tokens."
-            }
+            content={`This denotes the share that you will earn from the overall allocation.\n\nFor example,\nPresale Target = 50Sol\nTotal supply = 100M\nCreator's fee = 5%\nInitial Supply for Raydium LP = 30%\nRemaining Supply Upon Launch = 70%\n\nUpon Launch = 70% * 100M * 5%\nVesting = (30% * 100M & 50 Sol) LP tokens * 5%`}
           />
         </div>
-
         <input
           type="text"
           inputMode="numeric"
@@ -103,6 +115,36 @@ export const CustomisePrelaunchSettingsPane: FC<
         />
       </div>
       <div className="grid grid-cols-2 gap-4 items-center">
+        <div className="flex gap-2 items-center">
+          <label
+            htmlFor="lp-supply"
+            className="text-sm font-medium text-gray-400"
+          >
+            Initial Liquidity Pool Supply
+          </label>
+          <Tooltip
+            content={
+              "This percentage represents the amount of supply used to create the initial liquidity pool, the remaining supply will be released on launch."
+            }
+          />
+        </div>
+        <input
+          type="text"
+          inputMode="numeric"
+          id="lp-supply"
+          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
+          placeholder={liquidityPoolSupplyInPercentage.toString()}
+          value={liquidityPoolSupplyInPercentage.replaceAll("%", "") + "%"}
+          onChange={(e) => {
+            const amount = e.target.value.replaceAll("%", "");
+            if (!amount || amount.match(/^\d{1,}(\.\d{0,4})?$/)) {
+              setLiquidityPoolSupplyInPercentage(e.target.value);
+            }
+          }}
+          required
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4 items-center">
         <div className="flex items-center gap-2">
           <label
             htmlFor="presale-target"
@@ -112,7 +154,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           </label>
           <Tooltip
             content={
-              "This is the minimum amount of funds needed from the presale to launch."
+              "The presale will have a set funding target, which will also serve as the maximum cap for the presale. If the total funds collected during the presale do not meet this target, the presale will be terminated."
             }
           />
         </div>
@@ -134,7 +176,7 @@ export const CustomisePrelaunchSettingsPane: FC<
         </div>
       </div>
       <DurationPicker
-        tooltip="The designated timeframe for the presale."
+        tooltip="The amount of time allocated for the presale."
         title={"Presale Duration"}
         period={presaleDuration}
         setPeriod={setPresaleDuration}
@@ -156,7 +198,51 @@ export const CustomisePrelaunchSettingsPane: FC<
             : "Show Advanced Settings"}
         </button>
         {showAdvancedSettings && (
-          <div className="grid grid-cols-2 items-center gap-4">
+          <div className="grid grid-cols-2 w-full gap-4 items-center">
+            <label
+              htmlFor="decimal-input"
+              className="block text-sm font-medium text-gray-400"
+            >
+              Decimals:
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              id="decimal-input"
+              className="w-16 text-center text-sm block p-1 rounded border border-gray-300  text-black "
+              placeholder={decimals.toString()}
+              value={!Number.isNaN(decimals) ? decimals : 0}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setDecimals(parseInt(e.target.value));
+                } else {
+                  setDecimals(NaN);
+                }
+              }}
+              required
+            />
+
+            <label
+              htmlFor="supply-input"
+              className="block text-sm font-medium text-gray-400"
+            >
+              Total Supply:
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              id="supply-input"
+              className="text-center text-sm block p-1 w-fit rounded border border-gray-300 text-black "
+              placeholder={supply.toString()}
+              value={separateNumberWithComma(supply.replaceAll(",", ""))}
+              onChange={(e) => {
+                const amount = e.target.value.replaceAll(",", "");
+                if (!amount || amount.match(/^\d+$/)) {
+                  setSupply(e.target.value);
+                }
+              }}
+              required
+            />
             <span className="text-sm font-medium text-gray-400">
               Set Max Allowed Per Purchase (Optional)
             </span>
@@ -196,10 +282,6 @@ export const CustomisePrelaunchSettingsPane: FC<
                 <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
               </label>
             </div>
-          </div>
-        )}
-        {showAdvancedSettings && (
-          <div className="grid grid-cols-2 items-center gap-4">
             <span className="text-sm font-medium text-gray-400">
               Whitelist Collections (Optional)
             </span>
@@ -215,11 +297,12 @@ export const CustomisePrelaunchSettingsPane: FC<
               <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
             </label>
             {requiresCollection && collections && (
-              <div className="col-span-2 flex flex-col gap-4">
+              <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
                 {collectionsRequired && (
                   <div className="flex flex-wrap items-center gap-2">
                     {collectionsRequired.map((item) => (
                       <Chip
+                        textColor="text-white"
                         key={item.mintAddress}
                         k={item.name}
                         dismiss={() =>

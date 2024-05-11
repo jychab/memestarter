@@ -8,12 +8,16 @@ import {
   getStatus,
 } from "../utils/helper";
 import { buildAndSendTransaction } from "../utils/transactions";
-import { checkClaimElligibility } from "../utils/instructions";
-import { claim } from "../utils/instructions";
+import { checkClaimElligibility, claimReward } from "../utils/instructions";
+import { withdrawLp } from "../utils/instructions";
 import { withdraw } from "../utils/instructions";
 import { Status } from "../utils/types";
 import { Project } from "../sections/MintDashboard";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import {
+  useAnchorWallet,
+  useConnection,
+  useWallet,
+} from "@solana/wallet-adapter-react";
 import { toast } from "react-toastify";
 import { getCustomErrorMessage } from "../utils/error";
 import { useData } from "../hooks/useData";
@@ -54,17 +58,17 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         setCurrentLpElligible(0);
       } else {
         const durationVested =
-          (timer / 1000 -
+          (Math.min(
+            timer / 1000,
+            project.vestingStartedAt + project.vestingPeriod
+          ) -
             (project.lastClaimedAt
               ? project.lastClaimedAt
               : project.vestingStartedAt)) /
           project.vestingPeriod;
         const elligibleAmount =
-          Math.min(project.lpElligible, project.lpElligible * durationVested) /
-          10 ** project.decimal;
-        const amountAfterCreatorFees =
-          (elligibleAmount * (10000 - project.creatorFeeBasisPoints)) / 10000;
-        setCurrentLpElligible(amountAfterCreatorFees);
+          (project.lpElligible * durationVested) / 10 ** project.decimal;
+        setCurrentLpElligible(elligibleAmount);
       }
     } else {
       setCurrentLpElligible(undefined);
@@ -81,17 +85,30 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
 
         switch (actionType) {
           case "claim":
-            ix = await claim(
-              {
-                signer: publicKey,
-                nftOwner: publicKey,
-                nft: new PublicKey(nft.id),
-                poolId: new PublicKey(project.pool),
-                lpMint: new PublicKey(project.lpMint),
-                poolAuthority: new PublicKey(project.authority),
-              },
-              connection
-            );
+            if (!project.mintClaimed) {
+              ix = await claimReward(
+                {
+                  mint: new PublicKey(project.mint),
+                  nft: new PublicKey(nft.id),
+                  nftOwner: new PublicKey(nft.ownership.owner),
+                  signer: publicKey,
+                  poolId: new PublicKey(project.pool),
+                },
+                connection
+              );
+            } else {
+              ix = await withdrawLp(
+                {
+                  signer: publicKey,
+                  nftOwner: new PublicKey(nft.ownership.owner),
+                  nft: new PublicKey(nft.id),
+                  poolId: new PublicKey(project.pool),
+                  lpMint: new PublicKey(project.lpMint),
+                  poolAuthority: new PublicKey(project.authority),
+                },
+                connection
+              );
+            }
             break;
           case "checkClaim":
             ix = await checkClaimElligibility(
@@ -108,9 +125,10 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
           case "withdraw":
             ix = await withdraw(
               {
+                quoteMint: new PublicKey(project.quoteMint),
                 poolId: new PublicKey(project.pool),
                 signer: publicKey,
-                nftOwner: publicKey,
+                nftOwner: new PublicKey(nft.ownership.owner),
                 nft: new PublicKey(nft.id),
               },
               connection
@@ -122,7 +140,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
 
         await buildAndSendTransaction(
           connection,
-          [ix],
+          Array.isArray(ix) ? ix : [ix],
           publicKey,
           signTransaction
         );
@@ -144,8 +162,10 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
       presaleTarget,
       presaleTimeLimit,
       decimal,
-      amountWsolWithdrawn,
+      totalAmountWithdrawn,
       lpClaimed,
+      mintElligible,
+      mintClaimed,
       lpElligible,
       image,
       pool,
@@ -207,6 +227,27 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                 : "Ended"}
             </td>
           )}
+        {(status === Status.VestingCompleted ||
+          status === Status.VestingInProgress) && (
+          <td className="p-2 text-center">
+            {mintElligible
+              ? mintElligible == mintClaimed
+                ? "Fully Claimed"
+                : formatLargeNumber(mintElligible / 10 ** decimal)
+              : ""}
+          </td>
+        )}
+        {(status === Status.VestingCompleted ||
+          status === Status.VestingInProgress) && (
+          <td className="p-2 text-center">
+            {mintClaimed ? formatLargeNumber(mintClaimed / 10 ** decimal) : ""}
+          </td>
+        )}
+        {status === Status.VestingInProgress && (
+          <td className="p-2 text-center">
+            {lpElligible ? formatLargeNumber(lpElligible / 10 ** decimal) : ""}
+          </td>
+        )}
         {(status === Status.VestingInProgress ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
@@ -220,24 +261,10 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td className="p-2 text-center">
-            {lpClaimed
-              ? formatLargeNumber(
-                  (lpClaimed * (10000 - project.creatorFeeBasisPoints)) /
-                    (10000 * 10 ** decimal)
-                )
-              : ""}
+            {lpClaimed ? formatLargeNumber(lpClaimed / 10 ** decimal) : ""}
           </td>
         )}
-        {status === Status.VestingInProgress && (
-          <td className="p-2 text-center">
-            {lpElligible
-              ? formatLargeNumber(
-                  (lpElligible * (10000 - project.creatorFeeBasisPoints)) /
-                    (10000 * 10 ** decimal)
-                )
-              : ""}
-          </td>
-        )}
+
         {status === Status.VestingInProgress && timer && (
           <td className="p-2 text-center">
             {`${convertSecondsToNearestUnit(
@@ -251,14 +278,14 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {status === Status.Expired && (
           <td scope="row" className="p-2 text-center">
             {(liquidityCollected -
-              (amountWsolWithdrawn ? amountWsolWithdrawn : 0)) /
+              (totalAmountWithdrawn ? totalAmountWithdrawn : 0)) /
               LAMPORTS_PER_SOL +
               " Sol"}
           </td>
         )}
         {status === Status.Expired && (
           <td className="p-2 text-center">
-            {amountWsolWithdrawn === amount ? "Fully Withdrawn" : ""}
+            {totalAmountWithdrawn === amount ? "Fully Withdrawn" : ""}
           </td>
         )}
         <td className="p-2 text-center">
@@ -302,7 +329,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                   {`${
                     currentLpElligible !== undefined
                       ? currentLpElligible === 0
-                        ? ""
+                        ? status
                         : "Claim"
                       : "Check Elligibility"
                   }`}
@@ -312,7 +339,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
             {nft &&
               nft.id === originalMint &&
               status === Status.Expired &&
-              amountWsolWithdrawn !== amount && (
+              totalAmountWithdrawn !== amount && (
                 <button
                   onClick={() => handleAction("withdraw")}
                   className="text-blue-400 disabled:text-gray-400 items-center flex"

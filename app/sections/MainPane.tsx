@@ -1,5 +1,6 @@
 import { FC } from "react";
 import Image from "next/image";
+import { Tooltip } from "../components/Tooltip";
 
 interface MainPaneProps {
   image: string;
@@ -9,6 +10,7 @@ interface MainPaneProps {
   authority?: string;
   mint?: string;
   lpMint?: string;
+  creatorsFeeBasisPoints?: number;
 }
 
 export const MainPane: FC<MainPaneProps> = ({
@@ -17,6 +19,7 @@ export const MainPane: FC<MainPaneProps> = ({
   symbol,
   decimals,
   authority,
+  creatorsFeeBasisPoints,
   mint,
   lpMint,
 }) => {
@@ -41,12 +44,27 @@ export const MainPane: FC<MainPaneProps> = ({
         </div>
         {decimals && <span>Decimals</span>}
         {decimals && <span className=" text-black">{decimals}</span>}
-        {authority && <span>Creator</span>}
-        {authority && <span className="truncate text-black">{authority}</span>}
         {mint && <span>Mint Address</span>}
         {mint && <span className="truncate text-black">{mint}</span>}
         {lpMint && <span>LP Token Address</span>}
         {lpMint && <span className="truncate text-black">{lpMint}</span>}
+        {authority && <span>Creator</span>}
+        {authority && <span className="truncate text-black">{authority}</span>}
+        {creatorsFeeBasisPoints && <span>Creator's Fee</span>}
+        {creatorsFeeBasisPoints && (
+          <div className="flex items-center gap-2">
+            <span className="truncate text-black">
+              {creatorsFeeBasisPoints / 100 + "%"}
+            </span>
+            <Tooltip
+              content={`This denotes the share that the creator earns from the overall allocation.\n\nFor example,\nPresale Target = 50Sol\nTotal supply = 100M\nCreator's fee = ${
+                creatorsFeeBasisPoints / 100 + "%"
+              }\nInitial Supply for Raydium LP = 30%\nRemaining Supply Upon Launch = 70%\n\nUpon Launch = 70% * 100M * ${
+                creatorsFeeBasisPoints / 100 + "%"
+              }\nVesting = (30% * 100M & 50 Sol) LP tokens * 5%`}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
 import { createPool, uploadImage, uploadMetadata } from "../../utils/functions";
 import { useLogin } from "../../hooks/useLogin";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 function CreateCollection() {
   const { connection } = useConnection();
@@ -24,6 +25,8 @@ function CreateCollection() {
   const [symbol, setSymbol] = useState<string>("");
   const [decimals, setDecimals] = useState<number>(5);
   const [supply, setSupply] = useState<string>("1000000000");
+  const [liquidityPoolSupplyInPercentage, setLiquidityPoolSupplyInPercentage] =
+    useState<string>("30"); //in percentage
   const [description, setDescription] = useState<string>("");
   const [externalUrl, setExternalUrl] = useState<string>("");
 
@@ -42,24 +45,6 @@ function CreateCollection() {
     CollectionDetails[]
   >([]);
   const [creatorFees, setCreatorFees] = useState<string>("5"); //in percentage -> need to convert to basis pts
-
-  const reset = () => {
-    setName("");
-    setSymbol("");
-    setDescription("");
-    setPicture(null);
-    setTempImageUrl(null);
-    setExternalUrl("");
-    setCreatorFees("5");
-    setSupply("1000000000");
-    setVestingPeriod(3 * 30 * 24 * 60 * 60);
-    setPresaleDuration(30 * 24 * 60 * 60);
-    setPresaleTarget("50");
-    setMaxAmountPerPurchase("");
-    setCollectionsRequired([]);
-    setDecimals(5);
-    setPage(1);
-  };
 
   const handleNameChange = (e: any) => {
     setName(e.target.value);
@@ -96,7 +81,7 @@ function CreateCollection() {
     } else {
       if (
         !publicKey ||
-        picture === null ||
+        !picture ||
         !signTransaction ||
         loading ||
         !signMessage
@@ -113,7 +98,11 @@ function CreateCollection() {
         parseFloat(creatorFees.replaceAll("%", "")) * 100;
       const presaleTargetLamports =
         parseFloat(presaleTarget) * LAMPORTS_PER_SOL;
-      const totalSupplyNum = parseInt(supply.replaceAll(",", ""));
+      const totalSupply = parseInt(supply.replaceAll(",", ""));
+      const liquidityPoolPercentage =
+        parseFloat(liquidityPoolSupplyInPercentage.replaceAll("%", "")) / 100;
+      const liquidityPoolSupply = totalSupply * liquidityPoolPercentage;
+      const initialSupply = totalSupply - liquidityPoolSupply;
       try {
         setLoading(true);
         await handleLogin(publicKey, signMessage);
@@ -127,6 +116,7 @@ function CreateCollection() {
         );
         await createPool(
           {
+            quoteMint: NATIVE_MINT,
             publicKey: publicKey,
             collectionsRequired: collectionsRequired,
             externalUrl: externalUrl,
@@ -139,7 +129,8 @@ function CreateCollection() {
             presaleDuration: presaleDuration,
             presaleTarget: presaleTargetLamports,
             vestingPeriod: vestingPeriod,
-            totalSupply: totalSupplyNum,
+            initialSupply: initialSupply,
+            liquidityPoolSupply: liquidityPoolSupply,
             signer: publicKey,
             maxAmountPerPurchase:
               maxAmountPerPurchase != ""
@@ -153,6 +144,7 @@ function CreateCollection() {
         toast.success("Success!");
         router.push("/");
       } catch (error) {
+        console.log(error);
         toast.error(`${getCustomErrorMessage(error)}`);
       } finally {
         setLoading(false);
@@ -200,10 +192,6 @@ function CreateCollection() {
               handleExternalUrlChange={handleExternalUrlChange}
               description={description}
               handleDescriptionChange={handleDescriptionChange}
-              decimals={decimals}
-              setDecimals={setDecimals}
-              supply={supply}
-              setSupply={setSupply}
             />
           )}
           {page == 2 && (
@@ -220,6 +208,14 @@ function CreateCollection() {
               setVestingPeriod={setVestingPeriod}
               creatorFees={creatorFees}
               setCreatorFees={setCreatorFees}
+              liquidityPoolSupplyInPercentage={liquidityPoolSupplyInPercentage}
+              setLiquidityPoolSupplyInPercentage={
+                setLiquidityPoolSupplyInPercentage
+              }
+              decimals={decimals}
+              setDecimals={setDecimals}
+              supply={supply}
+              setSupply={setSupply}
             />
           )}
           {page == 3 && (
@@ -238,10 +234,11 @@ function CreateCollection() {
               decimal={decimals}
               externalUrl={externalUrl}
               totalSupply={parseInt(supply.replaceAll(",", ""))}
-              creatorFees={parseFloat(creatorFees.replaceAll("%", "")) * 100}
+              creatorFees={creatorFees}
               vestingPeriod={vestingPeriod}
               presaleTime={presaleDuration}
               presaleTarget={parseFloat(presaleTarget) * LAMPORTS_PER_SOL}
+              liquidityPoolSupplyInPercentage={liquidityPoolSupplyInPercentage}
             />
           )}
           <div className="flex gap-4 p-4 items-end justify-end">

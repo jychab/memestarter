@@ -25,13 +25,20 @@ export const DataProvider: FC<DataProviderProps> = ({ children }) => {
           if (doc.exists()) {
             const data = doc.data() as { nft: DAS.GetAssetResponse };
             if (data.nft) {
-              umi.rpc.getAsset(pubKey(data.nft.id)).then((data) => {
-                if (data.ownership.owner.toString() === publicKey.toString()) {
-                  setNft(data as unknown as DAS.GetAssetResponse);
-                } else {
+              umi.rpc
+                .getAsset(pubKey(data.nft.id))
+                .then((data) => {
+                  if (
+                    data.ownership.owner.toString() === publicKey.toString()
+                  ) {
+                    setNft(data as unknown as DAS.GetAssetResponse);
+                  } else {
+                    setNft(undefined);
+                  }
+                })
+                .catch((e) => {
                   setNft(undefined);
-                }
-              });
+                });
             } else {
               setNft(undefined);
             }

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(

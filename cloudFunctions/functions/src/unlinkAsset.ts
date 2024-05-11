@@ -3,7 +3,7 @@ import {db} from "./utils";
 
 export default async function unlinkAsset(
   context: CallableContext
-): Promise<any> {
+): Promise<void> {
   if (!context.auth) {
     throw new HttpsError("permission-denied", "Unauthenticated");
   }

@@ -1,7 +1,8 @@
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { httpsCallable } from "firebase/functions";
 import { DAS, IComment, IReply, UpdateMarketDataArgs } from "./types";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { PublicKey } from "@solana/web3.js";
+import { functions } from "./firebase";
 
 export async function getCurrentPrice(address: string): Promise<{
   data: {
@@ -11,7 +12,7 @@ export async function getCurrentPrice(address: string): Promise<{
   };
   success: boolean;
 }> {
-  const getPrice = httpsCallable(getFunctions(), "getPrice");
+  const getPrice = httpsCallable(functions, "getPrice");
   return (await getPrice({ address: address })).data as {
     data: {
       value: number;
@@ -23,7 +24,7 @@ export async function getCurrentPrice(address: string): Promise<{
 }
 
 export async function updateMarketData(payload: UpdateMarketDataArgs) {
-  const updateMarket = httpsCallable(getFunctions(), "updateMarketDetails");
+  const updateMarket = httpsCallable(functions, "updateMarketDetails");
   await updateMarket(payload);
 }
 
@@ -31,7 +32,7 @@ export async function verifyAndGetToken(
   publicKey: PublicKey,
   output: Uint8Array
 ) {
-  const verifyResponse = httpsCallable(getFunctions(), "verifySignIn");
+  const verifyResponse = httpsCallable(functions, "verifySignIn");
   return (
     await verifyResponse({
       signature: bs58.encode(output),
@@ -41,7 +42,7 @@ export async function verifyAndGetToken(
 }
 
 export async function mintNft(publicKey: PublicKey) {
-  const mintNftFn = httpsCallable(getFunctions(), "mintNft");
+  const mintNftFn = httpsCallable(functions, "mintNft");
   const { tx, mint } = (await mintNftFn()).data as {
     tx: string;
     mint: string;
@@ -50,20 +51,17 @@ export async function mintNft(publicKey: PublicKey) {
 }
 
 export async function linkAsset(asset: DAS.GetAssetResponse) {
-  const linkAssetFn = httpsCallable(getFunctions(), "linkAsset");
+  const linkAssetFn = httpsCallable(functions, "linkAsset");
   await linkAssetFn({ nft: asset });
 }
 
 export async function unlinkAsset() {
-  const unlinkAsset = httpsCallable(getFunctions(), "unlinkAsset");
+  const unlinkAsset = httpsCallable(functions, "unlinkAsset");
   await unlinkAsset();
 }
 
 export async function saveAdditionalInfo(poolId: string, content: string) {
-  const saveAdditionalInfo = httpsCallable(
-    getFunctions(),
-    "saveAdditionalInfo"
-  );
+  const saveAdditionalInfo = httpsCallable(functions, "saveAdditionalInfo");
   await saveAdditionalInfo({
     poolId,
     content,
@@ -75,7 +73,7 @@ export const handleAddComment = async (
   poolId: string,
   newComment: IComment
 ) => {
-  const addComment = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  const addComment = httpsCallable(functions, "handleCommentsAndReplies");
   await addComment({ poolId, newComment, method: "handleAddComment" });
 };
 
@@ -84,10 +82,7 @@ export const handleReplyComment = async (
   newReply: IReply,
   commentId: string
 ) => {
-  const replyComment = httpsCallable(
-    getFunctions(),
-    "handleCommentsAndReplies"
-  );
+  const replyComment = httpsCallable(functions, "handleCommentsAndReplies");
   await replyComment({
     poolId,
     newReply,
@@ -101,10 +96,7 @@ export const handleUpdateComment = async (
   updatedCommentContent: string,
   commentId: string
 ) => {
-  const updateComment = httpsCallable(
-    getFunctions(),
-    "handleCommentsAndReplies"
-  );
+  const updateComment = httpsCallable(functions, "handleCommentsAndReplies");
   await updateComment({
     poolId,
     updatedCommentContent,
@@ -118,10 +110,7 @@ export const handleUpdatePinComment = async (
   commentId: string,
   pin: boolean
 ) => {
-  const updatePinComment = httpsCallable(
-    getFunctions(),
-    "handleCommentsAndReplies"
-  );
+  const updatePinComment = httpsCallable(functions, "handleCommentsAndReplies");
   await updatePinComment({
     poolId,
     commentId,
@@ -134,10 +123,7 @@ export const handleDeleteComment = async (
   poolId: string,
   commentId: string
 ) => {
-  const deleteComment = httpsCallable(
-    getFunctions(),
-    "handleCommentsAndReplies"
-  );
+  const deleteComment = httpsCallable(functions, "handleCommentsAndReplies");
   await deleteComment({ poolId, commentId, method: "handleDeleteComment" });
 };
 
@@ -148,7 +134,7 @@ export const handleUpdateCommentVote = async (
   buttonType: string
 ) => {
   const updateCommentVote = httpsCallable(
-    getFunctions(),
+    functions,
     "handleCommentsAndReplies"
   );
   await updateCommentVote({
@@ -166,7 +152,7 @@ export const handleUpdateReply = async (
   commentId: string,
   replyId: string
 ) => {
-  const updateReply = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  const updateReply = httpsCallable(functions, "handleCommentsAndReplies");
   await updateReply({
     poolId,
     updatedReplyContent,
@@ -181,7 +167,7 @@ export const handleDeleteReply = async (
   commentId: string,
   replyId: string
 ) => {
-  const deleteReply = httpsCallable(getFunctions(), "handleCommentsAndReplies");
+  const deleteReply = httpsCallable(functions, "handleCommentsAndReplies");
   await deleteReply({
     poolId,
     commentId,
@@ -197,10 +183,7 @@ export const handleUpdateReplyVote = async (
   operation: string,
   buttonType: string
 ) => {
-  const updateReplyVote = httpsCallable(
-    getFunctions(),
-    "handleCommentsAndReplies"
-  );
+  const updateReplyVote = httpsCallable(functions, "handleCommentsAndReplies");
   await updateReplyVote({
     poolId,
     commentId,

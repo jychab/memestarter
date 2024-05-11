@@ -4,6 +4,8 @@ import {db, program, programEventAuthority} from "./utils";
 import * as anchor from "@coral-xyz/anchor";
 import {
   CheckClaimEvent,
+  ClaimRewardEvent,
+  ClaimRewardForCreatorEvent,
   CreatePurchaseAuthorisationEvent,
   Events,
   InitializedPoolEvent,
@@ -12,6 +14,7 @@ import {
   Status,
   WithdrawEvent,
   WithdrawLpTokenEvent,
+  WithdrawLpTokenForCreatorEvent,
 } from "./utils/types";
 import {FieldValue} from "firebase-admin/firestore";
 import {IdlEvent} from "@coral-xyz/anchor/dist/cjs/idl";
@@ -66,26 +69,35 @@ export default async function programWebhook(req: Request, res: Response) {
             return;
           }
           switch (event.name) {
-          case program.idl.events[0].name: // InitializedPoolEvent
-            processIntializePoolEvent(event, batch, tx);
-            break;
-          case program.idl.events[1].name: // CreatePurchaseAuthorisationEvent
-            processCreatePurchaseAuthorisationEvent(event, batch, tx);
-            break;
-          case program.idl.events[2].name: // PurchasePresaleEvent
-            processPurchasePresaleEvent(event, batch, tx);
-            break;
-          case program.idl.events[3].name: // CheckClaimEvent
+          case program.idl.events[0].name:
             processCheckClaimEvent(event, batch, tx);
             break;
-          case program.idl.events[4].name: // WithdrawLpTokenEvent
-            processWithdrawLpTokenEvent(event, batch, tx);
+          case program.idl.events[1].name:
+            processClaimRewardEvent(event, batch, tx);
             break;
-          case program.idl.events[5].name: // LaunchTokenAmmEvent
+          case program.idl.events[2].name:
+            processClaimRewardForCreatorEvent(event, batch, tx);
+            break;
+          case program.idl.events[3].name:
+            processCreatePurchaseAuthorisationEvent(event, batch, tx);
+            break;
+          case program.idl.events[4].name:
+            processIntializePoolEvent(event, batch, tx);
+            break;
+          case program.idl.events[5].name:
             processLaunchAmmEvent(event, batch, tx);
             break;
-          case program.idl.events[6].name: // WithdrawEvent
+          case program.idl.events[6].name:
+            processPurchasePresaleEvent(event, batch, tx);
+            break;
+          case program.idl.events[7].name:
             processWithdrawEvent(event, batch, tx);
+            break;
+          case program.idl.events[8].name:
+            processWithdrawLpTokenEvent(event, batch, tx);
+            break;
+          case program.idl.events[9].name:
+            processWithdrawLpTokenForCreatorEvent(event, batch, tx);
             break;
           default:
             break;
@@ -107,8 +119,8 @@ function processWithdrawEvent(
   batch.set(
     db.collection("Pool").doc(withdrawEvent.pool),
     {
-      amountWsolWithdrawn: FieldValue.increment(
-        parseInt(withdrawEvent.amountWsolWithdrawn, 16)
+      totalAmountWithdrawn: FieldValue.increment(
+        parseInt(withdrawEvent.amountWithdrawn, 16)
       ),
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -121,7 +133,7 @@ function processWithdrawEvent(
       .collection("Pool")
       .doc(withdrawEvent.pool),
     {
-      wsolWithdrawn: parseInt(withdrawEvent.amountWsolWithdrawn, 16),
+      amountWithdrawn: parseInt(withdrawEvent.amountWithdrawn, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
@@ -138,7 +150,7 @@ function processWithdrawEvent(
         event: Events.WithdrawEvent,
         eventData: {
           ...withdrawEvent,
-          amountWsolWithdrawn: parseInt(withdrawEvent.amountWsolWithdrawn, 16),
+          amountWithdrawn: parseInt(withdrawEvent.amountWithdrawn, 16),
         },
         updatedAt: FieldValue.serverTimestamp(),
       }
@@ -155,7 +167,7 @@ function processWithdrawEvent(
       event: Events.WithdrawEvent,
       eventData: {
         ...withdrawEvent,
-        amountWsolWithdrawn: parseInt(withdrawEvent.amountWsolWithdrawn, 16),
+        amountWithdrawn: parseInt(withdrawEvent.amountWithdrawn, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -209,46 +221,48 @@ function processWithdrawLpTokenEvent(
   batch: FirebaseFirestore.WriteBatch,
   tx: any
 ) {
-  const claimEventData = JSON.parse(
+  const withdrawLpTokenData = JSON.parse(
     JSON.stringify(event.data)
   ) as WithdrawLpTokenEvent;
   batch.set(
     db
       .collection("Mint")
-      .doc(claimEventData.originalMint)
+      .doc(withdrawLpTokenData.originalMint)
       .collection("Pool")
-      .doc(claimEventData.pool),
+      .doc(withdrawLpTokenData.pool),
     {
-      lpClaimed: FieldValue.increment(parseInt(claimEventData.lpClaimed, 16)),
-      lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
+      lpClaimed: FieldValue.increment(
+        parseInt(withdrawLpTokenData.lpClaimed, 16)
+      ),
+      lastClaimedAt: parseInt(withdrawLpTokenData.lastClaimedAt, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
   );
   batch.set(
-    db.collection("Pool").doc(claimEventData.pool),
+    db.collection("Pool").doc(withdrawLpTokenData.pool),
     {
-      totalClaimed: FieldValue.increment(
-        parseInt(claimEventData.lpClaimed, 16)
+      totalLpClaimed: FieldValue.increment(
+        parseInt(withdrawLpTokenData.lpClaimed, 16)
       ),
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
   );
-  if (claimEventData.originalMintOwner !== claimEventData.payer) {
+  if (withdrawLpTokenData.originalMintOwner !== withdrawLpTokenData.payer) {
     batch.set(
       db
         .collection("Users")
-        .doc(claimEventData.originalMintOwner)
+        .doc(withdrawLpTokenData.originalMintOwner)
         .collection("Transactions")
         .doc(tx.signature),
       {
         signature: tx.signature,
         event: Events.ClaimRewardsEvent,
         eventData: {
-          ...claimEventData,
-          lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
-          lpClaimed: parseInt(claimEventData.lpClaimed, 16),
+          ...withdrawLpTokenData,
+          lastClaimedAt: parseInt(withdrawLpTokenData.lastClaimedAt, 16),
+          lpClaimed: parseInt(withdrawLpTokenData.lpClaimed, 16),
         },
         updatedAt: FieldValue.serverTimestamp(),
       }
@@ -257,16 +271,169 @@ function processWithdrawLpTokenEvent(
   batch.set(
     db
       .collection("Users")
-      .doc(claimEventData.payer)
+      .doc(withdrawLpTokenData.payer)
+      .collection("Transactions")
+      .doc(tx.signature),
+    {
+      signature: tx.signature,
+      event: Events.WithdrawLpEvent,
+      eventData: {
+        ...withdrawLpTokenData,
+        lastClaimedAt: parseInt(withdrawLpTokenData.lastClaimedAt, 16),
+        lpClaimed: parseInt(withdrawLpTokenData.lpClaimed, 16),
+      },
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+  );
+}
+
+function processWithdrawLpTokenForCreatorEvent(
+  event: anchor.Event<IdlEvent, Record<string, string>>,
+  batch: FirebaseFirestore.WriteBatch,
+  tx: any
+) {
+  const withdrawLpTokenForCreatorData = JSON.parse(
+    JSON.stringify(event.data)
+  ) as WithdrawLpTokenForCreatorEvent;
+  batch.set(
+    db.collection("Pool").doc(withdrawLpTokenForCreatorData.pool),
+    {
+      totalLpClaimed: FieldValue.increment(
+        parseInt(withdrawLpTokenForCreatorData.lpClaimed, 16)
+      ),
+      lpClaimedByCreator: FieldValue.increment(
+        parseInt(withdrawLpTokenForCreatorData.lpClaimed, 16)
+      ),
+      lpLastClaimedByCreator: parseInt(
+        withdrawLpTokenForCreatorData.lastClaimedAt,
+        16
+      ),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  batch.set(
+    db
+      .collection("Users")
+      .doc(withdrawLpTokenForCreatorData.payer)
+      .collection("Transactions")
+      .doc(tx.signature),
+    {
+      signature: tx.signature,
+      event: Events.WithdrawLpForCreatorEvent,
+      eventData: {
+        ...withdrawLpTokenForCreatorData,
+        lastClaimedAt: parseInt(
+          withdrawLpTokenForCreatorData.lastClaimedAt,
+          16
+        ),
+        lpClaimed: parseInt(withdrawLpTokenForCreatorData.lpClaimed, 16),
+      },
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+  );
+}
+
+function processClaimRewardForCreatorEvent(
+  event: anchor.Event<IdlEvent, Record<string, string>>,
+  batch: FirebaseFirestore.WriteBatch,
+  tx: any
+) {
+  const claimRewardForCreatorData = JSON.parse(
+    JSON.stringify(event.data)
+  ) as ClaimRewardForCreatorEvent;
+  batch.set(
+    db.collection("Pool").doc(claimRewardForCreatorData.pool),
+    {
+      totalMintClaimed: FieldValue.increment(
+        parseInt(claimRewardForCreatorData.mintElligible, 16)
+      ),
+      initialSupplyClaimedByCreator: parseInt(
+        claimRewardForCreatorData.mintElligible,
+        16
+      ),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  batch.set(
+    db
+      .collection("Users")
+      .doc(claimRewardForCreatorData.payer)
+      .collection("Transactions")
+      .doc(tx.signature),
+    {
+      signature: tx.signature,
+      event: Events.ClaimRewardsForCreatorEvent,
+      eventData: {
+        ...claimRewardForCreatorData,
+        mintElligible: parseInt(claimRewardForCreatorData.mintElligible, 16),
+      },
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+  );
+}
+
+function processClaimRewardEvent(
+  event: anchor.Event<IdlEvent, Record<string, string>>,
+  batch: FirebaseFirestore.WriteBatch,
+  tx: any
+) {
+  const claimRewardData = JSON.parse(
+    JSON.stringify(event.data)
+  ) as ClaimRewardEvent;
+  batch.set(
+    db
+      .collection("Mint")
+      .doc(claimRewardData.originalMint)
+      .collection("Pool")
+      .doc(claimRewardData.pool),
+    {
+      mintClaimed: parseInt(claimRewardData.mintElligible, 16),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  batch.set(
+    db.collection("Pool").doc(claimRewardData.pool),
+    {
+      totalMintClaimed: FieldValue.increment(
+        parseInt(claimRewardData.mintElligible, 16)
+      ),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true}
+  );
+  if (claimRewardData.originalMintOwner !== claimRewardData.payer) {
+    batch.set(
+      db
+        .collection("Users")
+        .doc(claimRewardData.originalMintOwner)
+        .collection("Transactions")
+        .doc(tx.signature),
+      {
+        signature: tx.signature,
+        event: Events.ClaimRewardsEvent,
+        eventData: {
+          ...claimRewardData,
+          mintElligible: parseInt(claimRewardData.mintElligible, 16),
+        },
+        updatedAt: FieldValue.serverTimestamp(),
+      }
+    );
+  }
+  batch.set(
+    db
+      .collection("Users")
+      .doc(claimRewardData.payer)
       .collection("Transactions")
       .doc(tx.signature),
     {
       signature: tx.signature,
       event: Events.ClaimRewardsEvent,
       eventData: {
-        ...claimEventData,
-        lastClaimedAt: parseInt(claimEventData.lastClaimedAt, 16),
-        lpClaimed: parseInt(claimEventData.lpClaimed, 16),
+        ...claimRewardData,
+        mintElligible: parseInt(claimRewardData.mintElligible, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
     }
@@ -288,6 +455,7 @@ function processCheckClaimEvent(
       .collection("Pool")
       .doc(checkClaimData.pool),
     {
+      mintElligible: parseInt(checkClaimData.mintElligible, 16),
       lpElligible: parseInt(checkClaimData.lpElligible, 16),
       updatedAt: FieldValue.serverTimestamp(),
     },
@@ -304,6 +472,7 @@ function processCheckClaimEvent(
       event: Events.CheckClaimEvent,
       eventData: {
         ...checkClaimData,
+        mintElligible: parseInt(checkClaimData.mintElligible, 16),
         lpElligible: parseInt(checkClaimData.lpElligible, 16),
       },
       updatedAt: FieldValue.serverTimestamp(),
@@ -422,7 +591,15 @@ function processIntializePoolEvent(
     decimal: parseInt(poolEventData.decimal, 16),
     presaleTarget: parseInt(poolEventData.presaleTarget, 16),
     presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
-    totalSupply: parseInt(poolEventData.totalSupply, 16),
+    liquidityPoolSupply: parseInt(poolEventData.liquidityPoolSupply, 16),
+    initialSupply: parseInt(poolEventData.initialSupply, 16),
+    initialSupplyForCreator: parseInt(
+      poolEventData.initialSupplyForCreator,
+      16
+    ),
+    totalSupply:
+      parseInt(poolEventData.liquidityPoolSupply, 16) +
+      parseInt(poolEventData.initialSupply, 16),
     vestingPeriod: parseInt(poolEventData.vestingPeriod),
     maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?
       parseInt(poolEventData.maxAmountPerPurchase, 16) :
@@ -444,7 +621,12 @@ function processIntializePoolEvent(
         decimal: parseInt(poolEventData.decimal, 16),
         presaleTarget: parseInt(poolEventData.presaleTarget, 16),
         presaleTimeLimit: parseInt(poolEventData.presaleTimeLimit, 16),
-        totalSupply: parseInt(poolEventData.totalSupply, 16),
+        liquidityPoolSupply: parseInt(poolEventData.liquidityPoolSupply, 16),
+        initialSupplyForCreator: parseInt(
+          poolEventData.initialSupplyForCreator,
+          16
+        ),
+        initialSupply: parseInt(poolEventData.initialSupply, 16),
         vestingPeriod: parseInt(poolEventData.vestingPeriod),
         maxAmountPerPurchase: poolEventData.maxAmountPerPurchase ?
           parseInt(poolEventData.maxAmountPerPurchase, 16) :

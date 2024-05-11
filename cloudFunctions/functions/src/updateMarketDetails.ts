@@ -1,6 +1,5 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
 import {db} from "./utils";
-import {Pool} from "./utils/types";
 
 interface UpdateMarket {
   poolId: string;
@@ -23,14 +22,17 @@ interface UpdateMarket {
 export default async function updateMarketDetails(
   data: UpdateMarket,
   context: CallableContext
-): Promise<any> {
+): Promise<void> {
   if (!context.auth) {
     throw new HttpsError("permission-denied", "Unauthenticated");
   }
   if (context.auth.token.firebase.sign_in_provider !== "custom") {
     throw new HttpsError("permission-denied", "Wrong authentication provider!");
   }
-  const pool = (await db.doc(`Pool/${data.poolId}`).get()).data() as Pool;
+  const pool = (await db.doc(`Pool/${data.poolId}`).get()).data();
+  if (!pool) {
+    throw new HttpsError("invalid-argument", "Pool does not exist!");
+  }
   if (
     context.auth.uid !== pool.authority ||
     (pool.delegate && context.auth.uid !== pool.delegate)

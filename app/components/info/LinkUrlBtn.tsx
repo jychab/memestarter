@@ -19,12 +19,16 @@ export const LinkUrlBtn: FC<LinkUrlBtnProps> = ({ editor }) => {
     // empty
     if (url === "") {
       editor.chain().focus().unsetLink().run();
-
       return;
     }
 
+    let link = url;
+    if (!url.startsWith("https://")) {
+      link = "https://" + url;
+    }
+
     // update link
-    editor.chain().focus().setLink({ href: url }).run();
+    editor.chain().focus().setLink({ href: link }).run();
 
     setShow(false);
   }, [editor, url]);

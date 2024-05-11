@@ -18,13 +18,19 @@ export const LaunchedTable: FC<LaunchedTableProps> = ({ pool, timer }) => {
               Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Your Earnings
+              Mint Unclaimed
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Unlocked Lp (%)
+              Mint Claimed
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Claimed Lp (%)
+              Lp Allocated
+            </th>
+            <th scope="col" className="w-24 text-center p-2">
+              Lp Unclaimed
+            </th>
+            <th scope="col" className="w-24 text-center p-2">
+              Lp Claimed
             </th>
             <th scope="col" className="w-24 text-center p-2">
               Vesting End
@@ -35,7 +41,7 @@ export const LaunchedTable: FC<LaunchedTableProps> = ({ pool, timer }) => {
         <tbody>
           {pool.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={9}>
+              <td className="p-2 text-xs" colSpan={10}>
                 <span>No projects found.</span>
               </td>
             </tr>

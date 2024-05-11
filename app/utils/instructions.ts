@@ -1,56 +1,54 @@
-import { BN, Program } from "@coral-xyz/anchor";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   Liquidity,
   WSOL,
-  RENT_PROGRAM_ID,
-  SYSTEM_PROGRAM_ID,
   MarketV2,
-  TxVersion,
   generatePubKey,
   ZERO,
-  splitTxAndSigners,
   MARKET_STATE_LAYOUT_V2,
-  InstructionType,
 } from "@raydium-io/raydium-sdk";
 import {
-  createInitializeAccountInstruction,
-  getAssociatedTokenAddressSync,
   NATIVE_MINT,
+  createCloseAccountInstruction,
+  createInitializeAccountInstruction,
+  createSyncNativeInstruction,
+  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
   Connection,
-  LAMPORTS_PER_SOL,
+  Keypair,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { generateRandomU64 } from "./helper";
+import {
+  generateRandomU64,
+  getOrCreateAssociatedTokenAccountInstruction,
+} from "./helper";
 import {
   WithdrawArgs,
   WithdrawLpArgs,
-  ClaimArgs,
   CheckClaimElligbilityArgs,
   LaunchTokenAmmArgs,
-  CreateMarketArgs,
   BuyPresaleArgs,
   CreatePurchaseAuthorisationRecordArgs,
   InitializePoolArgs,
+  WithdrawLpForCreatorArgs,
+  ClaimRewardArgs,
+  ClaimRewardForCreatorsArgs,
 } from "./types";
-import { SafePresale, IDL as SafePresaleIdl } from "./idl";
+import { SafePresale } from "./idl";
+import IDL from "./idl.json";
 import {
-  FEE_COLLECTOR,
-  LOOKUP_TABLE,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   OPENBOOK_MARKET_PROGRAM_ID,
-  PROGRAM_ID,
   RAYDIUM_AMM_V4,
   RAYDIUM_FEE_COLLECTOR,
 } from "./constants";
+import { BN, Program } from "@coral-xyz/anchor";
 
 export const program = (connection: Connection) =>
-  new Program<SafePresale>(SafePresaleIdl, PROGRAM_ID, { connection });
+  new Program<SafePresale>(IDL as SafePresale, { connection });
 
 export async function withdraw(args: WithdrawArgs, connection: Connection) {
   const [purchaseReceipt] = PublicKey.findProgramAddressSync(
@@ -62,44 +60,73 @@ export async function withdraw(args: WithdrawArgs, connection: Connection) {
     args.signer,
     true
   );
-  const signerWsolTokenAccount = getAssociatedTokenAddressSync(
-    NATIVE_MINT,
-    args.signer,
+  const nftOwnerQuoteMintTokenAccount = getAssociatedTokenAddressSync(
+    args.quoteMint,
+    args.nftOwner,
     true
   );
-  const poolWsolTokenAccount = getAssociatedTokenAddressSync(
-    NATIVE_MINT,
+  const poolQuoteMintTokenAccount = getAssociatedTokenAddressSync(
+    args.quoteMint,
     args.poolId,
     true
   );
-  const [nftMetadata] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("metadata"),
-      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-      args.nft.toBuffer(),
-    ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
+  const ixs = [];
+  ixs.push(
+    await program(connection)
+      .methods.withdraw()
+      .accounts({
+        purchaseReceipt: purchaseReceipt,
+        nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+        pool: args.poolId,
+        payer: args.signer,
+        nftOwnerQuoteMintTokenAccount: nftOwnerQuoteMintTokenAccount,
+        nftOwner: args.nftOwner,
+        quoteMint: args.quoteMint,
+        poolQuoteMintTokenAccount: poolQuoteMintTokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        program: program(connection).programId,
+      })
+      .instruction()
   );
-
+  if (args.quoteMint.toBase58() == NATIVE_MINT.toBase58()) {
+    ixs.push(
+      createCloseAccountInstruction(
+        nftOwnerQuoteMintTokenAccount,
+        args.nftOwner,
+        args.signer
+      )
+    );
+  }
+  return ixs;
+}
+export async function withdrawLpForCreator(
+  args: WithdrawLpForCreatorArgs,
+  connection: Connection
+) {
+  const poolAuthorityLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolAuthority,
+    true
+  );
+  const poolLpTokenAccount = getAssociatedTokenAddressSync(
+    args.lpMint,
+    args.poolId,
+    true
+  );
   return await program(connection)
-    .methods.withdraw()
+    .methods.withdrawLpTokensForCreators()
     .accounts({
-      nftMetadata: nftMetadata,
-      purchaseReceipt: purchaseReceipt,
-      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      poolLpTokenAccount: poolLpTokenAccount,
+      poolAuthorityLpTokenAccount: poolAuthorityLpTokenAccount,
       pool: args.poolId,
+      lpMint: args.lpMint,
       payer: args.signer,
-      payerWsolTokenAccount: signerWsolTokenAccount,
-      nftOwner: args.nftOwner,
-      poolWsolTokenAccount: poolWsolTokenAccount,
-      wsol: NATIVE_MINT,
-      systemProgram: SystemProgram.programId,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
+      program: program(connection).programId,
     })
     .instruction();
 }
-export async function claim(args: ClaimArgs, connection: Connection) {
+export async function withdrawLp(args: WithdrawLpArgs, connection: Connection) {
   const [purchaseReceipt] = PublicKey.findProgramAddressSync(
     [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
     program(connection).programId
@@ -114,19 +141,6 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     args.nftOwner,
     true
   );
-  const poolAuthorityLpTokenAccount = getAssociatedTokenAddressSync(
-    args.lpMint,
-    args.poolAuthority,
-    true
-  );
-  const [nftMetadata] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("metadata"),
-      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-      args.nft.toBuffer(),
-    ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
-  );
   const purchaseReceiptLpTokenAccount = getAssociatedTokenAddressSync(
     args.lpMint,
     purchaseReceipt,
@@ -136,22 +150,86 @@ export async function claim(args: ClaimArgs, connection: Connection) {
     .methods.withdrawLpTokens()
     .accounts({
       purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
-      poolAuthority: args.poolAuthority,
-      poolAuthorityLpTokenAccount: poolAuthorityLpTokenAccount,
       nftOwnerLpTokenAccount: nftOwnerLpTokenAccount,
-      nftMetadata: nftMetadata,
       purchaseReceipt: purchaseReceipt,
       pool: args.poolId,
       nftOwner: args.nftOwner,
       nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
       lpMint: args.lpMint,
       payer: args.signer,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
+      program: program(connection).programId,
     })
     .instruction();
 }
+export async function claimRewardForCreators(
+  args: ClaimRewardForCreatorsArgs,
+  connection: Connection
+) {
+  const poolAuthorityRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.poolAuthority,
+    true
+  );
+  const poolRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.poolId,
+    true
+  );
+  return await program(connection)
+    .methods.claimRewardTokenForCreators()
+    .accounts({
+      poolRewardTokenAccount: poolRewardTokenAccount,
+      poolAuthorityRewardTokenAccount: poolAuthorityRewardTokenAccount,
+      pool: args.poolId,
+      rewardMint: args.mint,
+      payer: args.signer,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      program: program(connection).programId,
+    })
+    .instruction();
+}
+
+export async function claimReward(
+  args: ClaimRewardArgs,
+  connection: Connection
+) {
+  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
+    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
+    program(connection).programId
+  );
+  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
+    args.nft,
+    args.nftOwner,
+    true
+  );
+  const nftOwnerRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.nftOwner,
+    true
+  );
+  const purchaseReceiptRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    purchaseReceipt,
+    true
+  );
+  return await program(connection)
+    .methods.claimRewardToken()
+    .accounts({
+      purchaseReceiptRewardTokenAccount: purchaseReceiptRewardTokenAccount,
+      nftOwnerRewardTokenAccount: nftOwnerRewardTokenAccount,
+      purchaseReceipt: purchaseReceipt,
+      pool: args.poolId,
+      nftOwner: args.nftOwner,
+      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
+      rewardMint: args.mint,
+      payer: args.signer,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      program: program(connection).programId,
+    })
+    .instruction();
+}
+
 export async function checkClaimElligibility(
   args: CheckClaimElligbilityArgs,
   connection: Connection
@@ -170,18 +248,30 @@ export async function checkClaimElligibility(
     args.poolId,
     true
   );
+  const purchaseReceiptRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    purchaseReceipt,
+    true
+  );
+  const poolRewardTokenAccount = getAssociatedTokenAddressSync(
+    args.mint,
+    args.poolId,
+    true
+  );
   return await program(connection)
     .methods.checkClaimEllgibility()
     .accounts({
       purchaseReceipt: purchaseReceipt,
       pool: args.poolId,
       payer: args.signer,
+      purchaseReceiptRewardTokenAccount: purchaseReceiptRewardTokenAccount,
+      poolRewardTokenAccount: poolRewardTokenAccount,
       purchaseReceiptLpTokenAccount: purchaseReceiptLpTokenAccount,
       poolLpTokenAccount: poolLpTokenAccount,
+      rewardMint: args.mint,
       lpMint: args.lpMint,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
+      program: program(connection).programId,
     })
     .instruction();
 }
@@ -194,7 +284,7 @@ export async function launchTokenAmm(
     marketVersion: 3,
     marketId: args.marketId,
     baseMint: args.mint,
-    quoteMint: NATIVE_MINT,
+    quoteMint: args.quoteMint,
     baseDecimals: args.decimals,
     quoteDecimals: WSOL.decimals,
     programId: RAYDIUM_AMM_V4,
@@ -260,24 +350,21 @@ export async function launchTokenAmm(
     .accounts({
       pool: args.poolId,
       userWallet: args.signer,
-      poolAuthority: args.poolAuthority,
       userTokenCoin: userTokenCoin,
       userTokenPc: userTokenPc,
       poolTokenCoin: poolTokenCoin,
       poolTokenPc: poolTokenPc,
-      rent: RENT_PROGRAM_ID,
-      systemProgram: SYSTEM_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       ammCoinMint: poolInfo.baseMint,
       ammPcMint: poolInfo.quoteMint,
-      raydiumAmmProgram: RAYDIUM_AMM_V4,
+      program: program(connection).programId,
     })
     .remainingAccounts(remainingAccounts)
     .instruction();
 }
 export async function createMarketPart3(
   mint: PublicKey,
+  quoteMint: PublicKey,
   decimal: number,
   lotSize: number,
   tickSize: number,
@@ -311,7 +398,7 @@ export async function createMarketPart3(
       baseVault: baseVault,
       quoteVault: quoteVault,
       baseMint: mint,
-      quoteMint: NATIVE_MINT,
+      quoteMint: quoteMint,
       baseLotSize: baseLotSize,
       quoteLotSize: quoteLotSize,
       feeRateBps: feeRateBps,
@@ -408,6 +495,7 @@ export async function createMarketPart1(
   connection: Connection,
   signer: PublicKey,
   mint: PublicKey,
+  quoteMint: PublicKey,
   vaultOwner: PublicKey
 ) {
   const baseVault = generatePubKey({
@@ -444,7 +532,7 @@ export async function createMarketPart1(
     createInitializeAccountInstruction(baseVault.publicKey, mint, vaultOwner),
     createInitializeAccountInstruction(
       quoteVault.publicKey,
-      NATIVE_MINT,
+      quoteMint,
       vaultOwner
     )
   );
@@ -478,29 +566,34 @@ export async function buyPresaleIx(
   args: BuyPresaleArgs,
   connection: Connection
 ) {
-  const [purchaseReceipt] = PublicKey.findProgramAddressSync(
-    [Buffer.from("receipt"), args.poolId.toBuffer(), args.nft.toBuffer()],
-    program(connection).programId
-  );
-
-  const poolAndWSOLATA = getAssociatedTokenAddressSync(
-    NATIVE_MINT,
-    args.poolId,
-    true
-  );
-  const [nftMetadata] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("metadata"),
-      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-      args.nft.toBuffer(),
-    ],
-    MPL_TOKEN_METADATA_PROGRAM_ID
-  );
-  const nftOwnerOriginalMintAta = getAssociatedTokenAddressSync(
-    args.nft,
-    args.signer,
-    true
-  );
+  const ixs: any[] = [];
+  const poolQuoteMintTokenAccount =
+    await getOrCreateAssociatedTokenAccountInstruction(
+      ixs,
+      args.signer,
+      args.quoteMint,
+      args.poolId,
+      true,
+      connection
+    );
+  const payerQuoteMintTokenAccount =
+    await getOrCreateAssociatedTokenAccountInstruction(
+      ixs,
+      args.signer,
+      args.quoteMint,
+      args.signer,
+      true,
+      connection
+    );
+  const feeCollectorQuoteMintTokenAccount =
+    await getOrCreateAssociatedTokenAccountInstruction(
+      ixs,
+      args.signer,
+      args.quoteMint,
+      new PublicKey("73hCTYpoZNdFiwbh2PrW99ykAyNcQVfUwPMUhu9ogNTg"),
+      true,
+      connection
+    );
 
   let purchaseAuthorisationRecord: PublicKey | null = null;
   if (args.nftCollection) {
@@ -513,44 +606,46 @@ export async function buyPresaleIx(
       program(connection).programId
     );
   }
+  if (args.quoteMint.toBase58() === NATIVE_MINT.toBase58()) {
+    ixs.push(
+      SystemProgram.transfer({
+        fromPubkey: args.signer,
+        toPubkey: payerQuoteMintTokenAccount,
+        lamports: Math.round(args.amount * 1.01),
+      })
+    );
+    ixs.push(createSyncNativeInstruction(payerQuoteMintTokenAccount));
+  }
 
-  return await program(connection)
-    .methods.buyPresale(new BN(args.amount))
-    .accounts({
-      purchaseAuthorisationRecord: purchaseAuthorisationRecord,
-      nftMetadata: nftMetadata,
-      nftOwnerNftTokenAccount: nftOwnerOriginalMintAta,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      wsolMint: NATIVE_MINT,
-      poolWsolTokenAccount: poolAndWSOLATA,
-      purchaseReceipt: purchaseReceipt,
-      pool: args.poolId,
-      nft: args.nft,
-      payer: args.signer,
-      feeCollector: FEE_COLLECTOR,
-      systemProgram: SystemProgram.programId,
-    })
-    .instruction();
+  ixs.push(
+    await program(connection)
+      .methods.buyPresale(new BN(args.amount))
+      .accounts({
+        quoteMint: args.quoteMint,
+        poolQuoteMintTokenAccount: poolQuoteMintTokenAccount,
+        payerQuoteMintTokenAccount: payerQuoteMintTokenAccount,
+        feeCollectorQuoteMintTokenAccount: feeCollectorQuoteMintTokenAccount,
+        purchaseAuthorisationRecord: purchaseAuthorisationRecord,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        pool: args.poolId,
+        nft: args.nft,
+        payer: args.signer,
+        program: program(connection).programId,
+      })
+      .instruction()
+  );
+  return ixs;
 }
 export async function createPurchaseAuthorisationIx(
   args: CreatePurchaseAuthorisationRecordArgs,
   connection: Connection
 ) {
-  const [purchaseAuthorisationRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("authorisation"),
-      args.poolId.toBuffer(),
-      args.collectionMint.toBuffer(),
-    ],
-    program(connection).programId
-  );
   return await program(connection)
     .methods.createPurchaseAuthorisation(args.collectionMint)
     .accounts({
       payer: args.signer,
       pool: args.poolId,
-      purchaseAuthorisationRecord: purchaseAuthorisationRecord,
-      systemProgram: SystemProgram.programId,
+      program: program(connection).programId,
     })
     .instruction();
 }
@@ -593,6 +688,7 @@ export async function initializePoolIx(
   return {
     instruction: await program(connection)
       .methods.initPool({
+        quoteMint: args.quoteMint,
         name: rewardMint.name,
         symbol: rewardMint.symbol,
         decimals: rewardMint.decimal,
@@ -601,7 +697,8 @@ export async function initializePoolIx(
         presaleTarget: new BN(args.presaleTarget),
         creatorFeeBasisPoints: args.creatorFeesBasisPoints,
         vestingPeriod: args.vestingPeriod,
-        totalSupply: new BN(args.totalSupply),
+        initialSupply: new BN(args.initialSupply),
+        liquidityPoolSupply: new BN(args.liquidityPoolSupply),
         randomKey: new BN(randomKey),
         maxAmountPerPurchase: args.maxAmountPerPurchase
           ? new BN(args.maxAmountPerPurchase)
@@ -611,14 +708,10 @@ export async function initializePoolIx(
       })
       .accounts({
         payer: args.signer,
-        pool: poolId,
-        rewardMint: rewardMint.mint,
         rewardMintMetadata: rewardMintMetadata,
         poolRewardMintTokenAccount: poolAndMintRewardAta,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-        mplTokenProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
+        program: program(connection).programId,
       })
       .instruction(),
     poolId: poolId,

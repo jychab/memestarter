@@ -13,10 +13,6 @@ interface CreateTokenPaneProps {
   handleExternalUrlChange: (e: any) => void;
   description: string;
   handleDescriptionChange: (e: any) => void;
-  decimals: number;
-  setDecimals: React.Dispatch<React.SetStateAction<number>>;
-  supply: string;
-  setSupply: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
@@ -30,13 +26,7 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
   handleExternalUrlChange,
   description,
   handleDescriptionChange,
-  decimals,
-  setDecimals,
-  supply,
-  setSupply,
 }) => {
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-
   return (
     <div className="animate-fade-right flex flex-col lg:flex-row gap-4">
       <div className="flex w-40 h-40 lg:w-60 lg:h-60 items-center justify-center">
@@ -151,65 +141,6 @@ export const CreateTokenPane: FC<CreateTokenPaneProps> = ({
           value={description}
           onChange={handleDescriptionChange}
         />
-        <div className="flex flex-col gap-4 items-start">
-          <button
-            type="button"
-            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-            className="bg-gray-400 border border-gray-300  px-2 py-1 text-sm rounded"
-          >
-            {showAdvancedSettings
-              ? "Hide Advanced Settings"
-              : "Show Advanced Settings"}
-          </button>
-          {showAdvancedSettings && (
-            <div className="grid grid-cols-5 md:grid-cols-10 gap-4 items-center">
-              <label
-                htmlFor="decimal-input"
-                className="block text-sm font-medium text-gray-400 col-span-2"
-              >
-                Decimals:
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                id="decimal-input"
-                className="col-span-3 md:col-span-2 w-16 text-center text-sm block p-1 rounded border border-gray-300  text-black "
-                placeholder={decimals.toString()}
-                value={!Number.isNaN(decimals) ? decimals : 0}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setDecimals(parseInt(e.target.value));
-                  } else {
-                    setDecimals(NaN);
-                  }
-                }}
-                required
-              />
-
-              <label
-                htmlFor="supply-input"
-                className="block text-sm font-medium text-gray-400 col-span-2 md:col-span-3"
-              >
-                Total Supply:
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                id="supply-input"
-                className="col-span-3 text-center text-sm block p-1 rounded border border-gray-300 text-black "
-                placeholder={supply.toString()}
-                value={separateNumberWithComma(supply.replaceAll(",", ""))}
-                onChange={(e) => {
-                  const amount = e.target.value.replaceAll(",", "");
-                  if (!amount || amount.match(/^\d+$/)) {
-                    setSupply(e.target.value);
-                  }
-                }}
-                required
-              />
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import {log} from "firebase-functions/logger";
 import {db} from "./utils";
 import {addToQueue} from "./utils/helper";
-import {Pool} from "./utils/types";
 
 export async function enQueue() {
   const currentTime = Date.now() / 1000;
@@ -17,7 +16,7 @@ export async function enQueue() {
   if (!candidates.empty) {
     await Promise.all(
       candidates.docs.map((candidate) => {
-        const data = candidate.data() as Pool;
+        const data = candidate.data();
         batch.update(candidate.ref, {
           inQueue: true,
         });

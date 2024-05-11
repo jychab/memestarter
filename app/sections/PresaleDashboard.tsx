@@ -8,6 +8,7 @@ import {
 } from "../utils/helper";
 import { CollectionDetails } from "../utils/types";
 import { Chip } from "../components/Chip";
+import { Tooltip } from "../components/Tooltip";
 
 interface PresaleDashboardProps {
   symbol: string;
@@ -18,7 +19,7 @@ interface PresaleDashboardProps {
   liquidityCollected: number;
   presaleTimeLimit: number;
   presaleTarget: number;
-  creatorFeeBasisPoints: number;
+  liquidityPoolSupply: number;
   description?: string;
   collectionsRequired?: CollectionDetails[] | null;
 }
@@ -29,7 +30,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   uniqueBackers,
   presaleTimeLimit,
   totalSupply,
-  creatorFeeBasisPoints,
+  liquidityPoolSupply,
   decimal,
   symbol,
   vestingPeriod,
@@ -37,7 +38,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   collectionsRequired,
 }) => {
   return (
-    <div className="grid grid-cols-10 items-end justify-center overflow-x-auto gap-4">
+    <div className="grid grid-cols-9 items-end justify-center overflow-x-auto gap-4">
       {collectionsRequired && (
         <div className="col-span-10">
           <div className="flex-col flex gap-2 bg-gray-100 rounded p-2">
@@ -56,7 +57,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
           </div>
         </div>
       )}
-      <div className="col-span-4 flex flex-col gap-1">
+      <div className="col-span-3 flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">
             {`${liquidityCollected / LAMPORTS_PER_SOL}`}
@@ -82,7 +83,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         }`}</span>
         <span className="text-[10px]">{`till presale end`}</span>
       </div>
-      <div className="col-span-4 flex flex-col gap-1">
+      <div className="col-span-3 flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">
             {`${formatLargeNumber(totalSupply / 10 ** decimal)} ${symbol}`}
@@ -91,10 +92,17 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         <span className="text-[10px]">{`total supply`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
-        <span className="text-sm text-black">
-          {(creatorFeeBasisPoints / 100).toString() + "%"}
-        </span>
-        <span className="text-[10px]">{`creator fees`}</span>
+        <div className="flex gap-2 items-center">
+          <span className="text-sm text-black">
+            {((liquidityPoolSupply * 100) / totalSupply).toString() + "%"}
+          </span>
+          <Tooltip
+            content={
+              "This vested supply is used to create the intial liquidity pool on Raydium."
+            }
+          />
+        </div>
+        <span className="text-[10px]">{`vested supply`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
         <span className="text-sm text-black">{`${convertSecondsToNearestUnit(

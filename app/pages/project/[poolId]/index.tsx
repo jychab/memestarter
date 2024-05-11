@@ -81,9 +81,13 @@ export function Pool() {
       status &&
       (status == Status.VestingInProgress || status == Status.VestingCompleted)
     ) {
-      getCurrentPrice(pool.mint).then((res) => {
-        setPrice(res.data.value);
-      });
+      getCurrentPrice(pool.mint)
+        .then((res) => {
+          setPrice(res.data.value);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }
   }, [status, pool]);
 
@@ -142,10 +146,7 @@ export function Pool() {
 
   const getButton = useMemo(() => {
     if (!status || !pool) return null;
-    if (
-      status === Status.PresaleInProgress ||
-      status === Status.PresaleTargetMet
-    ) {
+    if (status === Status.PresaleInProgress) {
       if (!publicKey) {
         return (
           <MainBtn
@@ -195,6 +196,13 @@ export function Pool() {
           />
         );
       }
+    } else if (status === Status.PresaleTargetMet) {
+      return (
+        <MainBtn
+          color={"text-green-100 bg-green-700 hover:bg-green-800"}
+          text={"Presale Target Met"}
+        />
+      );
     } else if (status === Status.Expired) {
       return (
         <MainBtn
@@ -250,9 +258,10 @@ export function Pool() {
 
   return (
     pool && (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
-        <div className="flex flex-col gap-4 rounded border w-full shadow-sm p-4 text-gray-400 font-medium">
+      <div className="flex flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
+        <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
           <MainPane
+            creatorsFeeBasisPoints={pool.creatorFeeBasisPoints}
             lpMint={pool.lpMint}
             image={pool.image}
             name={pool.name}
@@ -264,7 +273,7 @@ export function Pool() {
             status == Status.PresaleTargetMet ||
             status == Status.ReadyToLaunch) && (
             <PresaleDashboard
-              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+              liquidityPoolSupply={pool.liquidityPoolSupply}
               collectionsRequired={pool.collectionsRequired}
               uniqueBackers={uniqueBackers}
               symbol={pool.symbol}
@@ -288,17 +297,13 @@ export function Pool() {
               vestingPeriod={pool.vestingPeriod}
               uniqueBackers={uniqueBackers}
               vestingStartedAt={pool.vestingStartedAt}
-              totalClaimed={pool.totalClaimed}
+              totalLpClaimed={pool.totalLpClaimed}
+              totalMintClaimed={pool.totalMintClaimed}
+              initialSupply={pool.initialSupply}
               amountLpReceived={pool.amountLpReceived}
             />
           )}
-          {publicKey &&
-            (status == Status.PresaleInProgress ||
-              status == Status.PresaleTargetMet ||
-              status == Status.ReadyToLaunch) && (
-              <span className="uppercase text-xs">Funding</span>
-            )}
-          {getButton}
+          <div className="mt-4">{getButton}</div>
         </div>
         <InfoSection
           poolCreator={pool.authority}

@@ -1,4 +1,4 @@
-import { IDL as SafePresaleIdl } from "./idl";
+import IDL from "./idl.json";
 export function getCustomErrorMessage(errorMessage: any): string {
   const customErrorExpression =
     /.*custom program error: 0x(?<errorNumber>[0-9abcdef]+)/;
@@ -9,7 +9,6 @@ export function getCustomErrorMessage(errorMessage: any): string {
   }
   const errorNumber = parseInt(errorNumberFound, 16);
   return (
-    SafePresaleIdl.errors.find((err) => err.code === errorNumber)?.msg ||
-    errorMessage
+    IDL.errors.find((err) => err.code === errorNumber)?.msg || errorMessage
   );
 }

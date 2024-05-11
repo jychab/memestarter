@@ -1,9 +1,10 @@
 import {db, helius} from "./utils/index";
 import {QueryDocumentSnapshot} from "firebase-functions/v1/firestore";
-import {Pool} from "./utils/types";
 import {EventContext} from "firebase-functions/v1";
 import axios from "axios";
 import {addToQueue} from "./utils/helper";
+import {PoolType} from "./utils/types";
+import {log} from "firebase-functions/logger";
 
 export default async function updatePool(
   snapshot: QueryDocumentSnapshot,
@@ -11,7 +12,7 @@ export default async function updatePool(
     poolId: string;
   }>
 ): Promise<void> {
-  const data = snapshot.data() as Pool;
+  const data = snapshot.data() as PoolType;
 
   // update metadata
   const metadata = await helius.rpc.getAsset({id: data.mint});
@@ -20,6 +21,7 @@ export default async function updatePool(
   let description;
   let symbol;
   let image;
+  log(metadata);
   if (metadata.content) {
     const jsonMetadata = await axios.get(metadata.content.json_uri);
     const data = jsonMetadata.data as {
@@ -43,7 +45,7 @@ export default async function updatePool(
   // Update Collection Details
   if (collectionsRequired) {
     collectionsRequired = await Promise.all(
-      data.collectionsRequired.map(async (item) => {
+      collectionsRequired.map(async (item) => {
         const ref = await db.collection("CollectionDetails").doc(item).get();
         return ref.data();
       })

@@ -44,6 +44,7 @@ export enum Status {
 export interface LaunchTokenAmmArgs {
   marketId: PublicKey;
   mint: PublicKey;
+  quoteMint: PublicKey;
   decimals: number;
   signer: PublicKey;
   poolAuthority: PublicKey;
@@ -59,6 +60,7 @@ export interface CreateMarketArgs {
 }
 export interface BuyPresaleArgs {
   amount: number;
+  quoteMint: PublicKey;
   nft: PublicKey;
   nftCollection?: PublicKey;
   poolId: PublicKey;
@@ -73,6 +75,7 @@ export interface CreatePoolArgs extends InitializePoolArgs {
 }
 
 export interface InitializePoolArgs {
+  quoteMint: PublicKey;
   name: string;
   symbol: string;
   decimal: number;
@@ -81,7 +84,8 @@ export interface InitializePoolArgs {
   presaleDuration: number;
   presaleTarget: number;
   vestingPeriod: number;
-  totalSupply: number;
+  initialSupply: number;
+  liquidityPoolSupply: number;
   signer: PublicKey;
   maxAmountPerPurchase: number | null;
   requiresCollection: boolean;
@@ -94,21 +98,21 @@ export interface CreatePurchaseAuthorisationRecordArgs {
 }
 
 export interface WithdrawArgs {
+  quoteMint: PublicKey;
   poolId: PublicKey;
   nft: PublicKey;
   nftOwner: PublicKey;
   signer: PublicKey;
 }
 
-export interface WithdrawLpArgs {
+export interface WithdrawLpForCreatorArgs {
   poolId: PublicKey;
-  nft: PublicKey;
   signer: PublicKey;
   poolAuthority: PublicKey;
   lpMint: PublicKey;
 }
 
-export interface ClaimArgs {
+export interface WithdrawLpArgs {
   signer: PublicKey;
   nftOwner: PublicKey;
   nft: PublicKey;
@@ -123,6 +127,20 @@ export interface CheckClaimElligbilityArgs {
   signer: PublicKey;
   lpMint: PublicKey;
   mint: PublicKey;
+}
+export interface ClaimRewardForCreatorsArgs {
+  mint: PublicKey;
+  poolId: PublicKey;
+  signer: PublicKey;
+  poolAuthority: PublicKey;
+}
+
+export interface ClaimRewardArgs {
+  mint: PublicKey;
+  nft: PublicKey;
+  nftOwner: PublicKey;
+  signer: PublicKey;
+  poolId: PublicKey;
 }
 
 export interface UpdateMarketDataArgs {
@@ -147,6 +165,7 @@ export interface MarketDetails {
 
 export interface DetermineOptimalParams {
   pool: string;
+  quoteMint: string;
   decimal: number;
 }
 
@@ -157,41 +176,58 @@ export interface CollectionDetails {
 }
 
 export interface PoolType {
-  additionalInfo?: string;
+  // overall claim settings
+  totalLpClaimed: number;
+  totalMintClaimed: number;
+  // token metadata
+  name: string;
+  symbol: string;
   decimal: number;
+  description: string;
+  image: string;
+  valid: boolean;
   mintMetadata: DAS.GetAssetResponse;
+  // liquidity pool info
   amountCoin: number;
   amountLpReceived: number;
-  amountWsolWithdrawn: number;
+  totalAmountWithdrawn: number;
   amountPc: number;
+  // pool settings
   authority: string;
   creatorFeeBasisPoints: number;
   liquidityCollected: number;
-  totalClaimed: number;
   lpMint: string;
   mint: string;
+  quoteMint: string;
   pool: string;
   presaleTarget: number;
   presaleTimeLimit: number;
   totalSupply: number;
+  liquidityPoolSupply: number;
+  initialSupply: number;
   vestingPeriod: number;
   vestingStartedAt: number;
-  createdAt: Timestamp | number | null;
-  updatedAt: Timestamp | number | null;
-  name: string;
-  symbol: string;
-  description: string;
-  image: string;
-  valid: boolean;
   maxAmountPerPurchase: number;
   collectionsRequired: CollectionDetails[] | null;
+  // pool authority claim progress
+  initialSupplyForCreator: number;
+  initialSupplyClaimedByCreator: number;
+  lpClaimedByCreator: number;
+  lpLastClaimedByCreator: number;
+  // others
+  createdAt: Timestamp | number | null;
+  updatedAt: Timestamp | number | null;
+  additionalInfo?: string;
 }
 
 export interface MintType {
   originalMint: string;
   pool: string;
   amount: number;
+  amountWithdrawn: number;
   lastClaimedAt: number;
+  mintElligible: number;
+  mintClaimed: number;
   lpElligible: number;
   lpClaimed: number;
   updatedAt: Timestamp | number | null;

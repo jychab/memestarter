@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { PoolType, Status } from "../../utils/types";
 import { CreatedTable } from "../../components/tables/CreatedTable";
@@ -32,15 +38,16 @@ function MyProjects() {
 
   useEffect(() => {
     if (publicKey) {
-      getDocs(
+      const unsubscribe = onSnapshot(
         query(
           collection(db, `Pool`),
           where("valid", "==", true),
           where("authority", "==", publicKey.toBase58())
-        )
-      ).then((response) =>
-        setMyPools(response.docs.map((doc) => doc.data() as PoolType))
+        ),
+        (response) =>
+          setMyPools(response.docs.map((doc) => doc.data() as PoolType))
       );
+      return () => unsubscribe();
     }
   }, [publicKey]);
 

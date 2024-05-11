@@ -8,6 +8,7 @@ import {
 } from "../utils/helper";
 import { Chip } from "../components/Chip";
 import { MainPane } from "./MainPane";
+import axios from "axios";
 
 interface ReviewPaneProps {
   authority?: string;
@@ -17,10 +18,11 @@ interface ReviewPaneProps {
   decimal: number;
   externalUrl?: string;
   totalSupply: number;
-  creatorFees: number;
+  creatorFees: string;
   vestingPeriod: number;
   presaleTime: number;
   presaleTarget: number;
+  liquidityPoolSupplyInPercentage: string;
   description?: string;
   maxAmountPerPurchase?: number;
   collectionsRequired?: CollectionDetails[] | null;
@@ -38,6 +40,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
   presaleTime,
   presaleTarget = 0,
   decimal: decimals,
+  liquidityPoolSupplyInPercentage,
   description,
   collectionsRequired,
   maxAmountPerPurchase,
@@ -69,14 +72,20 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           </div>
         )}
         <span className="col-span-2 sm:col-span-1">Total Supply</span>
-        <span className="col-span-4 sm:col-span-5 text-black">
+        <span className="col-span-4 sm:col-span-2 text-black">
           {formatLargeNumber(totalSupply) + ` ${symbol}`}
+        </span>
+        <span className="col-span-2 sm:col-span-1">
+          Initial Liquidity Pool Supply
+        </span>
+        <span className="col-span-4 sm:col-span-2 text-black">
+          {liquidityPoolSupplyInPercentage + "%"}
         </span>
         {creatorFees && (
           <span className="col-span-2 sm:col-span-1">Creator Fees</span>
         )}
         <span className="col-span-4 sm:col-span-2 text-black">
-          {creatorFees / 100 + "%"}
+          {creatorFees + "%"}
         </span>
         <span className="col-span-2 sm:col-span-1">Presale Target</span>
         <span className="col-span-4 sm:col-span-2 text-black">

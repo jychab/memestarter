@@ -17,7 +17,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     if (auth) {
-      setUser(null);
       await auth.signOut();
     }
     if (publicKey) {
@@ -26,11 +25,20 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      if (currentUser == null && user != null) {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (user == null) {
       if (publicKey && signMessage) {
         handleLogin(publicKey, signMessage);
       } else {
-        signInAnonymously(auth);
+        signInAnonymously(auth).then((res) => setUser(res.user));
       }
     }
   }, [user, publicKey]);

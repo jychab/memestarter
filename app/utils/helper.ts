@@ -1,8 +1,17 @@
 import { DAS, DetermineOptimalParams, PoolType, Status } from "./types";
-import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { getCurrentPrice } from "./cloudFunctions";
 import { program } from "./instructions";
-import { NATIVE_MINT } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Account,
+  TOKEN_PROGRAM_ID,
+  TokenAccountNotFoundError,
+  TokenInvalidAccountOwnerError,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
 /**
  * Retrieves the collection mint address from the provided asset response.
@@ -181,9 +190,9 @@ export async function determineOptimalParameters(
   const amountInSol =
     (poolData.liquidityCollected * (10000 - poolData.creatorFeeBasisPoints)) /
     (LAMPORTS_PER_SOL * 10000);
-  const response = await getCurrentPrice(NATIVE_MINT.toBase58());
+  const response = await getCurrentPrice(args.quoteMint);
   const amountInUSD = amountInSol * response.data.value;
-  const amountOfCoin = poolData.totalSupply / 10 ** args.decimal;
+  const amountOfCoin = poolData.liquidityPoolSupply / 10 ** args.decimal;
   const initialPrice = amountInUSD / amountOfCoin;
   const tickSize = initialPrice / 1000;
   const maxDecimals = 6;
@@ -232,4 +241,63 @@ export function convertToCustomFormat(number: number) {
   }
   result += integerPart;
   return result;
+}
+
+export async function getOrCreateAssociatedTokenAccountInstruction(
+  tx: any[],
+  payer: PublicKey,
+  mint: PublicKey,
+  owner: PublicKey,
+  allowOwnerOffCurve: boolean,
+  connection: Connection,
+  programId: PublicKey = TOKEN_PROGRAM_ID,
+  associatedTokenProgramId: PublicKey = ASSOCIATED_TOKEN_PROGRAM_ID
+) {
+  const associatedToken = getAssociatedTokenAddressSync(
+    mint,
+    owner,
+    allowOwnerOffCurve,
+    programId,
+    associatedTokenProgramId
+  );
+
+  // This is the optimal logic, considering TX fee, client-side computation, RPC roundtrips and guaranteed idempotent.
+  // Sadly we can't do this atomically.
+  let account: Account;
+  try {
+    account = await getAccount(
+      connection,
+      associatedToken,
+      connection.commitment,
+      programId
+    );
+  } catch (error: unknown) {
+    // TokenAccountNotFoundError can be possible if the associated address has already received some lamports,
+    // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
+    // TokenInvalidAccountOwnerError in this code path.
+    if (
+      error instanceof TokenAccountNotFoundError ||
+      error instanceof TokenInvalidAccountOwnerError
+    ) {
+      // As this isn't atomic, it's possible others can create associated accounts meanwhile.
+      try {
+        tx.push(
+          createAssociatedTokenAccountInstruction(
+            payer,
+            associatedToken,
+            owner,
+            mint,
+            programId,
+            associatedTokenProgramId
+          )
+        );
+      } catch (error: unknown) {
+        // Ignore all errors; for now there is no API-compatible way to selectively ignore the expected
+        // instruction error if the associated account exists already.
+      }
+    } else {
+      throw error;
+    }
+  }
+  return associatedToken;
 }

@@ -18,9 +18,6 @@ export const CreatedTable: FC<CreatedTableProps> = ({ pool, timer }) => {
               Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Your Earnings
-            </th>
-            <th scope="col" className="w-24 text-center p-2">
               Total Funds Raised
             </th>
             <th scope="col" className="w-24 text-center p-2">
