@@ -1,11 +1,11 @@
-import React, { FC } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import Image from "next/image";
 import Link from "next/link";
+import { FC } from "react";
+import logo from "../public/name.png";
+import { CreateProjectBtn } from "./buttons/CreateProjectBtn";
 import { SignInBtn } from "./buttons/SignInBtn";
 import { UserProfileBtn } from "./buttons/UserProfileBtn";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { CreateProjectBtn } from "./buttons/CreateProjectBtn";
-import logo from "../public/name.png";
-import Image from "next/image";
 
 export const Navbar: FC = () => {
   const { publicKey } = useWallet();

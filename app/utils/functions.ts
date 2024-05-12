@@ -1,8 +1,5 @@
-import {
-  buildSimpleTransaction,
-  generatePubKey,
-  TxVersion,
-} from "@raydium-io/raydium-sdk";
+import { BN } from "@coral-xyz/anchor";
+import { generatePubKey } from "@raydium-io/raydium-sdk";
 import {
   Connection,
   LAMPORTS_PER_SOL,
@@ -10,16 +7,11 @@ import {
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
-import {
-  getDoc,
-  doc,
-  collection,
-  getDocs,
-  limit,
-  query,
-} from "firebase/firestore";
+import { collection, getDocs, limit, query } from "firebase/firestore";
+import { ref, uploadBytes, uploadString } from "firebase/storage";
 import { toast } from "react-toastify";
 import { updateMarketData } from "./cloudFunctions";
+import { DOMAIN_API_URL, OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
 import { db, storage } from "./firebase";
 import { determineOptimalParameters, getCollectionMintAddress } from "./helper";
 import {
@@ -34,9 +26,6 @@ import {
 } from "./instructions";
 import { buildAndSendTransaction } from "./transactions";
 import { CreatePoolArgs, DAS, MarketDetails, PoolType } from "./types";
-import { ref, uploadBytes, uploadString } from "firebase/storage";
-import { DOMAIN_API_URL, OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
-import { BN } from "@coral-xyz/anchor";
 
 export async function launchToken(
   pool: PoolType,

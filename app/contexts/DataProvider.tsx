@@ -1,11 +1,11 @@
-import React, { FC, ReactNode, useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { db } from "../utils/firebase";
-import useUmi from "../hooks/useUmi";
 import { doc, onSnapshot } from "firebase/firestore";
-import { DataContext } from "../hooks/useData";
-import { DAS } from "../utils/types";
+import { FC, ReactNode, useEffect, useState } from "react";
 import useSWR from "swr";
+import { DataContext } from "../hooks/useData";
+import useUmi from "../hooks/useUmi";
+import { db } from "../utils/firebase";
+import { DAS } from "../utils/types";
 
 export interface DataProviderProps {
   children: ReactNode;

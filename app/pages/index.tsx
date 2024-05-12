@@ -1,16 +1,16 @@
 import {
-  orderBy,
+  collection,
   limit,
   onSnapshot,
-  collection,
-  where,
+  orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { db } from "../utils/firebase";
-import { PoolType } from "../utils/types";
 import CardItem from "../components/CardItem";
 import { OnboardingScreen } from "../sections/OnboardScreen";
+import { db } from "../utils/firebase";
+import { PoolType } from "../utils/types";
 
 enum SortCriteria {
   presaleTimeLimit = "Ending Soon",
@@ -31,7 +31,7 @@ function Projects() {
     SortCriteria.liquidity
   );
   const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(
-    FilterCriteria.all
+    FilterCriteria.ongoing
   );
   const filterDropDownRef = useRef<HTMLDivElement>(null);
   const [showFilter, setShowFilter] = useState(false);

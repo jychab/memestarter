@@ -3,14 +3,12 @@ import {
   ConnectionProvider,
   WalletProvider,
 } from "@solana/wallet-adapter-react";
-import { clusterApiUrl } from "@solana/web3.js";
 import { FC, ReactNode, useCallback, useMemo } from "react";
+import { HELIUS_ENDPOINT } from "../utils/constants";
 import {
   NetworkConfigurationProvider,
   useNetworkConfiguration,
 } from "./NetworkConfigurationProvider";
-import React from "react";
-import { HELIUS_ENDPOINT } from "../utils/constants";
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { networkConfiguration } = useNetworkConfiguration();

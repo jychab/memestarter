@@ -1,11 +1,11 @@
-import React, { FC, ReactNode, useCallback, useEffect, useState } from "react";
-import { LoginContext } from "../hooks/useLogin";
-import { User, signInAnonymously, signInWithCustomToken } from "firebase/auth";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { User, signInAnonymously, signInWithCustomToken } from "firebase/auth";
+import { FC, ReactNode, useCallback, useEffect, useState } from "react";
+import { LoginContext } from "../hooks/useLogin";
+import { verifyAndGetToken } from "../utils/cloudFunctions";
 import { auth } from "../utils/firebase";
 import { createLoginMessage } from "../utils/helper";
-import { PublicKey } from "@solana/web3.js";
-import { verifyAndGetToken } from "../utils/cloudFunctions";
 
 export interface LoginProviderProps {
   children: ReactNode;

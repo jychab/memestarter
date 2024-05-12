@@ -1,18 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  collection,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
-import { db } from "../../utils/firebase";
-import { PoolType, Status } from "../../utils/types";
-import { CreatedTable } from "../../components/tables/CreatedTable";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { getStatus } from "../../utils/helper";
-import { LaunchedTable } from "../../components/tables/LaunchedTable";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CreatedTable } from "../../components/tables/CreatedTable";
 import { FailedTable } from "../../components/tables/FailedTable";
+import { LaunchedTable } from "../../components/tables/LaunchedTable";
+import { db } from "../../utils/firebase";
+import { getStatus } from "../../utils/helper";
+import { PoolType, Status } from "../../utils/types";
 
 enum CreatorProjectType {
   All = "All",

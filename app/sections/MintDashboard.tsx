@@ -18,7 +18,7 @@ import {
   QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { getMetadata, getStatus } from "../utils/helper";
+import { getStatus } from "../utils/helper";
 import { FundedTable } from "../components/tables/FundedTable";
 import { VestingTable } from "../components/tables/VestingTable";
 import { CompletedTable } from "../components/tables/CompletedTable";

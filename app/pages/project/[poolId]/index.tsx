@@ -1,33 +1,28 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useRouter } from "next/router";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { toast } from "react-toastify";
-import { useLogin } from "../../../hooks/useLogin";
-import {
-  getStatus,
-  getCollectionMintAddress,
-  getMetadata,
-} from "../../../utils/helper";
-import { MintType, PoolType, Status } from "../../../utils/types";
 import {
   collection,
   doc,
   getCountFromServer,
-  getDoc,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../../../utils/firebase";
-import { MainBtn } from "../../../components/buttons/MainBtn";
 import Link from "next/link";
-import { getCustomErrorMessage } from "../../../utils/error";
+import { useRouter } from "next/router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { MainBtn } from "../../../components/buttons/MainBtn";
 import { useData } from "../../../hooks/useData";
-import PresaleDashboard from "../../../sections/PresaleDashboard";
+import { useLogin } from "../../../hooks/useLogin";
+import { CommentsSection } from "../../../sections/CommentsSection";
+import { InfoSection } from "../../../sections/InfoSection";
 import { MainPane } from "../../../sections/MainPane";
-import { buyPresale, launchToken } from "../../../utils/functions";
+import PresaleDashboard from "../../../sections/PresaleDashboard";
 import VestingDashboard from "../../../sections/VestingDashboard";
 import { getCurrentPrice } from "../../../utils/cloudFunctions";
-import { InfoSection } from "../../../sections/InfoSection";
-import { CommentsSection } from "../../../sections/CommentsSection";
+import { getCustomErrorMessage } from "../../../utils/error";
+import { db } from "../../../utils/firebase";
+import { buyPresale, launchToken } from "../../../utils/functions";
+import { getCollectionMintAddress, getStatus } from "../../../utils/helper";
+import { MintType, PoolType, Status } from "../../../utils/types";
 
 export function Pool() {
   const [loading, setLoading] = useState(false);

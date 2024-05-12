@@ -1,11 +1,10 @@
-import React, { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { MintDashboard } from "../../../sections/MintDashboard";
+import { useEffect, useState } from "react";
+import useSWR from "swr";
 import useUmi from "../../../hooks/useUmi";
-import { publicKey } from "@metaplex-foundation/umi";
+import { MintDashboard } from "../../../sections/MintDashboard";
 import { getCollectionMintAddress } from "../../../utils/helper";
 import { DAS } from "../../../utils/types";
-import useSWR from "swr";
 
 export default function Mint() {
   const router = useRouter();

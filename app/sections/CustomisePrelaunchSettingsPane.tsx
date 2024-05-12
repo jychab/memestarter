@@ -1,6 +1,5 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { DurationPicker } from "../components/DurationPicker";
-import { SearchBar } from "../components/SearchBar";
 import { CollectionDetails } from "../utils/types";
 import { Chip } from "../components/Chip";
 import { Tooltip } from "../components/Tooltip";

@@ -1,26 +1,25 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { useData } from "../hooks/useData";
+import { Project } from "../sections/MintDashboard";
+import { getCustomErrorMessage } from "../utils/error";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
   getStatus,
 } from "../utils/helper";
-import { buildAndSendTransaction } from "../utils/transactions";
-import { checkClaimElligibility, claimReward } from "../utils/instructions";
-import { withdrawLp } from "../utils/instructions";
-import { withdraw } from "../utils/instructions";
-import { Status } from "../utils/types";
-import { Project } from "../sections/MintDashboard";
 import {
-  useAnchorWallet,
-  useConnection,
-  useWallet,
-} from "@solana/wallet-adapter-react";
-import { toast } from "react-toastify";
-import { getCustomErrorMessage } from "../utils/error";
-import { useData } from "../hooks/useData";
+  checkClaimElligibility,
+  claimReward,
+  withdraw,
+  withdrawLp,
+} from "../utils/instructions";
+import { buildAndSendTransaction } from "../utils/transactions";
+import { Status } from "../utils/types";
 
 interface TableRowProps {
   project: Project;

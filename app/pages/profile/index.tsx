@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { MintDashboard } from "../../sections/MintDashboard";
-import useUmi from "../../hooks/useUmi";
-import { getCollectionMintAddress } from "../../utils/helper";
-import { PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import Image from "next/image";
 import { useRouter } from "next/router";
-import { useData } from "../../hooks/useData";
-import { DAS } from "../../utils/types";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
+import { useData } from "../../hooks/useData";
+import useUmi from "../../hooks/useUmi";
+import { MintDashboard } from "../../sections/MintDashboard";
+import { getCollectionMintAddress } from "../../utils/helper";
+import { DAS } from "../../utils/types";
 
 function Profile() {
   const { nft } = useData();

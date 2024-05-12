@@ -8,7 +8,6 @@ import {
 } from "../utils/helper";
 import { Chip } from "../components/Chip";
 import { MainPane } from "./MainPane";
-import axios from "axios";
 
 interface ReviewPaneProps {
   authority?: string;

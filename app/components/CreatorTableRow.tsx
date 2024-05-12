@@ -1,23 +1,23 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { useLogin } from "../hooks/useLogin";
+import { getCustomErrorMessage } from "../utils/error";
+import { launchToken } from "../utils/functions";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
   getStatus,
 } from "../utils/helper";
-import { PoolType, Status } from "../utils/types";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useLogin } from "../hooks/useLogin";
-import { toast } from "react-toastify";
-import { getCustomErrorMessage } from "../utils/error";
-import { launchToken } from "../utils/functions";
 import {
   claimRewardForCreators,
   withdrawLpForCreator,
 } from "../utils/instructions";
 import { buildAndSendTransaction } from "../utils/transactions";
+import { PoolType, Status } from "../utils/types";
 
 interface CreatorTableRowProps {
   pool: PoolType;
@@ -76,7 +76,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
     } else {
       setCurrentLpElligible(undefined);
     }
-  }, [timer, pool, lpElligible]);
+  }, [timer, pool, lpElligible, currentLpElligible]);
 
   const handleAction = useCallback(
     async (actionType: string) => {

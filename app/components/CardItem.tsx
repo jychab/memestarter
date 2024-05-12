@@ -1,12 +1,12 @@
-import React, { FC, useEffect, useState } from "react";
-import { PoolType, Status } from "../utils/types";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import solanaLogo from "../public/solanaLogoMark.png";
-import Image from "next/image";
-import { convertSecondsToNearestUnit, getStatus } from "../utils/helper";
-import Link from "next/link";
-import { Chip } from "./Chip";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import Image from "next/image";
+import Link from "next/link";
+import { FC, useEffect, useState } from "react";
+import solanaLogo from "../public/solanaLogoMark.png";
+import { convertSecondsToNearestUnit, getStatus } from "../utils/helper";
+import { PoolType, Status } from "../utils/types";
+import { Chip } from "./Chip";
 
 interface CardItemProps {
   pool: PoolType;
