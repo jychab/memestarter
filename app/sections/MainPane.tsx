@@ -50,18 +50,14 @@ export const MainPane: FC<MainPaneProps> = ({
         {lpMint && <span className="truncate text-black">{lpMint}</span>}
         {authority && <span>Creator</span>}
         {authority && <span className="truncate text-black">{authority}</span>}
-        {creatorsFeeBasisPoints && <span>Creator's Fee</span>}
+        {creatorsFeeBasisPoints && <span>Creator's share</span>}
         {creatorsFeeBasisPoints && (
           <div className="flex items-center gap-2">
             <span className="truncate text-black">
               {creatorsFeeBasisPoints / 100 + "%"}
             </span>
             <Tooltip
-              content={`This denotes the share that the creator earns from the overall allocation.\n\nFor example,\nPresale Target = 50Sol\nTotal supply = 100M\nCreator's fee = ${
-                creatorsFeeBasisPoints / 100 + "%"
-              }\nInitial Supply for Raydium LP = 30%\nRemaining Supply Upon Launch = 70%\n\nUpon Launch = 70% * 100M * ${
-                creatorsFeeBasisPoints / 100 + "%"
-              }\nVesting = (30% * 100M & 50 Sol) LP tokens * 5%`}
+              content={`This denotes the amount of token the creator will get from the total supply.\n\nFor example,\nCreator's share = 5%\nTotal supply = 100M\nInitial Liquidity Pool Supply= 30%\nRemaining Supply Upon Launch = 70%\n\nCreator's Share:\nUpon Launch = 70% * 100M * 5% (Tokens)\nVesting = LP Tokens * 5%`}
             />
           </div>
         )}

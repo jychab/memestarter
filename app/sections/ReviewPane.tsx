@@ -82,7 +82,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           {liquidityPoolSupplyInPercentage + "%"}
         </span>
         {creatorFees && (
-          <span className="col-span-2 sm:col-span-1">Creator Fees</span>
+          <span className="col-span-2 sm:col-span-1">Creator's Share</span>
         )}
         <span className="col-span-4 sm:col-span-2 text-black">
           {creatorFees + "%"}

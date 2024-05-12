@@ -293,7 +293,7 @@ export async function createPool(
     throw new Error("Liquidity Pool Supply cannot be higher than total supply");
   }
   if (args.creatorFeesBasisPoints > 5000) {
-    throw new Error("Creator Fees cannot be higher than 50%");
+    throw new Error("Creator's Share cannot be higher than 50%");
   }
   if (args.presaleTarget < LAMPORTS_PER_SOL) {
     throw new Error(

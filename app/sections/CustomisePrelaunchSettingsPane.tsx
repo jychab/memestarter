@@ -92,10 +92,10 @@ export const CustomisePrelaunchSettingsPane: FC<
             htmlFor="creator-fees"
             className="text-sm font-medium text-gray-400"
           >
-            Creator Fees
+            Creator's Share
           </label>
           <Tooltip
-            content={`This denotes the share that you will earn from the overall allocation.\n\nFor example,\nPresale Target = 50Sol\nTotal supply = 100M\nCreator's fee = 5%\nInitial Supply for Raydium LP = 30%\nRemaining Supply Upon Launch = 70%\n\nUpon Launch = 70% * 100M * 5%\nVesting = (30% * 100M & 50 Sol) LP tokens * 5%`}
+            content={`This denotes the amount of token the creator will get from the total supply.\n\nFor example,\nCreator's share = 5%\nTotal supply = 100M\nInitial Liquidity Pool Supply= 30%\nRemaining Supply Upon Launch = 70%\n\nCreator's Share:\nUpon Launch = 70% * 100M * 5% (Tokens)\nVesting = LP Tokens * 5%`}
           />
         </div>
         <input
@@ -109,36 +109,6 @@ export const CustomisePrelaunchSettingsPane: FC<
             const amount = e.target.value.replaceAll("%", "");
             if (!amount || amount.match(/^\d{1,}(\.\d{0,4})?$/)) {
               setCreatorFees(e.target.value);
-            }
-          }}
-          required
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4 items-center">
-        <div className="flex gap-2 items-center">
-          <label
-            htmlFor="lp-supply"
-            className="text-sm font-medium text-gray-400"
-          >
-            Initial Liquidity Pool Supply
-          </label>
-          <Tooltip
-            content={
-              "This percentage represents the amount of supply used to create the initial liquidity pool, the remaining supply will be released on launch."
-            }
-          />
-        </div>
-        <input
-          type="text"
-          inputMode="numeric"
-          id="lp-supply"
-          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
-          placeholder={liquidityPoolSupplyInPercentage.toString()}
-          value={liquidityPoolSupplyInPercentage.replaceAll("%", "") + "%"}
-          onChange={(e) => {
-            const amount = e.target.value.replaceAll("%", "");
-            if (!amount || amount.match(/^\d{1,}(\.\d{0,4})?$/)) {
-              setLiquidityPoolSupplyInPercentage(e.target.value);
             }
           }}
           required
@@ -239,6 +209,34 @@ export const CustomisePrelaunchSettingsPane: FC<
                 const amount = e.target.value.replaceAll(",", "");
                 if (!amount || amount.match(/^\d+$/)) {
                   setSupply(e.target.value);
+                }
+              }}
+              required
+            />
+            <div className="flex gap-2 items-center">
+              <label
+                htmlFor="lp-supply"
+                className="text-sm font-medium text-gray-400"
+              >
+                Initial Liquidity Pool Supply
+              </label>
+              <Tooltip
+                content={
+                  "This percentage represents the amount of supply used to create the initial liquidity pool, the remaining supply will be released on launch."
+                }
+              />
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              id="lp-supply"
+              className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
+              placeholder={liquidityPoolSupplyInPercentage.toString()}
+              value={liquidityPoolSupplyInPercentage.replaceAll("%", "") + "%"}
+              onChange={(e) => {
+                const amount = e.target.value.replaceAll("%", "");
+                if (!amount || amount.match(/^\d{1,}(\.\d{0,4})?$/)) {
+                  setLiquidityPoolSupplyInPercentage(e.target.value);
                 }
               }}
               required
