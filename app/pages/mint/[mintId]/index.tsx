@@ -5,31 +5,33 @@ import useUmi from "../../../hooks/useUmi";
 import { publicKey } from "@metaplex-foundation/umi";
 import { getCollectionMintAddress } from "../../../utils/helper";
 import { DAS } from "../../../utils/types";
+import useSWR from "swr";
 
 export default function Mint() {
   const router = useRouter();
-  const umi = useUmi();
+  const { getAsset } = useUmi();
   const [item, setItem] = useState<DAS.GetAssetResponse>();
   const [collectionItem, setCollectionItem] = useState<DAS.GetAssetResponse>();
   const { mintId } = router.query;
 
-  const fetchAsset = useCallback(async () => {
-    if (mintId) {
-      const response = (await umi.rpc.getAsset(
-        publicKey(mintId as string)
-      )) as unknown as DAS.GetAssetResponse;
-      setItem(response);
-      const collectionMint = getCollectionMintAddress(response);
-      if (collectionMint) {
-        const res = await umi.rpc.getAsset(publicKey(collectionMint));
-        setCollectionItem(res as unknown as DAS.GetAssetResponse);
-      }
-    }
-  }, [mintId, umi]);
+  const { data: mintData } = useSWR(mintId ? mintId : null, getAsset);
 
   useEffect(() => {
-    fetchAsset();
-  }, [fetchAsset]);
+    if (mintData) {
+      setItem(mintData as unknown as DAS.GetAssetResponse);
+    }
+  }, [mintData]);
+
+  const { data: collectionMintData } = useSWR(
+    item ? getCollectionMintAddress(item) : null,
+    getAsset
+  );
+
+  useEffect(() => {
+    if (collectionMintData) {
+      setCollectionItem(collectionMintData as unknown as DAS.GetAssetResponse);
+    }
+  }, [collectionMintData]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">

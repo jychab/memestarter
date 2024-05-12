@@ -41,15 +41,6 @@ export async function verifyAndGetToken(
   ).data as string;
 }
 
-export async function mintNft(publicKey: PublicKey) {
-  const mintNftFn = httpsCallable(functions, "mintNft");
-  const { tx, mint } = (await mintNftFn()).data as {
-    tx: string;
-    mint: string;
-  };
-  return { tx, mint };
-}
-
 export async function linkAsset(asset: DAS.GetAssetResponse) {
   const linkAssetFn = httpsCallable(functions, "linkAsset");
   await linkAssetFn({ nft: asset });

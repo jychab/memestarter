@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { MintDashboard } from "../../sections/MintDashboard";
 import useUmi from "../../hooks/useUmi";
 import { getCollectionMintAddress } from "../../utils/helper";
 import { PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
-import { publicKey as PubKey } from "@metaplex-foundation/umi";
 import { useRouter } from "next/router";
 import { useData } from "../../hooks/useData";
 import { DAS } from "../../utils/types";
+import useSWR from "swr";
 
 function Profile() {
   const { nft } = useData();
-  const { publicKey, signMessage, signAllTransactions } = useWallet();
-  const { connection } = useConnection();
+  const { publicKey } = useWallet();
   const [page, setPage] = useState(1);
 
   const [currentLength, setCurrentLength] = useState<number>();
@@ -28,17 +27,17 @@ function Profile() {
   const [selectedItem, setSelectedItem] = useState<DAS.GetAssetResponse>();
   const [collectionItem, setCollectionItem] = useState<DAS.GetAssetResponse>();
   const [currentUser, setCurrentUser] = useState<PublicKey>();
-  const umi = useUmi();
+  const { getAsset, searchAssets } = useUmi();
 
+  const { data: collectionItemData } = useSWR(
+    selectedItem ? getCollectionMintAddress(selectedItem) : null,
+    getAsset
+  );
   useEffect(() => {
-    if (selectedItem) {
-      umi.rpc
-        .getAsset(PubKey(getCollectionMintAddress(selectedItem)!))
-        .then((res) =>
-          setCollectionItem(res as unknown as DAS.GetAssetResponse)
-        );
+    if (collectionItemData) {
+      setCollectionItem(collectionItemData as unknown as DAS.GetAssetResponse);
     }
-  }, [selectedItem, umi.rpc]);
+  }, [collectionItemData]);
 
   async function loadAssets(walletData: DAS.GetAssetResponseList) {
     const promises = walletData.items.map(async (item) => {
@@ -56,10 +55,7 @@ function Profile() {
           decimal == 0 &&
           image
         ) {
-          return {
-            ...item,
-            image: image,
-          };
+          return item;
         }
       } catch (e) {
         console.log(e);
@@ -93,14 +89,9 @@ function Profile() {
     }
   }, [publicKey, nft, router]);
 
-  useEffect(() => {
-    if (publicKey && limit && !nft) {
-      if (!currentUser || currentUser.toBase58() !== publicKey.toBase58()) {
-        setPage(1);
-      }
-      setCurrentUser(publicKey);
-      umi.rpc
-        .searchAssets({
+  const { data: walletData } = useSWR(
+    publicKey && limit && !nft
+      ? JSON.stringify({
           owner: fromWeb3JsPublicKey(publicKey),
           compressed: false,
           sortBy: {
@@ -110,45 +101,24 @@ function Profile() {
           creatorVerified: true,
           limit: limit,
         })
-        .then((walletData) =>
-          loadAssets(walletData as unknown as DAS.GetAssetResponseList)
-        );
-    }
-  }, [publicKey, limit, nft, currentUser, umi.rpc]);
+      : null,
+    searchAssets
+  );
 
-  // const handleMintNft = async () => {
-  //   try {
-  //     if (publicKey && signMessage && signAllTransactions && connection) {
-  //       setLoading(true);
-  //       const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-  //       if (
-  //         !amountOfSolInWallet ||
-  //         amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.5
-  //       ) {
-  //         toast.error("Insufficient Sol. You need at least 0.5 Sol.");
-  //         return;
-  //       }
-  //       await handleLogin(publicKey, signMessage);
-  //       toast.info("Minting...");
-  //       const { tx, mint } = await mintNft(publicKey);
-  //       const transactionBuffer = base64.decode(tx as string);
-  //       const transaction = toWeb3JsTransaction(
-  //         umi.transactions.deserialize(transactionBuffer)
-  //       );
-  //       await sendTransactions(connection, [transaction], signAllTransactions);
-  //       toast.info("Linking...");
-  //       const asset = (await umi.rpc.getAsset(
-  //         PubKey(mint)
-  //       )) as unknown as DAS.GetAssetResponse;
-  //       await linkAsset(asset);
-  //       toast.success("Success");
-  //     }
-  //   } catch (error) {
-  //     toast.error(`${getCustomErrorMessage(error)}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  useEffect(() => {
+    if (walletData) {
+      loadAssets(walletData as unknown as DAS.GetAssetResponseList);
+    }
+  }, [walletData]);
+
+  useEffect(() => {
+    if (publicKey) {
+      if (!currentUser || currentUser.toBase58() !== publicKey.toBase58()) {
+        setPage(1);
+      }
+      setCurrentUser(publicKey);
+    }
+  }, [publicKey, currentUser]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center">
@@ -166,42 +136,6 @@ function Profile() {
           <span className="text-sm">
             Choose one from the NFTs available in your wallet below.
           </span>
-          {/* <span>or</span> */}
-          {/* <button
-            onClick={handleMintNft}
-            className=" rounded p-2 hover:text-blue-700 border border-gray-400 text-sm"
-          >
-            {loading ? (
-              <div className="flex items-center gap-1">
-                <svg
-                  className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                    fill="currentFill"
-                  />
-                </svg>
-                <span>Minting...</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <span>Mint for 0.5</span>
-                <Image
-                  width={16}
-                  height={16}
-                  src={solanaLogo}
-                  alt={"solana logo"}
-                />
-              </div>
-            )}
-          </button> */}
         </div>
       )}
       {!nft && publicKey && (

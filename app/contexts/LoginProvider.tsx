@@ -18,20 +18,12 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   const signOut = async () => {
     if (auth) {
       await auth.signOut();
+      setUser(null);
     }
     if (publicKey) {
       await disconnect();
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser == null && user != null) {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (user == null) {

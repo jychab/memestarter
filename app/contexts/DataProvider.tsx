@@ -1,12 +1,11 @@
 import React, { FC, ReactNode, useEffect, useState } from "react";
-import { LoginContext } from "../hooks/useLogin";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { db } from "../utils/firebase";
 import useUmi from "../hooks/useUmi";
 import { doc, onSnapshot } from "firebase/firestore";
-import { publicKey as pubKey } from "@metaplex-foundation/umi";
 import { DataContext } from "../hooks/useData";
 import { DAS } from "../utils/types";
+import useSWR from "swr";
 
 export interface DataProviderProps {
   children: ReactNode;
@@ -15,34 +14,23 @@ export interface DataProviderProps {
 export const DataProvider: FC<DataProviderProps> = ({ children }) => {
   const { publicKey } = useWallet();
   const [nft, setNft] = useState<DAS.GetAssetResponse>();
-  const umi = useUmi();
+  const [nftData, setNftData] = useState<{
+    nft: DAS.GetAssetResponse | undefined;
+  }>();
+  const { getAsset } = useUmi();
 
   useEffect(() => {
-    if (publicKey && umi) {
+    if (publicKey) {
       const unsubscribe = onSnapshot(
         doc(db, `Users/${publicKey.toBase58()}`),
         (doc) => {
           if (doc.exists()) {
-            const data = doc.data() as { nft: DAS.GetAssetResponse };
-            if (data.nft) {
-              umi.rpc
-                .getAsset(pubKey(data.nft.id))
-                .then((data) => {
-                  if (
-                    data.ownership.owner.toString() === publicKey.toString()
-                  ) {
-                    setNft(data as unknown as DAS.GetAssetResponse);
-                  } else {
-                    setNft(undefined);
-                  }
-                })
-                .catch((e) => {
-                  setNft(undefined);
-                });
-            } else {
-              setNft(undefined);
-            }
+            const nftData = doc.data() as {
+              nft: DAS.GetAssetResponse | undefined;
+            };
+            setNftData(nftData);
           } else {
+            setNftData(undefined);
             setNft(undefined);
           }
         }
@@ -50,6 +38,23 @@ export const DataProvider: FC<DataProviderProps> = ({ children }) => {
       return () => unsubscribe();
     }
   }, [publicKey]);
+
+  const { data } = useSWR(
+    nftData && nftData.nft ? nftData.nft.id : null,
+    getAsset
+  );
+
+  useEffect(() => {
+    if (
+      data &&
+      publicKey &&
+      data.ownership.owner.toString() === publicKey.toString()
+    ) {
+      setNft(data as unknown as DAS.GetAssetResponse);
+    } else {
+      setNft(undefined);
+    }
+  }, [data, publicKey]);
 
   return (
     <DataContext.Provider
