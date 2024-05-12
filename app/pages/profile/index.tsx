@@ -162,7 +162,7 @@ function Profile() {
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-black text-center p-8 gap-4 h-full">
-          <span>You need to link a NFT to your profile.</span>
+          <span>You need to set an avatar for your profile.</span>
           <span className="text-sm">
             Choose one from the NFTs available in your wallet below.
           </span>

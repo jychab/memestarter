@@ -102,7 +102,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           type="text"
           inputMode="numeric"
           id="creator-fees"
-          className="w-24 text-center text-sm block p-1 rounded border border-gray-300 text-black"
+          className="w-16 text-center text-sm block p-1 rounded border border-gray-300 text-black"
           placeholder={creatorFees.toString()}
           value={creatorFees.replaceAll("%", "") + "%"}
           onChange={(e) => {
@@ -124,7 +124,7 @@ export const CustomisePrelaunchSettingsPane: FC<
           </label>
           <Tooltip
             content={
-              "The presale will have a set funding target, which will also serve as the maximum cap for the presale. If the total funds collected during the presale do not meet this target, the presale will be terminated."
+              "If the total funds collected during the presale do not meet this target, the presale will be terminated. \n\nThe total funds collected cannot exceed this target."
             }
           />
         </div>
@@ -161,7 +161,7 @@ export const CustomisePrelaunchSettingsPane: FC<
         <button
           type="button"
           onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-          className="bg-gray-400 border border-gray-300  px-2 py-1 text-sm rounded"
+          className="bg-gray-400 border border-gray-300 px-2 py-1 text-sm text-gray-100 rounded"
         >
           {showAdvancedSettings
             ? "Hide Advanced Settings"
@@ -202,7 +202,7 @@ export const CustomisePrelaunchSettingsPane: FC<
               type="text"
               inputMode="numeric"
               id="supply-input"
-              className="text-center text-sm block p-1 w-fit rounded border border-gray-300 text-black "
+              className="text-center text-sm block p-1 w-32 rounded border border-gray-300 text-black "
               placeholder={supply.toString()}
               value={separateNumberWithComma(supply.replaceAll(",", ""))}
               onChange={(e) => {
@@ -241,9 +241,12 @@ export const CustomisePrelaunchSettingsPane: FC<
               }}
               required
             />
-            <span className="text-sm font-medium text-gray-400">
-              Set Max Allowed Per Purchase (Optional)
-            </span>
+            <label
+              htmlFor="lp-supply"
+              className="text-sm font-medium text-gray-400"
+            >
+              Max Allowed Per NFT (Optional)
+            </label>
             <div className="flex items-center gap-4">
               {maximumAllowedPerPurchase && (
                 <div className="flex">
@@ -280,9 +283,19 @@ export const CustomisePrelaunchSettingsPane: FC<
                 <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
               </label>
             </div>
-            <span className="text-sm font-medium text-gray-400">
-              Whitelist Collections (Optional)
-            </span>
+            <div className="flex gap-2 items-center">
+              <label
+                htmlFor="lp-supply"
+                className="text-sm font-medium text-gray-400"
+              >
+                Whitelisted Collections (Optional)
+              </label>
+              <Tooltip
+                content={
+                  "Only holders of the specified NFT collection can participate in the presale."
+                }
+              />
+            </div>
             <label className="w-fit items-center cursor-pointer">
               <input
                 id="whitelist-collections-checkbox"
