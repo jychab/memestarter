@@ -2,9 +2,13 @@ import {
   DocumentData,
   FirestoreError,
   Query,
+  doc,
+  getDoc,
   onSnapshot,
 } from "firebase/firestore";
+import useSWR from "swr";
 import useSWRSubscription from "swr/subscription";
+import { db } from "../utils/firebase";
 
 const useFirestoreWtihSWR = () => {
   const useCollection = <T>(
@@ -28,7 +32,14 @@ const useFirestoreWtihSWR = () => {
     });
     return { data, error };
   };
-  return { useCollection };
+
+  const getDocument = (path: string | null) => {
+    const { data, error, isLoading } = useSWR(path, (x: string) =>
+      getDoc(doc(db, x))
+    );
+    return { data, error, isLoading };
+  };
+  return { useCollection, getDocument };
 };
 
 export default useFirestoreWtihSWR;

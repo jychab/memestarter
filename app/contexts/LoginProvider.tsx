@@ -1,7 +1,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { User, signInAnonymously, signInWithCustomToken } from "firebase/auth";
-import { FC, ReactNode, useCallback, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { LoginContext } from "../hooks/useLogin";
 import { verifyAndGetToken } from "../utils/cloudFunctions";
 import { auth } from "../utils/firebase";
@@ -35,32 +35,29 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     }
   }, [user, publicKey]);
 
-  const handleLogin = useCallback(
-    async (
-      publicKey: PublicKey,
-      signMessage: (message: Uint8Array) => Promise<Uint8Array>
-    ) => {
-      if ((user && publicKey.toBase58() !== user.uid) || !user) {
-        try {
-          let currentUser = user;
-          if (!currentUser) {
-            currentUser = (await signInAnonymously(auth)).user;
-          }
-          const sessionKey = await currentUser.getIdToken();
-          const message = createLoginMessage(sessionKey.slice(0, 32));
-          const output = await signMessage(new TextEncoder().encode(message));
-          const token = await verifyAndGetToken(publicKey, output);
-          // Sign in with Firebase Authentication using a custom token.
-          const newUser = await signInWithCustomToken(auth, token);
-          setUser(newUser.user);
-        } catch (error) {
-          signOut();
-          console.log(error);
+  const handleLogin = async (
+    publicKey: PublicKey,
+    signMessage: (message: Uint8Array) => Promise<Uint8Array>
+  ) => {
+    if ((user && publicKey.toBase58() !== user.uid) || !user) {
+      try {
+        let currentUser = user;
+        if (!currentUser) {
+          currentUser = (await signInAnonymously(auth)).user;
         }
+        const sessionKey = await currentUser.getIdToken();
+        const message = createLoginMessage(sessionKey.slice(0, 32));
+        const output = await signMessage(new TextEncoder().encode(message));
+        const token = await verifyAndGetToken(publicKey, output);
+        // Sign in with Firebase Authentication using a custom token.
+        const newUser = await signInWithCustomToken(auth, token);
+        setUser(newUser.user);
+      } catch (error) {
+        signOut();
+        console.log(error);
       }
-    },
-    [user]
-  );
+    }
+  };
 
   return (
     <LoginContext.Provider

@@ -35,6 +35,7 @@ function Projects() {
   const [itemsLimit, setItemsLimit] = useState(10);
   const [timer, setTimer] = useState<number>(Date.now());
   const [endReached, setEndReached] = useState(false);
+  const [hide, setHide] = useState<boolean | undefined>();
   const { useCollection } = useFirestoreWtihSWR();
 
   useEffect(() => {
@@ -161,15 +162,15 @@ function Projects() {
 
   return (
     <>
-      <OnboardingScreen />
+      <OnboardingScreen hide={hide} setHide={setHide} />
       <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
-        <div className="flex gap-4">
+        <div className="flex gap-2 md:gap-4 ">
           <div className="flex items-center justify-start">
             <div className="relative">
               <button
                 id="dropdown-type-button"
                 onClick={() => setShowFilter(!showFilter)}
-                className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
+                className="relative flex-shrink-0 z-10 w-24 inline-flex items-center p-2 justify-center text-xs md:text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
                 type="button"
               >
                 {filterCriteria}
@@ -187,9 +188,9 @@ function Projects() {
                 id="dropdown-type"
                 hidden={!showFilter}
                 ref={filterDropDownRef}
-                className="z-20 mt-2 absolute rounded w-28"
+                className="z-20 mt-2 absolute rounded w-24"
               >
-                <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
+                <ul className="py-2 text-xs text-black z-30 bg-white border-gray-300 border">
                   {Object.values(FilterCriteria).map((value, index) => (
                     <li key={index}>
                       <button
@@ -213,7 +214,7 @@ function Projects() {
               <button
                 id="dropdown-type-button"
                 onClick={() => setShowSort(!showSort)}
-                className="relative flex-shrink-0 z-10 w-48 inline-flex items-center py-2 px-2 justify-center text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
+                className="relative flex-shrink-0 z-10 w-40 md:w-44 inline-flex items-center p-2 justify-center text-xs md:text-sm font-medium text-center border rounded-3xl focus:outline-none text-black border-gray-300"
                 type="button"
               >
                 {`Sort: ${sortCriteria}`}
@@ -231,7 +232,7 @@ function Projects() {
                 id="dropdown-type"
                 hidden={!showSort}
                 ref={sortDropDownRef}
-                className="z-20 mt-2 absolute rounded w-48"
+                className="z-20 mt-2 absolute rounded w-40 md:w-44"
               >
                 <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
                   {Object.values(SortCriteria).map((value, index) => (
@@ -252,8 +253,25 @@ function Projects() {
               </div>
             </div>
           </div>
+          <button
+            className="flex items-center gap-1"
+            onClick={() => setHide(false)}
+          >
+            <span className="text-xs md:text-sm hover:underline hover:text-blue-600">
+              Tutorial
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              width="18px"
+              height="18px"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+            </svg>
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {projects &&
             projects.length > 0 &&
             projects.map((project) => (
