@@ -58,7 +58,7 @@ export const OnboardingScreen: FC<OnboardingProps> = ({ hide, setHide }) => {
             <span className="col-span-1">2.</span>
             <span className="col-span-9">{`Select a project and contribute to its presale before it ends.`}</span>
             <span className="col-span-1">3.</span>
-            <span className="col-span-9">{`Once the presale concludes, a portion of the gathered funds will be utilized to create a liquidity pool.`}</span>
+            <span className="col-span-9">{`Once the presale concludes, all gathered funds will be utilized to create a liquidity pool.`}</span>
             <span className="col-span-1">4.</span>
             <span className="col-span-9">{`Claim your allocated tokens and trade them on any decentralized exchanges.`}</span>
             <span className="col-span-1">5.</span>
