@@ -5,7 +5,6 @@ import { PublicKey } from "@solana/web3.js";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
 import { useData } from "../../hooks/useData";
 import useUmi from "../../hooks/useUmi";
 import { MintDashboard } from "../../sections/MintDashboard";
@@ -29,10 +28,10 @@ function Profile() {
   const [currentUser, setCurrentUser] = useState<PublicKey>();
   const { getAsset, searchAssets } = useUmi();
 
-  const { data: collectionItemData } = useSWR(
-    selectedItem ? getCollectionMintAddress(selectedItem) : null,
-    getAsset
+  const { data: collectionItemData } = getAsset(
+    selectedItem ? getCollectionMintAddress(selectedItem) : null
   );
+
   useEffect(() => {
     if (collectionItemData) {
       setCollectionItem(collectionItemData as unknown as DAS.GetAssetResponse);
@@ -89,7 +88,7 @@ function Profile() {
     }
   }, [publicKey, nft, router]);
 
-  const { data: walletData } = useSWR(
+  const { data: walletData } = searchAssets(
     publicKey && limit && !nft
       ? JSON.stringify({
           owner: fromWeb3JsPublicKey(publicKey),
@@ -101,8 +100,7 @@ function Profile() {
           creatorVerified: true,
           limit: limit,
         })
-      : null,
-    searchAssets
+      : null
   );
 
   useEffect(() => {

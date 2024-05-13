@@ -5,6 +5,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useMemo } from "react";
+import useSWR from "swr";
 
 const useUmi = () => {
   // Import useWallet hook
@@ -22,12 +23,20 @@ const useUmi = () => {
     );
   }, [connection.rpcEndpoint, wallet]);
 
-  const searchAssets = async (input: string) => {
-    return await umi.rpc.searchAssets(JSON.parse(input));
+  const searchAssets = (input: string | null | undefined) => {
+    const { data, error, isLoading } = useSWR(
+      input ? JSON.parse(input) : null,
+      umi.rpc.searchAssets
+    );
+    return { data, error, isLoading };
   };
 
-  const getAsset = async (assetId: string) => {
-    return await umi.rpc.getAsset(publicKey(assetId));
+  const getAsset = (assetId: string | null | undefined) => {
+    const { data, error, isLoading } = useSWR(
+      assetId ? publicKey(assetId) : null,
+      umi.rpc.getAsset
+    );
+    return { data, error, isLoading };
   };
 
   return { searchAssets, getAsset };

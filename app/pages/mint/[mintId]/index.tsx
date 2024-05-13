@@ -1,6 +1,5 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
 import useUmi from "../../../hooks/useUmi";
 import { MintDashboard } from "../../../sections/MintDashboard";
 import { getCollectionMintAddress } from "../../../utils/helper";
@@ -13,7 +12,7 @@ export default function Mint() {
   const [collectionItem, setCollectionItem] = useState<DAS.GetAssetResponse>();
   const { mintId } = router.query;
 
-  const { data: mintData } = useSWR(mintId ? mintId : null, getAsset);
+  const { data: mintData } = getAsset(mintId as string);
 
   useEffect(() => {
     if (mintData) {
@@ -21,9 +20,8 @@ export default function Mint() {
     }
   }, [mintData]);
 
-  const { data: collectionMintData } = useSWR(
-    item ? getCollectionMintAddress(item) : null,
-    getAsset
+  const { data: collectionMintData } = getAsset(
+    item ? getCollectionMintAddress(item) : null
   );
 
   useEffect(() => {

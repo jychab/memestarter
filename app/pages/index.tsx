@@ -7,6 +7,7 @@ import {
   where,
 } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import useSWRSubscription from "swr/subscription";
 import CardItem from "../components/CardItem";
 import { OnboardingScreen } from "../sections/OnboardScreen";
 import { db } from "../utils/firebase";
@@ -37,7 +38,7 @@ function Projects() {
   const [showFilter, setShowFilter] = useState(false);
   const sortDropDownRef = useRef<HTMLDivElement>(null);
   const [showSort, setShowSort] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [itemsLimit, setItemsLimit] = useState(10);
   const [timer, setTimer] = useState<number>(Date.now());
   const [endReached, setEndReached] = useState(false);
@@ -47,43 +48,41 @@ function Projects() {
     return () => clearInterval(interval);
   }, []);
   const createQuery = useMemo(() => {
-    return (max: number) => {
-      const base = collection(db, "Pool");
-      const queries = [];
-      queries.push(where("valid", "==", true));
-      if (filterCriteria) {
-        switch (filterCriteria) {
-          case FilterCriteria.ongoing:
-            queries.push(where("status", "==", "Initialized"));
-            break;
-          case FilterCriteria.launched:
-            queries.push(where("status", "==", "Launched"));
-            break;
-          case FilterCriteria.expired:
-            queries.push(where("status", "==", "Ended"));
-            break;
-          default:
-            break;
-        }
-      }
+    if (!filterCriteria || !sortCriteria || !itemsLimit) return null;
+    const base = collection(db, "Pool");
+    const queries = [];
+    queries.push(where("valid", "==", true));
 
-      if (sortCriteria) {
-        switch (sortCriteria) {
-          case SortCriteria.createdTime:
-            queries.push(orderBy("createdAt", "desc"));
-            break;
-          case SortCriteria.liquidity:
-            queries.push(orderBy("liquidityCollected", "desc"));
-            break;
-          default:
-            queries.push(orderBy("presaleTimeLimit", "asc"));
-            break;
-        }
-      }
-      queries.push(limit(max));
-      return query(base, ...queries);
-    };
-  }, [filterCriteria, sortCriteria]);
+    switch (filterCriteria) {
+      case FilterCriteria.ongoing:
+        queries.push(where("status", "==", "Initialized"));
+        break;
+      case FilterCriteria.launched:
+        queries.push(where("status", "==", "Launched"));
+        break;
+      case FilterCriteria.expired:
+        queries.push(where("status", "==", "Ended"));
+        break;
+      default:
+        break;
+    }
+
+    switch (sortCriteria) {
+      case SortCriteria.createdTime:
+        queries.push(orderBy("createdAt", "desc"));
+        break;
+      case SortCriteria.liquidity:
+        queries.push(orderBy("liquidityCollected", "desc"));
+        break;
+      default:
+        queries.push(orderBy("presaleTimeLimit", "asc"));
+        break;
+    }
+
+    queries.push(limit(itemsLimit));
+
+    return query(base, ...queries);
+  }, [filterCriteria, sortCriteria, itemsLimit]);
 
   useEffect(() => {
     const handleScrollDebounced = debounce(handleScroll, 200);
@@ -110,6 +109,7 @@ function Projects() {
         Math.ceil(scrollTop + clientHeight) >= scrollHeight;
       if (scrolledToBottom && !loading && !endReached) {
         setItemsLimit((prevLimit) => prevLimit + 10);
+        setLoading(true);
       }
     }
     window.addEventListener("scroll", handleScrollDebounced);
@@ -118,24 +118,36 @@ function Projects() {
     };
   }, [loading, endReached]);
 
+  const { data: updatedProjects } = useSWRSubscription(
+    { filterCriteria, sortCriteria, itemsLimit },
+    (_, { next }) => {
+      const query = createQuery;
+      if (query == null) {
+        return;
+      }
+      const unsubscribe = onSnapshot(
+        query,
+        (querySnapshot) => {
+          next(
+            null,
+            querySnapshot.docs.map((doc) => doc.data() as PoolType)
+          );
+        },
+        (error) => next(error)
+      );
+      return () => unsubscribe && unsubscribe();
+    }
+  );
+
   useEffect(() => {
-    if (!itemsLimit) return;
-    setLoading(true);
-    const projectQuery = createQuery(itemsLimit);
-    const unsubscribe = onSnapshot(projectQuery, (querySnapshot) => {
-      const updatedProjects: PoolType[] = [];
-      querySnapshot.forEach((doc) => {
-        // Convert each document to a plain JavaScript object
-        updatedProjects.push(doc.data() as PoolType);
-      });
+    if (updatedProjects && itemsLimit) {
       setProjects(updatedProjects);
-      if (querySnapshot.size < itemsLimit) {
+      if (updatedProjects.size < itemsLimit) {
         setEndReached(true); // If fetched data is less than the limit, it means no more data available
       }
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [itemsLimit, createQuery]);
+    }
+  }, [updatedProjects, itemsLimit]);
 
   const handleClickOutside = <T extends HTMLElement>(
     event: MouseEvent,

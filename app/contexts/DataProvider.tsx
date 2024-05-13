@@ -1,7 +1,6 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { FC, ReactNode, useEffect, useState } from "react";
-import useSWR from "swr";
 import { DataContext } from "../hooks/useData";
 import useUmi from "../hooks/useUmi";
 import { db } from "../utils/firebase";
@@ -39,10 +38,7 @@ export const DataProvider: FC<DataProviderProps> = ({ children }) => {
     }
   }, [publicKey]);
 
-  const { data } = useSWR(
-    nftData && nftData.nft ? nftData.nft.id : null,
-    getAsset
-  );
+  const { data } = getAsset(nftData && nftData.nft ? nftData.nft.id : null);
 
   useEffect(() => {
     if (
