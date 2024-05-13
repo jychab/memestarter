@@ -1,14 +1,7 @@
-import {
-  collection,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, limit, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import useSWRSubscription from "swr/subscription";
 import CardItem from "../components/CardItem";
+import useFirestoreWtihSWR from "../hooks/useFirestoreWithSWR";
 import { OnboardingScreen } from "../sections/OnboardScreen";
 import { db } from "../utils/firebase";
 import { PoolType } from "../utils/types";
@@ -42,6 +35,7 @@ function Projects() {
   const [itemsLimit, setItemsLimit] = useState(10);
   const [timer, setTimer] = useState<number>(Date.now());
   const [endReached, setEndReached] = useState(false);
+  const { useCollection } = useFirestoreWtihSWR();
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(Date.now()), 2000);
@@ -118,31 +112,12 @@ function Projects() {
     };
   }, [loading, endReached]);
 
-  const { data: updatedProjects } = useSWRSubscription(
-    { filterCriteria, sortCriteria, itemsLimit },
-    (_, { next }) => {
-      const query = createQuery;
-      if (query == null) {
-        return;
-      }
-      const unsubscribe = onSnapshot(
-        query,
-        (querySnapshot) => {
-          next(
-            null,
-            querySnapshot.docs.map((doc) => doc.data() as PoolType)
-          );
-        },
-        (error) => next(error)
-      );
-      return () => unsubscribe && unsubscribe();
-    }
-  );
+  const { data: updatedProjects } = useCollection<PoolType>(createQuery);
 
   useEffect(() => {
     if (updatedProjects && itemsLimit) {
       setProjects(updatedProjects);
-      if (updatedProjects.size < itemsLimit) {
+      if (updatedProjects.length < itemsLimit) {
         setEndReached(true); // If fetched data is less than the limit, it means no more data available
       }
       setLoading(false);
