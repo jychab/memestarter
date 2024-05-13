@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import { useLogin } from "../../hooks/useLogin";
 import { CreateTokenPane } from "../../sections/CreateTokenPane";
 import { CustomisePrelaunchSettingsPane } from "../../sections/CustomisePrelaunchSettingsPane";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { ReviewPane } from "../../sections/ReviewPane";
-import { CollectionDetails } from "../../utils/types";
 import { getCustomErrorMessage } from "../../utils/error";
 import { createPool, uploadImage, uploadMetadata } from "../../utils/functions";
-import { useLogin } from "../../hooks/useLogin";
-import { NATIVE_MINT } from "@solana/spl-token";
+import { CollectionDetails } from "../../utils/types";
 
 function CreateCollection() {
   const { connection } = useConnection();
@@ -234,11 +234,14 @@ function CreateCollection() {
               decimal={decimals}
               externalUrl={externalUrl}
               totalSupply={parseInt(supply.replaceAll(",", ""))}
-              creatorFees={creatorFees}
+              creatorFees={creatorFees.replaceAll("%", "")}
               vestingPeriod={vestingPeriod}
               presaleTime={presaleDuration}
               presaleTarget={parseFloat(presaleTarget) * LAMPORTS_PER_SOL}
-              liquidityPoolSupplyInPercentage={liquidityPoolSupplyInPercentage}
+              liquidityPoolSupplyInPercentage={liquidityPoolSupplyInPercentage.replaceAll(
+                "%",
+                ""
+              )}
             />
           )}
           <div className="flex gap-4 p-4 items-end justify-end">

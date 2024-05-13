@@ -1,12 +1,11 @@
-import React, { FC } from "react";
-import Image from "next/image";
-import { CollectionDetails, Status } from "../utils/types";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { FC } from "react";
+import { Chip } from "../components/Chip";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
 } from "../utils/helper";
-import { Chip } from "../components/Chip";
+import { CollectionDetails } from "../utils/types";
 import { MainPane } from "./MainPane";
 
 interface ReviewPaneProps {
@@ -80,9 +79,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         <span className="col-span-4 sm:col-span-2 text-black">
           {liquidityPoolSupplyInPercentage + "%"}
         </span>
-        {creatorFees && (
-          <span className="col-span-2 sm:col-span-1">Creator's Share</span>
-        )}
+        <span className="col-span-2 sm:col-span-1">Creator's Share</span>
         <span className="col-span-4 sm:col-span-2 text-black">
           {creatorFees + "%"}
         </span>

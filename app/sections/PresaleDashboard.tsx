@@ -1,14 +1,14 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import React, { FC } from "react";
 import Image from "next/image";
-import solanaLogo from "./../public/solanaLogoMark.png";
+import { FC } from "react";
+import { Chip } from "../components/Chip";
+import { Tooltip } from "../components/Tooltip";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
 } from "../utils/helper";
 import { CollectionDetails } from "../utils/types";
-import { Chip } from "../components/Chip";
-import { Tooltip } from "../components/Tooltip";
+import solanaLogo from "./../public/solanaLogoMark.png";
 
 interface PresaleDashboardProps {
   symbol: string;
@@ -98,16 +98,21 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
           </span>
           <Tooltip
             content={
-              "This vested supply is used to create the intial liquidity pool on Raydium."
+              "This denotes the amount of tokens used to create the initial liquidity pool."
             }
           />
         </div>
-        <span className="text-[10px]">{`vested supply`}</span>
+        <span className="text-[10px]">{`initial LP supply`}</span>
       </div>
       <div className="col-span-3 flex flex-col gap-1">
-        <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
-          vestingPeriod
-        )}`}</span>
+        <div className="flex gap-2 items-center">
+          <span className="text-sm text-black">{`${convertSecondsToNearestUnit(
+            vestingPeriod
+          )}`}</span>
+          <Tooltip
+            content={"LP tokens will be unlocked linearly over this duration."}
+          />
+        </div>
         <span className="text-[10px]">{`vesting duration`}</span>
       </div>
       {description && (
