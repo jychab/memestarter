@@ -1,12 +1,13 @@
+import { useWallet } from "@solana/wallet-adapter-react";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import TextStyle from "@tiptap/extension-text-style";
+import Youtube from "@tiptap/extension-youtube";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { FC, useCallback, useState } from "react";
 import { MenuBar } from "../components/info/MenuBar";
-import TextStyle from "@tiptap/extension-text-style";
-import { useWallet } from "@solana/wallet-adapter-react";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Youtube from "@tiptap/extension-youtube";
+import { useLogin } from "../hooks/useLogin";
 import { saveAdditionalInfo } from "../utils/cloudFunctions";
 interface InfoSectionProps {
   poolId: string;
@@ -18,9 +19,10 @@ export const InfoSection: FC<InfoSectionProps> = ({
   content,
   poolId,
 }) => {
-  const { publicKey } = useWallet();
+  const { publicKey, signMessage } = useWallet();
   const [loading, setLoading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
+  const { handleLogin } = useLogin();
 
   const editor = useEditor(
     {
@@ -56,13 +58,14 @@ export const InfoSection: FC<InfoSectionProps> = ({
   );
 
   const handlePublish = useCallback(async () => {
-    if (editor && poolId && !loading) {
+    if (editor && poolId && !loading && publicKey && signMessage) {
       setLoading(true);
+      await handleLogin(publicKey, signMessage);
       await saveAdditionalInfo(poolId, editor.getHTML());
       setShowEditor(false);
       setLoading(false);
     }
-  }, [editor, poolId, loading]);
+  }, [editor, poolId, loading, publicKey, signMessage]);
 
   return (
     <div className="flex flex-col items-start w-full gap-4">

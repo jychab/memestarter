@@ -39,7 +39,11 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     publicKey: PublicKey,
     signMessage: (message: Uint8Array) => Promise<Uint8Array>
   ) => {
-    if ((user && publicKey.toBase58() !== user.uid) || !user) {
+    if (
+      (user && publicKey.toBase58() !== user.uid) ||
+      !user ||
+      user.isAnonymous
+    ) {
       try {
         let currentUser = user;
         if (!currentUser) {
