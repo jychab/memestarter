@@ -40,10 +40,10 @@ export async function launchToken(
   );
   if (
     (!amountOfSolInWallet ||
-      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 4) &&
+      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.4) &&
     docRef.empty
   ) {
-    throw new Error("Insufficient Sol. You need at least 4 Sol.");
+    throw new Error("Insufficient Sol. You need at least 0.4 Sol.");
   }
 
   let {
@@ -53,9 +53,9 @@ export async function launchToken(
     quoteVault,
     requestQueue,
     eventQueue,
+    vaultSignerNonce,
     bids,
     asks,
-    vaultSignerNonce,
   } = !docRef.empty
     ? (docRef.docs[0].data() as MarketDetails)
     : ({} as MarketDetails);
@@ -65,11 +65,9 @@ export async function launchToken(
     !baseVault ||
     !quoteVault ||
     !requestQueue ||
-    !eventQueue ||
-    !bids ||
-    !asks
+    !eventQueue
   ) {
-    toast.info("Launching Token Part 1...");
+    toast.info("Creating Market Part 1...");
     const market = generatePubKey({
       fromPublicKey: publicKey,
       programId: OPENBOOK_MARKET_PROGRAM_ID,
@@ -84,8 +82,6 @@ export async function launchToken(
       quoteVault: qv,
       requestQueue: rq,
       eventQueue: eq,
-      bids: b,
-      asks: a,
     } = await createMarketPart1(
       connection,
       publicKey,
@@ -106,8 +102,6 @@ export async function launchToken(
         quoteVault: qv.publicKey.toBase58(),
         requestQueue: rq.publicKey.toBase58(),
         eventQueue: eq.publicKey.toBase58(),
-        bids: b.publicKey.toBase58(),
-        asks: a.publicKey.toBase58(),
       },
     });
     vaultSignerNonce = Number(nonce);
@@ -117,14 +111,18 @@ export async function launchToken(
     quoteVault = qv.publicKey.toBase58();
     requestQueue = rq.publicKey.toBase58();
     eventQueue = eq.publicKey.toBase58();
-    bids = b.publicKey.toBase58();
-    asks = a.publicKey.toBase58();
+  }
 
-    toast.info("Launching Token Part 2...");
+  if (!bids || !asks) {
+    toast.info("Creating Market Part 2...");
     const { tickSize, orderSize } = await determineOptimalParameters(
       pool.totalSupply / 10 ** pool.decimal
     );
-    const { instructions: ix2 } = await createMarketPart2(
+    const {
+      instructions: ix2,
+      bids: b,
+      asks: a,
+    } = await createMarketPart2(
       new PublicKey(pool.mint),
       new PublicKey(pool.quoteMint),
       pool.decimal,
@@ -135,29 +133,27 @@ export async function launchToken(
       new PublicKey(quoteVault),
       new PublicKey(requestQueue),
       new PublicKey(eventQueue),
-      new PublicKey(bids),
-      new PublicKey(asks),
-      new BN(vaultSignerNonce)
-    );
-    const ix3 = await launchTokenAmm(
-      {
-        decimals: pool.decimal,
-        marketId: new PublicKey(marketId),
-        mint: new PublicKey(pool.mint),
-        quoteMint: new PublicKey(pool.quoteMint),
-        signer: publicKey,
-        poolAuthority: new PublicKey(pool.authority),
-        poolId: new PublicKey(pool.pool),
-      },
+      new BN(vaultSignerNonce),
+      publicKey,
       connection
     );
-    await buildAndSendTransaction(
-      connection,
-      [ix2, ix3],
-      publicKey,
-      signTransaction
-    );
+    await buildAndSendTransaction(connection, ix2, publicKey, signTransaction);
   }
+
+  toast.info("Launching Token...");
+  const ix3 = await launchTokenAmm(
+    {
+      decimals: pool.decimal,
+      marketId: new PublicKey(marketId),
+      mint: new PublicKey(pool.mint),
+      quoteMint: new PublicKey(pool.quoteMint),
+      signer: publicKey,
+      poolAuthority: new PublicKey(pool.authority),
+      poolId: new PublicKey(pool.pool),
+    },
+    connection
+  );
+  await buildAndSendTransaction(connection, [ix3], publicKey, signTransaction);
 }
 
 export async function buyPresale(

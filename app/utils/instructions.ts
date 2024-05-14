@@ -372,9 +372,9 @@ export async function createMarketPart2(
   quoteVault: PublicKey,
   requestQueue: PublicKey,
   eventQueue: PublicKey,
-  bids: PublicKey,
-  asks: PublicKey,
-  vaultSignerNonce: BN
+  vaultSignerNonce: BN,
+  signer: PublicKey,
+  connection: Connection
 ) {
   const baseLotSize = new BN(Math.round(10 ** decimal * lotSize));
   const quoteLotSize = new BN(
@@ -386,27 +386,61 @@ export async function createMarketPart2(
   if (baseLotSize.eq(ZERO)) throw Error("lot size is too small");
   if (quoteLotSize.eq(ZERO)) throw Error("tick size or lot size is too small");
 
-  const ix2 = MarketV2.initializeMarketInstruction({
+  const bids = generatePubKey({
+    fromPublicKey: signer,
     programId: OPENBOOK_MARKET_PROGRAM_ID,
-    marketInfo: {
-      id: marketId,
-      requestQueue: requestQueue,
-      eventQueue: eventQueue,
-      bids: bids,
-      asks: asks,
-      baseVault: baseVault,
-      quoteVault: quoteVault,
-      baseMint: mint,
-      quoteMint: quoteMint,
-      baseLotSize: baseLotSize,
-      quoteLotSize: quoteLotSize,
-      feeRateBps: feeRateBps,
-      vaultSignerNonce: vaultSignerNonce,
-      quoteDustThreshold: quoteDustThreshold,
-    },
   });
+  const asks = generatePubKey({
+    fromPublicKey: signer,
+    programId: OPENBOOK_MARKET_PROGRAM_ID,
+  });
+  let ix2 = [];
+  ix2.push(
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: signer,
+      basePubkey: signer,
+      seed: bids.seed,
+      newAccountPubkey: bids.publicKey,
+      lamports: await connection.getMinimumBalanceForRentExemption(14524),
+      space: 14524,
+      programId: OPENBOOK_MARKET_PROGRAM_ID,
+    })
+  );
+  ix2.push(
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: signer,
+      basePubkey: signer,
+      seed: asks.seed,
+      newAccountPubkey: asks.publicKey,
+      lamports: await connection.getMinimumBalanceForRentExemption(14524),
+      space: 14524,
+      programId: OPENBOOK_MARKET_PROGRAM_ID,
+    })
+  );
 
-  return { instructions: ix2 };
+  ix2.push(
+    MarketV2.initializeMarketInstruction({
+      programId: OPENBOOK_MARKET_PROGRAM_ID,
+      marketInfo: {
+        id: marketId,
+        requestQueue: requestQueue,
+        eventQueue: eventQueue,
+        bids: bids.publicKey,
+        asks: asks.publicKey,
+        baseVault: baseVault,
+        quoteVault: quoteVault,
+        baseMint: mint,
+        quoteMint: quoteMint,
+        baseLotSize: baseLotSize,
+        quoteLotSize: quoteLotSize,
+        feeRateBps: feeRateBps,
+        vaultSignerNonce: vaultSignerNonce,
+        quoteDustThreshold: quoteDustThreshold,
+      },
+    })
+  );
+
+  return { instructions: ix2, bids, asks };
 }
 
 export async function createMarketPart1(
@@ -433,14 +467,7 @@ export async function createMarketPart1(
     fromPublicKey: signer,
     programId: OPENBOOK_MARKET_PROGRAM_ID,
   });
-  const bids = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
-  const asks = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
+
   const ins1: TransactionInstruction[] = [];
   const accountLamports = await connection.getMinimumBalanceForRentExemption(
     165
@@ -486,8 +513,8 @@ export async function createMarketPart1(
       basePubkey: signer,
       seed: requestQueue.seed,
       newAccountPubkey: requestQueue.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(5120 + 12),
-      space: 5120 + 12,
+      lamports: await connection.getMinimumBalanceForRentExemption(5084),
+      space: 5084,
       programId: OPENBOOK_MARKET_PROGRAM_ID,
     }),
     SystemProgram.createAccountWithSeed({
@@ -495,26 +522,8 @@ export async function createMarketPart1(
       basePubkey: signer,
       seed: eventQueue.seed,
       newAccountPubkey: eventQueue.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(262144 + 12),
-      space: 262144 + 12,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: bids.seed,
-      newAccountPubkey: bids.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(65536 + 12),
-      space: 65536 + 12,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: asks.seed,
-      newAccountPubkey: asks.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(65536 + 12),
-      space: 65536 + 12,
+      lamports: await connection.getMinimumBalanceForRentExemption(11308),
+      space: 11308,
       programId: OPENBOOK_MARKET_PROGRAM_ID,
     })
   );
@@ -526,8 +535,6 @@ export async function createMarketPart1(
     market,
     requestQueue,
     eventQueue,
-    bids,
-    asks,
   };
 }
 

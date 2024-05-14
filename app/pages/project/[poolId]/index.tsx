@@ -301,6 +301,10 @@ export function Pool() {
               totalMintClaimed={pool.totalMintClaimed}
               initialSupply={pool.initialSupply}
               amountLpReceived={pool.amountLpReceived}
+              liquidityPoolSupply={pool.liquidityPoolSupply}
+              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+              mint={pool.mint}
+              lpMint={pool.lpMint}
             />
           )}
           <div className="mt-4">{getButton}</div>

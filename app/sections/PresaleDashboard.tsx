@@ -6,6 +6,7 @@ import { Chip } from "../components/Chip";
 import { Tooltip } from "../components/Tooltip";
 import {
   convertSecondsToNearestUnit,
+  creatorsShareTooltipContent,
   formatLargeNumber,
 } from "../utils/helper";
 import { CollectionDetails } from "../utils/types";
@@ -43,15 +44,6 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
   vestingPeriod,
   collectionsRequired,
 }) => {
-  const creatorsShareTooltipContent = (
-    creatorFee: number,
-    supply: number,
-    initialLpSupply: number
-  ) => {
-    return `This denotes the amount of tokens the creator will receive from the total supply.\n\nUpon Launch = ${formatLargeNumber(
-      ((supply - initialLpSupply) * (creatorFee / 100)) / 10 ** decimal
-    )} in tokens\nVesting = ${creatorFee}% of LP tokens`;
-  };
   return (
     <div className="grid grid-cols-9 items-center justify-evenly overflow-x-auto gap-x-2 gap-y-4">
       {collectionsRequired && (
@@ -139,7 +131,8 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
             content={creatorsShareTooltipContent(
               creatorFeeBasisPoints / 100,
               totalSupply,
-              liquidityPoolSupply
+              liquidityPoolSupply,
+              decimal
             )}
           />
         </div>

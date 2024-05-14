@@ -90,7 +90,7 @@ function CreateCollection() {
       }
       const amountOfSol = (await connection.getAccountInfo(publicKey))
         ?.lamports;
-      if (!amountOfSol || amountOfSol < 0.01 * LAMPORTS_PER_SOL) {
+      if (!amountOfSol || amountOfSol < 0.022 * LAMPORTS_PER_SOL) {
         toast.error("Insufficient sol, need at least 0.022 sol");
         return;
       }

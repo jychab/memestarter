@@ -307,3 +307,14 @@ export async function getOrCreateAssociatedTokenAccountInstruction(
   }
   return associatedToken;
 }
+
+export const creatorsShareTooltipContent = (
+  creatorFee: number,
+  supply: number,
+  initialLpSupply: number,
+  decimal: number
+) => {
+  return `This denotes the amount of tokens the creator will receive from the total supply.\n\nUpon Launch = ${formatLargeNumber(
+    ((supply - initialLpSupply) * (creatorFee / 100)) / 10 ** decimal
+  )} in tokens\nVesting = ${creatorFee}% of LP tokens`;
+};
