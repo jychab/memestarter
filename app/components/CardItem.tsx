@@ -3,8 +3,6 @@ import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Image from "next/image";
 import Link from "next/link";
 import { FC, useEffect, useState } from "react";
-import useFirestoreWtihSWR from "../hooks/useFirestoreWithSWR";
-import logo from "../public/logo.png";
 import solanaLogo from "../public/solanaLogoMark.png";
 import { convertSecondsToNearestUnit, getStatus } from "../utils/helper";
 import { PoolType, Status } from "../utils/types";
@@ -19,8 +17,6 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
   const [status, setStatus] = useState<Status>();
   const { publicKey } = useWallet();
-  const { getDocument } = useFirestoreWtihSWR();
-  const { data: creatorData } = getDocument(`Users/${pool.authority}`);
 
   useEffect(() => {
     if (pool) {
@@ -62,11 +58,8 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                     priority={true}
                     sizes="33vw"
                     quality={100}
-                    src={
-                      (creatorData?.data()?.nft?.content?.links
-                        ?.image as string) || logo
-                    }
-                    alt={"Creator"}
+                    src={pool.image}
+                    alt={"project"}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -74,7 +67,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                     {pool.name}
                   </span>
                   <span className="max-w-24 lg:max-w-36 truncate text-gray-400 text-[10px] lg:text-xs">
-                    {pool.authority}
+                    {pool.name}
                   </span>
                 </div>
               </div>

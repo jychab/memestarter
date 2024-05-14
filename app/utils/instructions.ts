@@ -361,7 +361,7 @@ export async function launchTokenAmm(
     .remainingAccounts(remainingAccounts)
     .instruction();
 }
-export async function createMarketPart3(
+export async function createMarketPart2(
   mint: PublicKey,
   quoteMint: PublicKey,
   decimal: number,
@@ -386,7 +386,7 @@ export async function createMarketPart3(
   if (baseLotSize.eq(ZERO)) throw Error("lot size is too small");
   if (quoteLotSize.eq(ZERO)) throw Error("tick size or lot size is too small");
 
-  const ix3 = MarketV2.initializeMarketInstruction({
+  const ix2 = MarketV2.initializeMarketInstruction({
     programId: OPENBOOK_MARKET_PROGRAM_ID,
     marketInfo: {
       id: marketId,
@@ -406,13 +406,25 @@ export async function createMarketPart3(
     },
   });
 
-  return { instructions: ix3 };
+  return { instructions: ix2 };
 }
-export async function createMarketPart2(
+
+export async function createMarketPart1(
+  connection: Connection,
   signer: PublicKey,
-  market: { publicKey: PublicKey; seed: string },
-  connection: Connection
+  mint: PublicKey,
+  quoteMint: PublicKey,
+  vaultOwner: PublicKey,
+  market: { publicKey: PublicKey; seed: string }
 ) {
+  const baseVault = generatePubKey({
+    fromPublicKey: signer,
+    programId: TOKEN_PROGRAM_ID,
+  });
+  const quoteVault = generatePubKey({
+    fromPublicKey: signer,
+    programId: TOKEN_PROGRAM_ID,
+  });
   const requestQueue = generatePubKey({
     fromPublicKey: signer,
     programId: OPENBOOK_MARKET_PROGRAM_ID,
@@ -429,9 +441,35 @@ export async function createMarketPart2(
     fromPublicKey: signer,
     programId: OPENBOOK_MARKET_PROGRAM_ID,
   });
-
-  const ins2: TransactionInstruction[] = [];
-  ins2.push(
+  const ins1: TransactionInstruction[] = [];
+  const accountLamports = await connection.getMinimumBalanceForRentExemption(
+    165
+  );
+  ins1.push(
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: signer,
+      basePubkey: signer,
+      seed: baseVault.seed,
+      newAccountPubkey: baseVault.publicKey,
+      lamports: accountLamports,
+      space: 165,
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    SystemProgram.createAccountWithSeed({
+      fromPubkey: signer,
+      basePubkey: signer,
+      seed: quoteVault.seed,
+      newAccountPubkey: quoteVault.publicKey,
+      lamports: accountLamports,
+      space: 165,
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    createInitializeAccountInstruction(baseVault.publicKey, mint, vaultOwner),
+    createInitializeAccountInstruction(
+      quoteVault.publicKey,
+      quoteMint,
+      vaultOwner
+    ),
     SystemProgram.createAccountWithSeed({
       fromPubkey: signer,
       basePubkey: signer,
@@ -480,66 +518,16 @@ export async function createMarketPart2(
       programId: OPENBOOK_MARKET_PROGRAM_ID,
     })
   );
-  return {
-    instructions: ins2,
-    market,
-    requestQueue,
-    eventQueue,
-    bids,
-    asks,
-  };
-}
-
-export async function createMarketPart1(
-  connection: Connection,
-  signer: PublicKey,
-  mint: PublicKey,
-  quoteMint: PublicKey,
-  vaultOwner: PublicKey
-) {
-  const baseVault = generatePubKey({
-    fromPublicKey: signer,
-    programId: TOKEN_PROGRAM_ID,
-  });
-  const quoteVault = generatePubKey({
-    fromPublicKey: signer,
-    programId: TOKEN_PROGRAM_ID,
-  });
-  const ins1: TransactionInstruction[] = [];
-  const accountLamports = await connection.getMinimumBalanceForRentExemption(
-    165
-  );
-  ins1.push(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: baseVault.seed,
-      newAccountPubkey: baseVault.publicKey,
-      lamports: accountLamports,
-      space: 165,
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: quoteVault.seed,
-      newAccountPubkey: quoteVault.publicKey,
-      lamports: accountLamports,
-      space: 165,
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    createInitializeAccountInstruction(baseVault.publicKey, mint, vaultOwner),
-    createInitializeAccountInstruction(
-      quoteVault.publicKey,
-      quoteMint,
-      vaultOwner
-    )
-  );
 
   return {
     instructions: ins1,
     baseVault,
     quoteVault,
+    market,
+    requestQueue,
+    eventQueue,
+    bids,
+    asks,
   };
 }
 

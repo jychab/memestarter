@@ -49,7 +49,6 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         image={image}
         name={name}
         symbol={symbol}
-        decimals={decimals}
         authority={authority}
       />
       <div className="grid grid-cols-6 items-center gap-4 text-xs">
@@ -95,6 +94,12 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         <span className="col-span-4 sm:col-span-2 text-black">
           {convertSecondsToNearestUnit(vestingPeriod)}
         </span>
+        {decimals && <span className="col-span-2 sm:col-span-1">Decimal</span>}
+        {decimals && (
+          <span className="col-span-4 sm:col-span-5 text-black">
+            {decimals}
+          </span>
+        )}
         {maxAmountPerPurchase && (
           <span className="col-span-2 sm:col-span-1">
             Max Allowed Per Purchase

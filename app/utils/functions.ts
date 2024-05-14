@@ -18,7 +18,6 @@ import {
   buyPresaleIx,
   createMarketPart1,
   createMarketPart2,
-  createMarketPart3,
   createPurchaseAuthorisationIx,
   getVaultOwnerAndNonce,
   initializePoolIx,
@@ -48,7 +47,6 @@ export async function launchToken(
   }
 
   let {
-    created,
     marketId,
     marketSeed,
     baseVault,
@@ -61,97 +59,72 @@ export async function launchToken(
   } = !docRef.empty
     ? (docRef.docs[0].data() as MarketDetails)
     : ({} as MarketDetails);
-  if (!created) {
-    if (!marketId || !marketSeed || !baseVault || !quoteVault) {
-      toast.info("Creating Market Part 1...");
-      const market = generatePubKey({
-        fromPublicKey: publicKey,
-        programId: OPENBOOK_MARKET_PROGRAM_ID,
-      });
+  if (
+    !marketId ||
+    !marketSeed ||
+    !baseVault ||
+    !quoteVault ||
+    !requestQueue ||
+    !eventQueue ||
+    !bids ||
+    !asks
+  ) {
+    toast.info("Launching Token Part 1...");
+    const market = generatePubKey({
+      fromPublicKey: publicKey,
+      programId: OPENBOOK_MARKET_PROGRAM_ID,
+    });
 
-      const { vaultOwner, vaultSignerNonce: nonce } = getVaultOwnerAndNonce(
-        market.publicKey
-      );
-      const {
-        instructions: ix1,
-        baseVault: bv,
-        quoteVault: qv,
-      } = await createMarketPart1(
-        connection,
-        publicKey,
-        new PublicKey(pool.mint),
-        new PublicKey(pool.quoteMint),
-        vaultOwner
-      );
-      await buildAndSendTransaction(
-        connection,
-        ix1,
-        publicKey,
-        signTransaction
-      );
-      await updateMarketData({
-        pubKey: publicKey.toBase58(),
-        poolId: pool.pool,
-        marketDetails: {
-          vaultSignerNonce: Number(nonce),
-          marketSeed: market.seed,
-          marketId: market.publicKey.toBase58(),
-          baseVault: bv.publicKey.toBase58(),
-          quoteVault: qv.publicKey.toBase58(),
-          created: false,
-        },
-      });
-      created = false;
-      vaultSignerNonce = Number(nonce);
-      marketSeed = market.seed;
-      marketId = market.publicKey.toBase58();
-      baseVault = bv.publicKey.toBase58();
-      quoteVault = qv.publicKey.toBase58();
-    }
+    const { vaultOwner, vaultSignerNonce: nonce } = getVaultOwnerAndNonce(
+      market.publicKey
+    );
+    const {
+      instructions: ix1,
+      baseVault: bv,
+      quoteVault: qv,
+      requestQueue: rq,
+      eventQueue: eq,
+      bids: b,
+      asks: a,
+    } = await createMarketPart1(
+      connection,
+      publicKey,
+      new PublicKey(pool.mint),
+      new PublicKey(pool.quoteMint),
+      vaultOwner,
+      market
+    );
+    await buildAndSendTransaction(connection, ix1, publicKey, signTransaction);
+    await updateMarketData({
+      pubKey: publicKey.toBase58(),
+      poolId: pool.pool,
+      marketDetails: {
+        vaultSignerNonce: Number(nonce),
+        marketSeed: market.seed,
+        marketId: market.publicKey.toBase58(),
+        baseVault: bv.publicKey.toBase58(),
+        quoteVault: qv.publicKey.toBase58(),
+        requestQueue: rq.publicKey.toBase58(),
+        eventQueue: eq.publicKey.toBase58(),
+        bids: b.publicKey.toBase58(),
+        asks: a.publicKey.toBase58(),
+      },
+    });
+    vaultSignerNonce = Number(nonce);
+    marketSeed = market.seed;
+    marketId = market.publicKey.toBase58();
+    baseVault = bv.publicKey.toBase58();
+    quoteVault = qv.publicKey.toBase58();
+    requestQueue = rq.publicKey.toBase58();
+    eventQueue = eq.publicKey.toBase58();
+    bids = b.publicKey.toBase58();
+    asks = a.publicKey.toBase58();
 
-    if (!requestQueue || !eventQueue || !bids || !asks) {
-      toast.info("Creating Market Part 2...");
-      const {
-        instructions: ix2,
-        requestQueue: rq,
-        eventQueue: eq,
-        bids: b,
-        asks: a,
-      } = await createMarketPart2(
-        publicKey,
-        { publicKey: new PublicKey(marketId), seed: marketSeed },
-        connection
-      );
-      await buildAndSendTransaction(
-        connection,
-        ix2,
-        publicKey,
-        signTransaction
-      );
-      await updateMarketData({
-        pubKey: publicKey.toBase58(),
-        poolId: pool.pool,
-        marketDetails: {
-          marketId: marketId,
-          requestQueue: rq.publicKey.toBase58(),
-          eventQueue: eq.publicKey.toBase58(),
-          bids: b.publicKey.toBase58(),
-          asks: a.publicKey.toBase58(),
-          created: false,
-        },
-      });
-      created = false;
-      requestQueue = rq.publicKey.toBase58();
-      eventQueue = eq.publicKey.toBase58();
-      bids = b.publicKey.toBase58();
-      asks = a.publicKey.toBase58();
-    }
-
-    toast.info("Creating Market Part 3...");
+    toast.info("Launching Token Part 2...");
     const { tickSize, orderSize } = await determineOptimalParameters(
       pool.totalSupply / 10 ** pool.decimal
     );
-    const { instructions: ix3 } = await createMarketPart3(
+    const { instructions: ix2 } = await createMarketPart2(
       new PublicKey(pool.mint),
       new PublicKey(pool.quoteMint),
       pool.decimal,
@@ -166,35 +139,25 @@ export async function launchToken(
       new PublicKey(asks),
       new BN(vaultSignerNonce)
     );
+    const ix3 = await launchTokenAmm(
+      {
+        decimals: pool.decimal,
+        marketId: new PublicKey(marketId),
+        mint: new PublicKey(pool.mint),
+        quoteMint: new PublicKey(pool.quoteMint),
+        signer: publicKey,
+        poolAuthority: new PublicKey(pool.authority),
+        poolId: new PublicKey(pool.pool),
+      },
+      connection
+    );
     await buildAndSendTransaction(
       connection,
-      [ix3],
+      [ix2, ix3],
       publicKey,
       signTransaction
     );
-    await updateMarketData({
-      pubKey: publicKey.toBase58(),
-      poolId: pool.pool,
-      marketDetails: {
-        marketId: marketId,
-        created: true,
-      },
-    });
   }
-  toast.info("Launching Token...");
-  const ix4 = await launchTokenAmm(
-    {
-      decimals: pool.decimal,
-      marketId: new PublicKey(marketId),
-      mint: new PublicKey(pool.mint),
-      quoteMint: new PublicKey(pool.quoteMint),
-      signer: publicKey,
-      poolAuthority: new PublicKey(pool.authority),
-      poolId: new PublicKey(pool.pool),
-    },
-    connection
-  );
-  await buildAndSendTransaction(connection, [ix4], publicKey, signTransaction);
 }
 
 export async function buyPresale(

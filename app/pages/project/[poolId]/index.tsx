@@ -254,15 +254,17 @@ export function Pool() {
   return (
     pool && (
       <div className="flex flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
+        <InfoSection
+          poolCreator={pool.authority}
+          content={pool.additionalInfo || ""}
+          poolId={pool.pool}
+        />
         <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
           <MainPane
-            creatorsFeeBasisPoints={pool.creatorFeeBasisPoints}
-            lpMint={pool.lpMint}
             image={pool.image}
             name={pool.name}
             symbol={pool.symbol}
             authority={pool.authority}
-            mint={pool.mint}
           />
           {(status == Status.PresaleInProgress ||
             status == Status.PresaleTargetMet ||
@@ -278,6 +280,9 @@ export function Pool() {
               liquidityCollected={pool.liquidityCollected}
               presaleTimeLimit={pool.presaleTimeLimit}
               presaleTarget={pool.presaleTarget}
+              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+              lpMint={pool.lpMint}
+              mint={pool.mint}
               description={pool.description}
             />
           )}
@@ -300,11 +305,7 @@ export function Pool() {
           )}
           <div className="mt-4">{getButton}</div>
         </div>
-        <InfoSection
-          poolCreator={pool.authority}
-          content={pool.additionalInfo || ""}
-          poolId={pool.pool}
-        />
+
         <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
       </div>
     )

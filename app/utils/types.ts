@@ -149,7 +149,6 @@ export interface UpdateMarketDataArgs {
   marketDetails: MarketDetails;
 }
 export interface MarketDetails {
-  created: boolean;
   vaultSignerNonce?: number;
   marketId: string;
   marketSeed?: string;
