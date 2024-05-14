@@ -8,9 +8,10 @@ import { PublicKey } from "@solana/web3.js";
 export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );
-export const HELIUS_ENDPOINT = `https://${
-  process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod" ? "mainnet" : "devnet"
-}.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
+export const HELIUS_ENDPOINT =
+  process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
+    ? `https://elisabet-a7bz68-fast-mainnet.helius-rpc.com`
+    : `https://corly-a4vtm7-fast-devnet.helius-rpc.com`;
 
 export const RAYDIUM_FEE_COLLECTOR =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
