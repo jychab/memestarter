@@ -86,7 +86,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
       <div className="col-span-3 flex flex-col gap-1">
         <div className="flex items-center gap-1">
           <span className="text-sm text-black">
-            {`${formatLargeNumber(totalSupply / 10 ** decimal)} ${symbol}`}
+            {formatLargeNumber(totalSupply / 10 ** decimal)}
           </span>
         </div>
         <span className="text-[10px]">{`total supply`}</span>
