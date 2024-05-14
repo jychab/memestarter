@@ -1,7 +1,3 @@
-import { DAS, DetermineOptimalParams, PoolType, Status } from "./types";
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { getCurrentPrice } from "./cloudFunctions";
-import { program } from "./instructions";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Account,
@@ -12,6 +8,8 @@ import {
   getAccount,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { DAS, PoolType, Status } from "./types";
 
 /**
  * Retrieves the collection mint address from the provided asset response.
@@ -182,24 +180,32 @@ function countDecimalPlaces(number: number) {
   return numDecimalPlaces;
 }
 
-export async function determineOptimalParameters(
-  args: DetermineOptimalParams,
-  connection: Connection
-) {
-  const poolData = await program(connection).account.pool.fetch(args.pool);
-  const amountInSol =
-    (poolData.liquidityCollected * (10000 - poolData.creatorFeeBasisPoints)) /
-    (LAMPORTS_PER_SOL * 10000);
-  const response = await getCurrentPrice(args.quoteMint);
-  const amountInUSD = amountInSol * response.data.value;
-  const amountOfCoin = poolData.liquidityPoolSupply / 10 ** args.decimal;
-  const initialPrice = amountInUSD / amountOfCoin;
-  const tickSize = initialPrice / 1000;
-  const maxDecimals = 6;
-  const tickDecimals = countDecimalPlaces(tickSize);
-  const orderSizeDecimals = Math.min(maxDecimals - tickDecimals, 6);
-  const optimalOrderSize = 1 / Math.pow(10, orderSizeDecimals);
-  return { tickSize: tickSize, orderSize: optimalOrderSize };
+export async function determineOptimalParameters(totalSupply: number) {
+  let tickSize;
+  let orderSize;
+  if (totalSupply <= 100000) {
+    tickSize = 0.0001;
+    orderSize = 0.01;
+  } else if (totalSupply <= 1000000) {
+    tickSize = 0.00001;
+    orderSize = 0.1;
+  } else if (totalSupply <= 10000000) {
+    tickSize = 0.000001;
+    orderSize = 1;
+  } else if (totalSupply <= 100000000) {
+    tickSize = 0.0000001;
+    orderSize = 10;
+  } else if (totalSupply <= 1000000000) {
+    tickSize = 0.00000001;
+    orderSize = 100;
+  } else if (totalSupply <= 10000000000) {
+    tickSize = 0.000000001;
+    orderSize = 1000;
+  } else {
+    tickSize = 0.0000000001;
+    orderSize = 10000;
+  }
+  return { tickSize: tickSize, orderSize: orderSize };
 }
 
 function getFirstFourNonZeroDigits(number: number) {

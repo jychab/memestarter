@@ -149,8 +149,7 @@ export async function launchToken(
 
     toast.info("Creating Market Part 3...");
     const { tickSize, orderSize } = await determineOptimalParameters(
-      { pool: pool.pool, quoteMint: pool.quoteMint, decimal: pool.decimal },
-      connection
+      pool.totalSupply / 10 ** pool.decimal
     );
     const { instructions: ix3 } = await createMarketPart3(
       new PublicKey(pool.mint),

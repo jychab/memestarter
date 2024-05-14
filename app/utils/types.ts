@@ -1,15 +1,15 @@
 import { PublicKey } from "@solana/web3.js";
+import { Timestamp } from "firebase/firestore";
 import {
   AssetSortBy,
   AssetSortDirection,
-  Interface,
-  Scope,
   Context,
+  Interface,
   OwnershipModel,
   RoyaltyModel,
+  Scope,
   UseMethods,
 } from "./enums";
-import { FieldValue, Timestamp } from "firebase/firestore";
 
 export interface IReply {
   id: string;
@@ -161,12 +161,6 @@ export interface MarketDetails {
   quoteVault?: string;
   baseMint?: string;
   quoteMint?: string;
-}
-
-export interface DetermineOptimalParams {
-  pool: string;
-  quoteMint: string;
-  decimal: number;
 }
 
 export interface CollectionDetails {
