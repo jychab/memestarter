@@ -138,6 +138,15 @@ export async function launchToken(
       connection
     );
     await buildAndSendTransaction(connection, ix2, publicKey, signTransaction);
+    await updateMarketData({
+      pubKey: publicKey.toBase58(),
+      poolId: pool.pool,
+      marketDetails: {
+        bids: b.publicKey.toBase58(),
+        asks: a.publicKey.toBase58(),
+        marketId: marketId,
+      },
+    });
   }
 
   toast.info("Launching Token...");
