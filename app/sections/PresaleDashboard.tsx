@@ -172,7 +172,7 @@ export const PresaleDashboard: FC<PresaleDashboardProps> = ({
         <span className="uppercase text-xs col-span-10">About</span>
       )}
       {description && (
-        <span className="text-xs text-black text-wrap truncate col-span-10">
+        <span className="text-xs text-black col-span-10 line-clamp-3">
           {description}
         </span>
       )}

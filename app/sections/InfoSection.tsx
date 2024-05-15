@@ -144,7 +144,7 @@ export const InfoSection: FC<InfoSectionProps> = ({
               (isEditable ? " bg-red-600" : " bg-blue-600")
             }
           >
-            <span>{isEditable ? "Close Edit Mode" : "Edit"}</span>
+            <span>{isEditable ? "Close" : "Edit Info"}</span>
           </button>
         )}
       </div>

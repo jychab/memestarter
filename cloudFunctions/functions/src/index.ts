@@ -1,22 +1,23 @@
-import { onCall, onRequest } from "firebase-functions/v1/https";
-import programWebhook from "./programWebhook";
-import cors = require("cors");
-import { firestore } from "firebase-functions/v1";
-import updatePool from "./updatePool";
+import {firestore} from "firebase-functions/v1";
+import {onCall, onRequest} from "firebase-functions/v1/https";
+import {onSchedule} from "firebase-functions/v2/scheduler";
+import {onTaskDispatched} from "firebase-functions/v2/tasks";
+import {handleCommentsAndReplies} from "./commentsAndReplies";
+import {enQueue} from "./enQueue";
+import getPrice from "./getPrice";
 import linkAsset from "./linkAsset";
+import programWebhook from "./programWebhook";
+import {saveAdditionalInfo} from "./saveInfo";
+import {saveThumbnail} from "./saveThumbnail";
 import unlinkAsset from "./unlinkAsset";
 import updateMarketDetails from "./updateMarketDetails";
-import { onTaskDispatched } from "firebase-functions/v2/tasks";
-import { onSchedule } from "firebase-functions/v2/scheduler";
-import { updatePoolStatus } from "./updatePoolStatus";
-import { enQueue } from "./enQueue";
-import { verifySignIn } from "./verifySignIn";
-import getPrice from "./getPrice";
-import { handleCommentsAndReplies } from "./commentsAndReplies";
-import { saveAdditionalInfo } from "./saveInfo";
+import updatePool from "./updatePool";
+import {updatePoolStatus} from "./updatePoolStatus";
+import {verifySignIn} from "./verifySignIn";
+import cors = require("cors");
 
 exports.programWebhook = onRequest(async (req, res) =>
-  cors({ origin: true })(req, res, async () => await programWebhook(req, res))
+  cors({origin: true})(req, res, async () => await programWebhook(req, res))
 );
 exports.updatePool = firestore
   .document("Pool/{poolId}")
@@ -63,4 +64,8 @@ exports.handleCommentsAndReplies = onCall(
 
 exports.saveAdditionalInfo = onCall(
   async (data, context) => await saveAdditionalInfo(data, context)
+);
+
+exports.saveThumbnail = onCall(
+  async (data, context) => await saveThumbnail(data, context)
 );

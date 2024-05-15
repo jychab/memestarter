@@ -16,6 +16,7 @@ import { CommentsSection } from "../../../sections/CommentsSection";
 import { InfoSection } from "../../../sections/InfoSection";
 import { MainPane } from "../../../sections/MainPane";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
+import { ThumbnailSection } from "../../../sections/ThumbnailSection";
 import VestingDashboard from "../../../sections/VestingDashboard";
 import { getCurrentPrice } from "../../../utils/cloudFunctions";
 import { getCustomErrorMessage } from "../../../utils/error";
@@ -24,7 +25,7 @@ import { buyPresale, launchToken } from "../../../utils/functions";
 import { getCollectionMintAddress, getStatus } from "../../../utils/helper";
 import { MintType, PoolType, Status } from "../../../utils/types";
 
-export function Pool() {
+export default function Pool() {
   const [loading, setLoading] = useState(false);
   const { connection } = useConnection();
   const [status, setStatus] = useState<Status>();
@@ -253,7 +254,8 @@ export function Pool() {
 
   return (
     pool && (
-      <div className="flex flex-col items-center justify-center gap-4 max-w-screen-sm w-full h-full">
+      <div className="flex flex-col items-center justify-center gap-8 max-w-screen-md w-full h-full">
+        <ThumbnailSection pool={pool} />
         <InfoSection
           poolCreator={pool.authority}
           content={pool.additionalInfo || ""}
@@ -315,5 +317,3 @@ export function Pool() {
     )
   );
 }
-
-export default Pool;

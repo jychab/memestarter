@@ -1,10 +1,10 @@
-import {db, helius} from "./utils/index";
-import {QueryDocumentSnapshot} from "firebase-functions/v1/firestore";
-import {EventContext} from "firebase-functions/v1";
 import axios from "axios";
-import {addToQueue} from "./utils/helper";
-import {PoolType} from "./utils/types";
 import {log} from "firebase-functions/logger";
+import {EventContext} from "firebase-functions/v1";
+import {QueryDocumentSnapshot} from "firebase-functions/v1/firestore";
+import {addToQueue} from "./utils/helper";
+import {db, helius} from "./utils/index";
+import {PoolType} from "./utils/types";
 
 export default async function updatePool(
   snapshot: QueryDocumentSnapshot,
@@ -68,6 +68,11 @@ export default async function updatePool(
         symbol: symbol,
         image: image,
         description: description,
+        thumbnail: {
+          imageUrl: image,
+          title: name,
+          description: description,
+        },
         valid: valid,
         mintMetadata: metadata,
         inQueue: inQueue,

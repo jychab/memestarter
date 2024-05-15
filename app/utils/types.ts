@@ -211,6 +211,13 @@ export interface PoolType {
   createdAt: Timestamp | number | null;
   updatedAt: Timestamp | number | null;
   additionalInfo?: string;
+  thumbnail: Thumbnail;
+}
+
+export interface Thumbnail {
+  imageUrl: string;
+  title: string;
+  description: string;
 }
 
 export interface MintType {

@@ -1,8 +1,8 @@
-import { httpsCallable } from "firebase/functions";
-import { DAS, IComment, IReply, UpdateMarketDataArgs } from "./types";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { PublicKey } from "@solana/web3.js";
+import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
+import { DAS, IComment, IReply, UpdateMarketDataArgs } from "./types";
 
 export async function getCurrentPrice(address: string): Promise<{
   data: {
@@ -56,6 +56,21 @@ export async function saveAdditionalInfo(poolId: string, content: string) {
   await saveAdditionalInfo({
     poolId,
     content,
+  });
+}
+
+export async function saveThumbnail(
+  poolId: string,
+  imageUrl: string,
+  title: string,
+  description: string
+) {
+  const saveThumbnail = httpsCallable(functions, "saveThumbnail");
+  await saveThumbnail({
+    poolId,
+    imageUrl,
+    title,
+    description,
   });
 }
 

@@ -122,7 +122,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
           <span className="col-span-2 sm:col-span-1">Description</span>
         )}
         {description && (
-          <span className="col-span-4 sm:col-span-5 text-black truncate text-wrap">
+          <span className="col-span-4 sm:col-span-5 text-black line-clamp-3">
             {description}
           </span>
         )}
