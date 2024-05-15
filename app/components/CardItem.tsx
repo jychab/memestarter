@@ -67,7 +67,7 @@ export const CardItem: FC<CardItemProps> = ({
       <button
         disabled={disabled}
         onClick={() => router.push(`project/${pool.pool}`)}
-        className="group cursor overflow-hidden rounded hover:shadow-xl w-full max-w-80 duration-200 hover:-translate-y-2 p-2 md:p-4 hover:border hover:border-gray-300"
+        className="group cursor overflow-hidden rounded hover:shadow-xl w-full max-w-80 duration-200 hover:-translate-y-2 p-4 hover:border hover:border-gray-300"
       >
         <div className="relative w-full h-44 overflow-hidden">
           <Image
