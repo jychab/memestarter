@@ -16,7 +16,29 @@ interface CardItemProps {
 export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   const [percentage, setPercentage] = useState<number>(0);
   const [status, setStatus] = useState<Status>();
+  const [presaleDurationLeft, setPresaleDurationLeft] = useState<
+    string | undefined
+  >();
   const { publicKey } = useWallet();
+
+  useEffect(() => {
+    if (
+      timer &&
+      (status === Status.PresaleInProgress ||
+        status === Status.PresaleTargetMet ||
+        status === Status.ReadyToLaunch) &&
+      pool.presaleTimeLimit - timer / 1000 > 0
+    ) {
+      setPresaleDurationLeft(
+        convertSecondsToNearestUnit(pool.presaleTimeLimit - timer / 1000)
+          .split(" ")
+          .slice(0, 2)
+          .join(" ") + " left"
+      );
+    } else {
+      setPresaleDurationLeft(undefined);
+    }
+  }, [status, timer, pool]);
 
   useEffect(() => {
     if (pool) {
@@ -29,11 +51,10 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
   }, [pool]);
 
   return (
-    pool &&
-    timer && (
+    pool && (
       <Link className="cursor-pointer" href={`project/${pool.pool}`}>
         <div className="group cursor overflow-hidden rounded group-hover:shadow-xl duration-200 hover:-translate-y-2 p-2 lg:p-4 hover:border hover:border-gray-300">
-          <div className="relative w-full h-36 md:h-56 overflow-hidden">
+          <div className="relative w-full max-w-72 h-40 overflow-hidden">
             <Image
               priority={true}
               className={`rounded object-cover cursor-pointer`}
@@ -48,9 +69,9 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
               </div>
             )}
           </div>
-          <div className="flex flex-col w-full min-h-16 h-fit group-hover:max-h-40 gap-2 overflow-hidden bg-white p-2">
+          <div className="flex flex-col w-full max-w-72 min-h-16 h-fit group-hover:max-h-36 gap-2 overflow-hidden bg-white p-2">
             <div className="flex items-center justify-between">
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <div className="w-8 h-8 relative">
                   <Image
                     className={`rounded-full object-cover hover:border-2 hover:border-gray-400`}
@@ -63,7 +84,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="group-hover:text-gray-900 max-w-24 lg:max-w-36 truncate text-gray-800 text-xs lg:text-sm">
+                  <span className="group-hover:text-gray-900 max-w-24 lg:max-w-36 truncate text-gray-800 text-sm md:text-base">
                     {pool.name}
                   </span>
                   <span className="max-w-24 lg:max-w-36 truncate text-gray-400 text-[10px] lg:text-xs">
@@ -78,9 +99,7 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
             </p>
             <div className="flex items-center justify-between">
               <div className="flex flex-none items-center gap-1 text-gray-800 focus:text-gray-900 hover:text-gray-800">
-                {(status === Status.PresaleInProgress ||
-                  status === Status.PresaleTargetMet ||
-                  status === Status.ReadyToLaunch) && (
+                {presaleDurationLeft && (
                   <svg
                     className="h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -97,39 +116,32 @@ export const CardItem: FC<CardItemProps> = ({ pool, timer }) => {
                     />
                   </svg>
                 )}
-                <span className="text-[10px] lg:text-xs w-full group-hover:max-w-32 truncate">
-                  {`${
-                    status === Status.PresaleInProgress ||
-                    status === Status.PresaleTargetMet ||
-                    status === Status.ReadyToLaunch
-                      ? convertSecondsToNearestUnit(
-                          pool.presaleTimeLimit - timer / 1000
-                        )
-                          .split(" ")
-                          .slice(0, 2)
-                          .join(" ") + " left"
-                      : status
-                  }`}
+                <span className="text-[10px] md:text-xs w-full truncate">
+                  {presaleDurationLeft || status}
                 </span>
               </div>
-              <div className="hidden gap-1 group-hover:flex flex-none items-center">
-                <span className="text-[10px] lg:text-xs text-gray-900 ">
-                  {`${
-                    pool.liquidityCollected
-                      ? pool.liquidityCollected / LAMPORTS_PER_SOL
-                      : 0
-                  } / ${pool.presaleTarget / LAMPORTS_PER_SOL}`}
+              {presaleDurationLeft && (
+                <div className="hidden gap-1 group-hover:flex flex-none items-center">
+                  <span className="text-[10px] lg:text-xs text-gray-900 ">
+                    {`${
+                      pool.liquidityCollected
+                        ? pool.liquidityCollected / LAMPORTS_PER_SOL
+                        : 0
+                    } / ${pool.presaleTarget / LAMPORTS_PER_SOL}`}
+                  </span>
+                  <Image
+                    width={16}
+                    height={16}
+                    src={solanaLogo}
+                    alt={"solana logo"}
+                  />
+                </div>
+              )}
+              {presaleDurationLeft && (
+                <span className="text-[10px] lg:text-xs group-hover:hidden text-gray-900">
+                  {`${percentage}% funded`}
                 </span>
-                <Image
-                  width={16}
-                  height={16}
-                  src={solanaLogo}
-                  alt={"solana logo"}
-                />
-              </div>
-              <span className="text-[10px] lg:text-xs group-hover:hidden text-gray-900">
-                {`${percentage}%`}
-              </span>
+              )}
             </div>
           </div>
         </div>
