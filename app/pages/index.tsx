@@ -164,7 +164,7 @@ function Projects() {
     <>
       <OnboardingScreen hide={hide} setHide={setHide} />
       <div className="flex flex-col w-full h-fit max-w-screen-xl mx-auto gap-4">
-        <div className="flex gap-2 md:gap-4 ">
+        <div className="flex gap-2 md:gap-4 overflow-auto scrollbar-none">
           <div className="flex items-center justify-start">
             <div className="relative">
               <button
