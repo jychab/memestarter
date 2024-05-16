@@ -161,6 +161,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
       presaleTarget,
       presaleTimeLimit,
       decimal,
+      amountWithdrawn,
       totalAmountWithdrawn,
       lpClaimed,
       mintElligible,
@@ -284,7 +285,9 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         )}
         {status === Status.Expired && (
           <td className="p-2 text-center">
-            {totalAmountWithdrawn === amount ? "Fully Withdrawn" : ""}
+            {amountWithdrawn === amount
+              ? "Fully Withdrawn"
+              : amount / LAMPORTS_PER_SOL + " Sol"}
           </td>
         )}
         <td className="p-2 text-center">
@@ -338,7 +341,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
             {nft &&
               nft.id === originalMint &&
               status === Status.Expired &&
-              totalAmountWithdrawn !== amount && (
+              amountWithdrawn !== amount && (
                 <button
                   onClick={() => handleAction("withdraw")}
                   className="text-blue-400 disabled:text-gray-400 items-center flex"
