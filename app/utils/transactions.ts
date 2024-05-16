@@ -1,14 +1,52 @@
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {
-  Connection,
-  TransactionInstruction,
-  PublicKey,
   AddressLookupTableAccount,
   ComputeBudgetProgram,
-  VersionedTransaction,
-  TransactionMessage,
+  Connection,
+  PublicKey,
   Transaction,
-  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
+
+async function getPriorityFeeEstimate(
+  priorityLevel: string,
+  testInstructions: TransactionInstruction[],
+  payer: PublicKey,
+  connection: Connection
+) {
+  const testVersionedTxn = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message([])
+  );
+  const response = await fetch(connection.rpcEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: "1",
+      method: "getPriorityFeeEstimate",
+      params: [
+        {
+          transaction: bs58.encode(testVersionedTxn.serialize()), // Pass the serialized transaction in Base58
+          options: { priorityLevel: priorityLevel },
+        },
+      ],
+    }),
+  });
+  const data = await response.json();
+  console.log(
+    "Fee in function for",
+    priorityLevel,
+    " :",
+    data.result.priorityFeeEstimate
+  );
+  return data.result.priorityFeeEstimate;
+}
 
 export async function getSimulationUnits(
   connection: Connection,
@@ -47,11 +85,10 @@ export async function buildAndSendTransaction(
   ) => Promise<T>
 ) {
   const [microLamports, units, recentBlockhash] = await Promise.all([
-    LAMPORTS_PER_SOL * 0.001,
+    getPriorityFeeEstimate("High", ixs, publicKey, connection),
     getSimulationUnits(connection, ixs, publicKey, []),
     connection.getLatestBlockhash(),
   ]);
-  console.log(`Priority Fees: ${microLamports / LAMPORTS_PER_SOL} Sol`);
   ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
   if (units) {
     // probably should add some margin of error to units
