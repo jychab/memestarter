@@ -70,7 +70,7 @@ export const ReviewPane: FC<ReviewPaneProps> = ({
         )}
         <span className="col-span-2 sm:col-span-1">Total Supply</span>
         <span className="col-span-4 sm:col-span-2 text-black">
-          {formatLargeNumber(totalSupply) + ` ${symbol}`}
+          {formatLargeNumber(totalSupply)}
         </span>
         <span className="col-span-2 sm:col-span-1">
           Initial Liquidity Pool Supply

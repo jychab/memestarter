@@ -311,7 +311,6 @@ export default function Pool() {
           )}
           <div className="mt-4">{getButton}</div>
         </div>
-
         <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
       </div>
     )

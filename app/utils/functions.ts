@@ -34,10 +34,10 @@ export async function launchToken(
   );
   if (
     (!amountOfSolInWallet ||
-      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.4) &&
+      amountOfSolInWallet.lamports <= LAMPORTS_PER_SOL * 0.2) &&
     docRef.empty
   ) {
-    throw new Error("Insufficient Sol. You need at least 0.4 Sol.");
+    throw new Error("Insufficient Sol. You need at least 0.2 Sol.");
   }
 
   toast.info("Launching Token...");
@@ -136,16 +136,10 @@ export async function createPool(
   if (args.initialSupply < 0) {
     throw new Error("Liquidity Pool Supply cannot be higher than total supply");
   }
-  if (args.creatorFeesBasisPoints > 5000) {
-    throw new Error("Creator's Share cannot be higher than 50%");
-  }
   if (args.presaleTarget < LAMPORTS_PER_SOL) {
     throw new Error(
       "Presale Target is too low. It needs to be higher than 1 Sol."
     );
-  }
-  if (args.presaleDuration > 30 * 24 * 60 * 60) {
-    throw new Error("Presale duration cannot be longer than a month");
   }
   let ix = [];
   const { instruction, poolId } = await initializePoolIx(

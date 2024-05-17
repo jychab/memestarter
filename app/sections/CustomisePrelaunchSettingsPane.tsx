@@ -1,12 +1,12 @@
+import { collection, getDocs, query } from "@firebase/firestore";
 import React, { FC, useEffect, useState } from "react";
-import { DurationPicker } from "../components/DurationPicker";
-import { CollectionDetails } from "../utils/types";
 import { Chip } from "../components/Chip";
-import { Tooltip } from "../components/Tooltip";
 import { ComboBox } from "../components/ComboBox";
-import { getDocs, query, collection } from "@firebase/firestore";
+import { DurationPicker } from "../components/DurationPicker";
+import { Tooltip } from "../components/Tooltip";
 import { db } from "../utils/firebase";
 import { separateNumberWithComma } from "../utils/helper";
+import { CollectionDetails } from "../utils/types";
 
 interface CustomisePrelaunchSettingsPaneProps {
   liquidityPoolSupplyInPercentage: string;
@@ -94,7 +94,7 @@ export const CustomisePrelaunchSettingsPane: FC<
             Creator's Share
           </label>
           <Tooltip
-            content={`This denotes the amount of token the creator will get from the total supply.\n\nFor example,\nCreator's share = 5%\nTotal supply = 100M\nInitial Liquidity Pool Supply= 30%\nRemaining Supply Upon Launch = 70%\n\nCreator's Share:\nUpon Launch = 70% * 100M * 5% (Tokens)\nVesting = LP Tokens * 5%`}
+            content={`This denotes the amount of token the creator will receive from the total supply.\n\nFor example,\nCreator's share = 5%\nTotal supply = 100M\nInitial Liquidity Pool Supply = 30%\nRemaining Supply Upon Launch = 70%\n\nCreator's Share:\nUpon Launch = 70% * 100M * 5% (Tokens)\nVesting = LP Tokens * 5%`}
           />
         </div>
         <input
@@ -151,7 +151,7 @@ export const CustomisePrelaunchSettingsPane: FC<
         setPeriod={setPresaleDuration}
       />
       <DurationPicker
-        tooltip="The duration for the linear release of the liquidity tokens over time."
+        tooltip="The duration for the release of the LP tokens over time."
         title={"Vesting Duration"}
         period={vestingPeriod}
         setPeriod={setVestingPeriod}
