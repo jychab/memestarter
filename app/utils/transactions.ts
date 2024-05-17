@@ -85,20 +85,21 @@ export async function buildAndSendTransaction(
   ) => Promise<T>
 ) {
   const [microLamports, units, recentBlockhash] = await Promise.all([
-    getPriorityFeeEstimate("High", ixs, publicKey, connection),
+    getPriorityFeeEstimate("VeryHigh", ixs, publicKey, connection),
     getSimulationUnits(connection, ixs, publicKey, []),
-    connection.getLatestBlockhash(),
+    connection.getLatestBlockhash({ commitment: "confirmed" }),
   ]);
   ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
   if (units) {
     // probably should add some margin of error to units
-    console.log(`Compute Units: ${units}`);
     ixs.unshift(
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: Math.max(units * 1.1, 10000),
+        units: units * 1.1,
       })
     );
+    console.log(`Compute Units: ${units * 1.1}`);
   }
+  console.log(`Blockhash: ${recentBlockhash.blockhash}`);
   let tx = new VersionedTransaction(
     new TransactionMessage({
       instructions: ixs,
@@ -108,7 +109,10 @@ export async function buildAndSendTransaction(
   );
   const signedTx = await signTransaction(tx);
   const txId = await connection.sendTransaction(
-    signedTx as VersionedTransaction
+    signedTx as VersionedTransaction,
+    {
+      skipPreflight: true,
+    }
   );
   await connection.confirmTransaction({
     signature: txId,

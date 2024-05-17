@@ -781,7 +781,7 @@ export type SafePresale = {
         },
         {
           name: "raydiumAmmProgram";
-          address: "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8";
+          address: "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C";
         },
         {
           name: "eventAuthority";
@@ -817,10 +817,6 @@ export type SafePresale = {
         }
       ];
       args: [
-        {
-          name: "nonce";
-          type: "u8";
-        },
         {
           name: "openTime";
           type: "u64";

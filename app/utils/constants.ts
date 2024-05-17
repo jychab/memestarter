@@ -15,13 +15,18 @@ export const HELIUS_ENDPOINT =
 
 export const RAYDIUM_FEE_COLLECTOR =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
-    ? new PublicKey("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5")
-    : new PublicKey("3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR");
+    ? new PublicKey("DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8")
+    : new PublicKey("G11FKBRaAkHAKuLCgLM6K6NUc9rTjPAznRCjZifrTQe2");
 
-export const RAYDIUM_AMM_V4 =
+export const RAYDIUM_CPMM =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
-    ? MAINNET_PROGRAM_ID.AmmV4
-    : DEVNET_PROGRAM_ID.AmmV4;
+    ? new PublicKey("CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C")
+    : new PublicKey("CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW");
+
+export const RAYDIUM_AMM_CONFIG =
+  process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"
+    ? new PublicKey("D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2")
+    : new PublicKey("9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6");
 
 export const OPENBOOK_MARKET_PROGRAM_ID =
   process.env.NEXT_PUBLIC_PROJECT_ENVIRONMENT == "prod"

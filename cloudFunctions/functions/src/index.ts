@@ -10,7 +10,6 @@ import programWebhook from "./programWebhook";
 import {saveAdditionalInfo} from "./saveInfo";
 import {saveThumbnail} from "./saveThumbnail";
 import unlinkAsset from "./unlinkAsset";
-import updateMarketDetails from "./updateMarketDetails";
 import updatePool from "./updatePool";
 import {updatePoolStatus} from "./updatePoolStatus";
 import {verifySignIn} from "./verifySignIn";
@@ -36,10 +35,6 @@ exports.linkAsset = onCall(
 );
 
 exports.unlinkAsset = onCall(async (_, context) => await unlinkAsset(context));
-
-exports.updateMarketDetails = onCall(
-  async (data, context) => await updateMarketDetails(data, context)
-);
 
 exports.updatePoolStatus = onTaskDispatched(
   {

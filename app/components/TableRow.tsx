@@ -66,7 +66,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               : project.vestingStartedAt)) /
           project.vestingPeriod;
         const elligibleAmount =
-          (project.lpElligible * durationVested) / 10 ** project.decimal;
+          (project.lpElligible * durationVested) / 10 ** 9;
         setCurrentLpElligible(elligibleAmount);
       }
     } else {
@@ -245,7 +245,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         )}
         {status === Status.VestingInProgress && (
           <td className="p-2 text-center">
-            {lpElligible ? formatLargeNumber(lpElligible / 10 ** decimal) : ""}
+            {lpElligible ? formatLargeNumber(lpElligible / 9) : ""}
           </td>
         )}
         {(status === Status.VestingInProgress ||

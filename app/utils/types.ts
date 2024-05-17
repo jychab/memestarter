@@ -42,12 +42,9 @@ export enum Status {
   ReadyToLaunch = "Ready To Launch",
 }
 export interface LaunchTokenAmmArgs {
-  marketId: PublicKey;
   mint: PublicKey;
   quoteMint: PublicKey;
-  decimals: number;
   signer: PublicKey;
-  poolAuthority: PublicKey;
   poolId: PublicKey;
 }
 

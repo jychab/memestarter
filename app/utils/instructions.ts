@@ -1,35 +1,26 @@
 import { BN, Program } from "@coral-xyz/anchor";
-import {
-  Liquidity,
-  MARKET_STATE_LAYOUT_V2,
-  MarketV2,
-  TOKEN_PROGRAM_ID,
-  WSOL,
-  ZERO,
-  generatePubKey,
-} from "@raydium-io/raydium-sdk";
+import { TOKEN_PROGRAM_ID } from "@raydium-io/raydium-sdk";
 import {
   NATIVE_MINT,
   createCloseAccountInstruction,
-  createInitializeAccountInstruction,
   createSyncNativeInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   MPL_TOKEN_METADATA_PROGRAM_ID,
-  OPENBOOK_MARKET_PROGRAM_ID,
-  RAYDIUM_AMM_V4,
+  RAYDIUM_AMM_CONFIG,
+  RAYDIUM_CPMM,
   RAYDIUM_FEE_COLLECTOR,
 } from "./constants";
 import {
   generateRandomU64,
+  getAuthAddress,
   getOrCreateAssociatedTokenAccountInstruction,
+  getOrcleAccountAddress,
+  getPoolAddress,
+  getPoolLpMintAddress,
+  getPoolVaultAddress,
 } from "./helper";
 import { SafePresale } from "./idl";
 import IDL from "./idl.json";
@@ -278,74 +269,99 @@ export async function launchTokenAmm(
   args: LaunchTokenAmmArgs,
   connection: Connection
 ) {
-  const poolInfo = Liquidity.getAssociatedPoolKeys({
-    version: 4,
-    marketVersion: 3,
-    marketId: args.marketId,
-    baseMint: args.mint,
-    quoteMint: args.quoteMint,
-    baseDecimals: args.decimals,
-    quoteDecimals: WSOL.decimals,
-    programId: RAYDIUM_AMM_V4,
-    marketProgramId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
+  const token_0_mint =
+    new BN(args.mint.toBuffer()) < new BN(args.quoteMint.toBuffer())
+      ? args.mint
+      : args.quoteMint;
+  const token_1_mint =
+    new BN(args.mint.toBuffer()) < new BN(args.quoteMint.toBuffer())
+      ? args.quoteMint
+      : args.mint;
+  const [auth] = await getAuthAddress(RAYDIUM_CPMM);
+  const [poolAddress] = await getPoolAddress(
+    RAYDIUM_AMM_CONFIG,
+    token_0_mint,
+    token_1_mint,
+    RAYDIUM_CPMM
+  );
+  const [lpMintAddress] = await getPoolLpMintAddress(poolAddress, RAYDIUM_CPMM);
+  const [vault0] = await getPoolVaultAddress(
+    poolAddress,
+    token_0_mint,
+    RAYDIUM_CPMM
+  );
+  const [vault1] = await getPoolVaultAddress(
+    poolAddress,
+    token_1_mint,
+    RAYDIUM_CPMM
+  );
+  const [observationAddress] = await getOrcleAccountAddress(
+    poolAddress,
+    RAYDIUM_CPMM
+  );
+
   const userTokenLp = getAssociatedTokenAddressSync(
-    poolInfo.lpMint,
+    lpMintAddress,
     args.signer,
     true
   );
   const poolTokenLp = getAssociatedTokenAddressSync(
-    poolInfo.lpMint,
+    lpMintAddress,
     args.poolId,
     true
   );
   const remainingAccounts = [
-    { pubkey: poolInfo.lpMint, isSigner: false, isWritable: true },
+    { pubkey: lpMintAddress, isSigner: false, isWritable: true },
     { pubkey: userTokenLp, isSigner: false, isWritable: true },
     { pubkey: poolTokenLp, isSigner: false, isWritable: true },
-    { pubkey: poolInfo.id, isSigner: false, isWritable: true },
-    { pubkey: poolInfo.authority, isSigner: false, isWritable: false },
     {
-      pubkey: poolInfo.openOrders,
+      pubkey: RAYDIUM_AMM_CONFIG,
       isSigner: false,
       isWritable: true,
     },
-    { pubkey: poolInfo.baseVault, isSigner: false, isWritable: true },
-    { pubkey: poolInfo.quoteVault, isSigner: false, isWritable: true },
-    { pubkey: poolInfo.targetOrders, isSigner: false, isWritable: true },
-    { pubkey: poolInfo.configId, isSigner: false, isWritable: false },
+    { pubkey: auth, isSigner: false, isWritable: false },
+    {
+      pubkey: poolAddress,
+      isSigner: false,
+      isWritable: true,
+    },
+    { pubkey: vault0, isSigner: false, isWritable: true },
+    { pubkey: vault1, isSigner: false, isWritable: true },
     {
       pubkey: RAYDIUM_FEE_COLLECTOR,
       isSigner: false,
       isWritable: true,
     },
-    { pubkey: poolInfo.marketProgramId, isSigner: false, isWritable: false },
-    { pubkey: poolInfo.marketId, isSigner: false, isWritable: false },
+    {
+      pubkey: observationAddress,
+      isSigner: false,
+      isWritable: true,
+    },
   ];
 
   const userTokenCoin = getAssociatedTokenAddressSync(
-    poolInfo.baseMint,
+    args.mint,
     args.signer,
     true
   );
   const userTokenPc = getAssociatedTokenAddressSync(
-    poolInfo.quoteMint,
+    args.quoteMint,
     args.signer,
     true
   );
   const poolTokenCoin = getAssociatedTokenAddressSync(
-    poolInfo.baseMint,
+    args.mint,
     args.poolId,
     true
   );
   const poolTokenPc = getAssociatedTokenAddressSync(
-    poolInfo.quoteMint,
+    args.quoteMint,
     args.poolId,
     true
   );
 
   return await program(connection)
-    .methods.launchTokenAmm(poolInfo.nonce, new BN(Date.now() / 1000))
+    .methods.launchTokenAmm(new BN(Date.now() / 1000))
     .accounts({
       pool: args.poolId,
       userWallet: args.signer,
@@ -354,206 +370,12 @@ export async function launchTokenAmm(
       poolTokenCoin: poolTokenCoin,
       poolTokenPc: poolTokenPc,
       tokenProgram: TOKEN_PROGRAM_ID,
-      ammCoinMint: poolInfo.baseMint,
-      ammPcMint: poolInfo.quoteMint,
+      ammCoinMint: args.mint,
+      ammPcMint: args.quoteMint,
       program: program(connection).programId,
     })
     .remainingAccounts(remainingAccounts)
     .instruction();
-}
-export async function createMarketPart2(
-  mint: PublicKey,
-  quoteMint: PublicKey,
-  decimal: number,
-  lotSize: number,
-  tickSize: number,
-  marketId: PublicKey,
-  baseVault: PublicKey,
-  quoteVault: PublicKey,
-  requestQueue: PublicKey,
-  eventQueue: PublicKey,
-  vaultSignerNonce: BN,
-  signer: PublicKey,
-  connection: Connection
-) {
-  const baseLotSize = new BN(Math.round(10 ** decimal * lotSize));
-  const quoteLotSize = new BN(
-    Math.round(lotSize * 10 ** WSOL.decimals * tickSize)
-  );
-  const feeRateBps = 0;
-  const quoteDustThreshold = new BN(100);
-
-  if (baseLotSize.eq(ZERO)) throw Error("lot size is too small");
-  if (quoteLotSize.eq(ZERO)) throw Error("tick size or lot size is too small");
-
-  const bids = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
-  const asks = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
-  let ix2 = [];
-  ix2.push(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: bids.seed,
-      newAccountPubkey: bids.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(14524),
-      space: 14524,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    })
-  );
-  ix2.push(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: asks.seed,
-      newAccountPubkey: asks.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(14524),
-      space: 14524,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    })
-  );
-
-  ix2.push(
-    MarketV2.initializeMarketInstruction({
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-      marketInfo: {
-        id: marketId,
-        requestQueue: requestQueue,
-        eventQueue: eventQueue,
-        bids: bids.publicKey,
-        asks: asks.publicKey,
-        baseVault: baseVault,
-        quoteVault: quoteVault,
-        baseMint: mint,
-        quoteMint: quoteMint,
-        baseLotSize: baseLotSize,
-        quoteLotSize: quoteLotSize,
-        feeRateBps: feeRateBps,
-        vaultSignerNonce: vaultSignerNonce,
-        quoteDustThreshold: quoteDustThreshold,
-      },
-    })
-  );
-
-  return { instructions: ix2, bids, asks };
-}
-
-export async function createMarketPart1(
-  connection: Connection,
-  signer: PublicKey,
-  mint: PublicKey,
-  quoteMint: PublicKey,
-  vaultOwner: PublicKey,
-  market: { publicKey: PublicKey; seed: string }
-) {
-  const baseVault = generatePubKey({
-    fromPublicKey: signer,
-    programId: TOKEN_PROGRAM_ID,
-  });
-  const quoteVault = generatePubKey({
-    fromPublicKey: signer,
-    programId: TOKEN_PROGRAM_ID,
-  });
-  const requestQueue = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
-  const eventQueue = generatePubKey({
-    fromPublicKey: signer,
-    programId: OPENBOOK_MARKET_PROGRAM_ID,
-  });
-
-  const ins1: TransactionInstruction[] = [];
-  const accountLamports = await connection.getMinimumBalanceForRentExemption(
-    165
-  );
-  ins1.push(
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: baseVault.seed,
-      newAccountPubkey: baseVault.publicKey,
-      lamports: accountLamports,
-      space: 165,
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: quoteVault.seed,
-      newAccountPubkey: quoteVault.publicKey,
-      lamports: accountLamports,
-      space: 165,
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    createInitializeAccountInstruction(baseVault.publicKey, mint, vaultOwner),
-    createInitializeAccountInstruction(
-      quoteVault.publicKey,
-      quoteMint,
-      vaultOwner
-    ),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: market.seed,
-      newAccountPubkey: market.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(
-        MARKET_STATE_LAYOUT_V2.span
-      ),
-      space: MARKET_STATE_LAYOUT_V2.span,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: requestQueue.seed,
-      newAccountPubkey: requestQueue.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(5084),
-      space: 5084,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    }),
-    SystemProgram.createAccountWithSeed({
-      fromPubkey: signer,
-      basePubkey: signer,
-      seed: eventQueue.seed,
-      newAccountPubkey: eventQueue.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(11308),
-      space: 11308,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    })
-  );
-
-  return {
-    instructions: ins1,
-    baseVault,
-    quoteVault,
-    market,
-    requestQueue,
-    eventQueue,
-  };
-}
-
-export function getVaultOwnerAndNonce(market: PublicKey) {
-  const vaultSignerNonce: BN = new BN(0);
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    try {
-      const vaultOwner = PublicKey.createProgramAddressSync(
-        [market.toBuffer(), vaultSignerNonce.toArrayLike(Buffer, "le", 8)],
-        OPENBOOK_MARKET_PROGRAM_ID
-      );
-      return { vaultOwner, vaultSignerNonce };
-    } catch (e) {
-      vaultSignerNonce.iaddn(1);
-      if (vaultSignerNonce.gt(new BN(25555)))
-        throw Error("find vault owner error");
-    }
-  }
 }
 
 export async function buyPresaleIx(

@@ -1,5 +1,3 @@
-import { BN } from "@coral-xyz/anchor";
-import { generatePubKey } from "@raydium-io/raydium-sdk";
 import {
   Connection,
   LAMPORTS_PER_SOL,
@@ -10,21 +8,17 @@ import {
 import { collection, getDocs, limit, query } from "firebase/firestore";
 import { ref, uploadBytes, uploadString } from "firebase/storage";
 import { toast } from "react-toastify";
-import { updateMarketData } from "./cloudFunctions";
-import { DOMAIN_API_URL, OPENBOOK_MARKET_PROGRAM_ID } from "./constants";
+import { DOMAIN_API_URL } from "./constants";
 import { db, storage } from "./firebase";
-import { determineOptimalParameters, getCollectionMintAddress } from "./helper";
+import { getCollectionMintAddress } from "./helper";
 import {
   buyPresaleIx,
-  createMarketPart1,
-  createMarketPart2,
   createPurchaseAuthorisationIx,
-  getVaultOwnerAndNonce,
   initializePoolIx,
   launchTokenAmm,
 } from "./instructions";
 import { buildAndSendTransaction } from "./transactions";
-import { CreatePoolArgs, DAS, MarketDetails, PoolType } from "./types";
+import { CreatePoolArgs, DAS, PoolType } from "./types";
 
 export async function launchToken(
   pool: PoolType,
@@ -46,123 +40,17 @@ export async function launchToken(
     throw new Error("Insufficient Sol. You need at least 0.4 Sol.");
   }
 
-  let {
-    marketId,
-    marketSeed,
-    baseVault,
-    quoteVault,
-    requestQueue,
-    eventQueue,
-    vaultSignerNonce,
-    bids,
-    asks,
-  } = !docRef.empty
-    ? (docRef.docs[0].data() as MarketDetails)
-    : ({} as MarketDetails);
-  if (
-    !marketId ||
-    !marketSeed ||
-    !baseVault ||
-    !quoteVault ||
-    !requestQueue ||
-    !eventQueue
-  ) {
-    toast.info("Creating Market Part 1...");
-    const market = generatePubKey({
-      fromPublicKey: publicKey,
-      programId: OPENBOOK_MARKET_PROGRAM_ID,
-    });
-
-    const { vaultOwner, vaultSignerNonce: nonce } = getVaultOwnerAndNonce(
-      market.publicKey
-    );
-    const {
-      instructions: ix1,
-      baseVault: bv,
-      quoteVault: qv,
-      requestQueue: rq,
-      eventQueue: eq,
-    } = await createMarketPart1(
-      connection,
-      publicKey,
-      new PublicKey(pool.mint),
-      new PublicKey(pool.quoteMint),
-      vaultOwner,
-      market
-    );
-    await buildAndSendTransaction(connection, ix1, publicKey, signTransaction);
-    await updateMarketData({
-      pubKey: publicKey.toBase58(),
-      poolId: pool.pool,
-      marketDetails: {
-        vaultSignerNonce: Number(nonce),
-        marketSeed: market.seed,
-        marketId: market.publicKey.toBase58(),
-        baseVault: bv.publicKey.toBase58(),
-        quoteVault: qv.publicKey.toBase58(),
-        requestQueue: rq.publicKey.toBase58(),
-        eventQueue: eq.publicKey.toBase58(),
-      },
-    });
-    vaultSignerNonce = Number(nonce);
-    marketSeed = market.seed;
-    marketId = market.publicKey.toBase58();
-    baseVault = bv.publicKey.toBase58();
-    quoteVault = qv.publicKey.toBase58();
-    requestQueue = rq.publicKey.toBase58();
-    eventQueue = eq.publicKey.toBase58();
-  }
-
-  if (!bids || !asks) {
-    toast.info("Creating Market Part 2...");
-    const { tickSize, orderSize } = await determineOptimalParameters(
-      pool.totalSupply / 10 ** pool.decimal
-    );
-    const {
-      instructions: ix2,
-      bids: b,
-      asks: a,
-    } = await createMarketPart2(
-      new PublicKey(pool.mint),
-      new PublicKey(pool.quoteMint),
-      pool.decimal,
-      orderSize,
-      tickSize,
-      new PublicKey(marketId),
-      new PublicKey(baseVault),
-      new PublicKey(quoteVault),
-      new PublicKey(requestQueue),
-      new PublicKey(eventQueue),
-      new BN(vaultSignerNonce),
-      publicKey,
-      connection
-    );
-    await buildAndSendTransaction(connection, ix2, publicKey, signTransaction);
-    await updateMarketData({
-      pubKey: publicKey.toBase58(),
-      poolId: pool.pool,
-      marketDetails: {
-        bids: b.publicKey.toBase58(),
-        asks: a.publicKey.toBase58(),
-        marketId: marketId,
-      },
-    });
-  }
-
   toast.info("Launching Token...");
-  const ix3 = await launchTokenAmm(
+  const ix = await launchTokenAmm(
     {
-      decimals: pool.decimal,
-      marketId: new PublicKey(marketId),
       mint: new PublicKey(pool.mint),
       quoteMint: new PublicKey(pool.quoteMint),
       signer: publicKey,
-      poolAuthority: new PublicKey(pool.authority),
       poolId: new PublicKey(pool.pool),
     },
     connection
   );
-  await buildAndSendTransaction(connection, [ix3], publicKey, signTransaction);
+  await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
 }
 
 export async function buyPresale(

@@ -1,3 +1,4 @@
+import { encode } from "@coral-xyz/anchor/dist/cjs/utils/bytes/utf8";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Account,
@@ -318,3 +319,69 @@ export const creatorsShareTooltipContent = (
     ((supply - initialLpSupply) * (creatorFee / 100)) / 10 ** decimal
   )} in tokens\nVesting = ${creatorFee}% of LP tokens`;
 };
+
+export async function getAuthAddress(
+  programId: PublicKey
+): Promise<[PublicKey, number]> {
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [Buffer.from(encode("vault_and_lp_mint_auth_seed"))],
+    programId
+  );
+  return [address, bump];
+}
+
+export async function getPoolAddress(
+  ammConfig: PublicKey,
+  tokenMint0: PublicKey,
+  tokenMint1: PublicKey,
+  programId: PublicKey
+): Promise<[PublicKey, number]> {
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(encode("pool")),
+      ammConfig.toBuffer(),
+      tokenMint0.toBuffer(),
+      tokenMint1.toBuffer(),
+    ],
+    programId
+  );
+  return [address, bump];
+}
+
+export async function getPoolVaultAddress(
+  pool: PublicKey,
+  vaultTokenMint: PublicKey,
+  programId: PublicKey
+): Promise<[PublicKey, number]> {
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(encode("pool_vault")),
+      pool.toBuffer(),
+      vaultTokenMint.toBuffer(),
+    ],
+    programId
+  );
+  return [address, bump];
+}
+
+export async function getPoolLpMintAddress(
+  pool: PublicKey,
+  programId: PublicKey
+): Promise<[PublicKey, number]> {
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [Buffer.from(encode("pool_lp_mint")), pool.toBuffer()],
+    programId
+  );
+  return [address, bump];
+}
+
+export async function getOrcleAccountAddress(
+  pool: PublicKey,
+  programId: PublicKey
+): Promise<[PublicKey, number]> {
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [Buffer.from(encode("observation")), pool.toBuffer()],
+    programId
+  );
+  return [address, bump];
+}

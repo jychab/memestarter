@@ -37,10 +37,10 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
   useEffect(() => {
     if (pool) {
       setStatus(getStatus(pool));
-      if (pool.amountLpReceived && pool.creatorFeeBasisPoints && pool.decimal) {
+      if (pool.amountLpReceived && pool.creatorFeeBasisPoints) {
         setLpEllgibile(
           (pool.amountLpReceived * pool.creatorFeeBasisPoints) /
-            (10000 * 10 ** pool.decimal)
+            (10000 * 10 ** 9)
         );
       }
     }
@@ -241,7 +241,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
             {lpClaimedByCreator
-              ? formatLargeNumber(lpClaimedByCreator / 10 ** decimal)
+              ? formatLargeNumber(lpClaimedByCreator / 10 ** 9)
               : ""}
           </td>
         )}
