@@ -226,11 +226,20 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
           publicKey &&
           publicKey.toBase58() == pool.authority && (
             <div className="flex">
-              <IconButton onClick={() => setIsEditable(true)}>
-                <Edit />
+              <IconButton
+                color="inherit"
+                size="medium"
+                onClick={() => setIsEditable(true)}
+              >
+                <Edit color="inherit" fontSize="inherit" />
               </IconButton>
-              <IconButton onClick={handleDelete}>
-                {loading ? (
+              <IconButton
+                color="inherit"
+                size="medium"
+                disableRipple
+                onClick={handleDelete}
+              >
+                {loading && (
                   <svg
                     className="inline w-4 h-4 animate-spin text-gray-600 fill-gray-300"
                     viewBox="0 0 100 100"
@@ -246,9 +255,8 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
                       fill="currentFill"
                     />
                   </svg>
-                ) : (
-                  <Delete />
                 )}
+                <Delete color="inherit" fontSize="inherit" />
               </IconButton>
             </div>
           )}

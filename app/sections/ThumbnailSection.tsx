@@ -60,8 +60,12 @@ export const ThumbnailSection: FC<ThumbnailSectionProps> = ({ pool }) => {
       <div className="flex w-full gap-2 items-center">
         <span className="text-base md:text-lg text-gray-400">Thumbnail</span>
         {!isEditable && publicKey && publicKey.toBase58() == pool.authority && (
-          <IconButton onClick={() => setIsEditable(true)}>
-            <Edit />
+          <IconButton
+            color="inherit"
+            size="medium"
+            onClick={() => setIsEditable(true)}
+          >
+            <Edit color="inherit" fontSize="inherit" />
           </IconButton>
         )}
       </div>

@@ -42,8 +42,12 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
       <div className="flex gap-2 items-center">
         <span className="text-base md:text-lg text-gray-400">Rewards</span>
         {editingMode && publicKey && publicKey.toBase58() == pool.authority && (
-          <IconButton onClick={() => setShowNew(true)}>
-            <AddCircle />
+          <IconButton
+            color="inherit"
+            size="medium"
+            onClick={() => setShowNew(true)}
+          >
+            <AddCircle color="inherit" fontSize="inherit" />
           </IconButton>
         )}
       </div>
