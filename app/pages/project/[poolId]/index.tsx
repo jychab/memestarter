@@ -147,7 +147,9 @@ export default function Pool() {
           return (
             <StatusBtn
               disabled={false}
-              handleClick={async () => await router.push(`${poolId}/rewards`)}
+              handleClick={async () =>
+                await router.push(`${pool.pool}/rewards`)
+              }
               color={"text-green-100 bg-green-700 hover:bg-green-800"}
               text={"Back this project"}
             />
@@ -208,7 +210,7 @@ export default function Pool() {
         );
       }
     }
-  }, [status, publicKey, pool, loading, nft, launch]);
+  }, [status, router, publicKey, pool, loading, nft, launch]);
 
   function setTabProps(tab: TabType) {
     return {
@@ -298,7 +300,7 @@ export default function Pool() {
       case TabType.PURCHASE:
         return <></>;
     }
-  }, [pool, tabValue, status]);
+  }, [pool, tabValue, status, uniqueBackers, price, StatusButton]);
 
   const TabNavigationBar = useMemo(() => {
     return (

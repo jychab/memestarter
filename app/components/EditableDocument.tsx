@@ -165,7 +165,7 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
         setLoading(false);
       }
     }
-  }, [pool, reward, loading, publicKey, signMessage]);
+  }, [pool, reward, loading, publicKey, signMessage, handleLogin]);
   const handlePublish = useCallback(async () => {
     if (
       rteRef &&
@@ -213,6 +213,8 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
     loading,
     publicKey,
     signMessage,
+    handleLogin,
+    onCancelCallback,
   ]);
 
   return (
