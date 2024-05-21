@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { FC } from "react";
 
 export interface AttributeProps {
   k: string;
@@ -20,23 +20,23 @@ export const Chip: FC<AttributeProps> = ({
         {k}
       </span>
     </div>
-
-    <button
-      className={`${bgColor} hover:${textColor}/50 focus:outline-none`}
-      hidden={!dismiss}
-      onClick={dismiss}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="24"
-        height="24"
-        fill="none"
-        className="w-4 h-4"
+    {dismiss && (
+      <button
+        className={`${bgColor} hover:${textColor}/50 focus:outline-none`}
+        onClick={dismiss}
       >
-        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" />
-        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" />
-      </svg>
-    </button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          fill="none"
+          className="w-4 h-4"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" />
+          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" />
+        </svg>
+      </button>
+    )}
   </div>
 );

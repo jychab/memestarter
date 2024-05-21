@@ -42,20 +42,61 @@ export async function verifyAndGetToken(
 }
 
 export async function linkAsset(asset: DAS.GetAssetResponse) {
-  const linkAssetFn = httpsCallable(functions, "linkAsset");
+  const linkAssetFn = httpsCallable(functions, "saveAsset");
   await linkAssetFn({ nft: asset });
 }
 
 export async function unlinkAsset() {
-  const unlinkAsset = httpsCallable(functions, "unlinkAsset");
-  await unlinkAsset();
+  const unlinkAsset = httpsCallable(functions, "saveAsset");
+  await unlinkAsset({ delete: true });
 }
 
-export async function saveAdditionalInfo(poolId: string, content: string) {
-  const saveAdditionalInfo = httpsCallable(functions, "saveAdditionalInfo");
-  await saveAdditionalInfo({
+export async function saveInfo(poolId: string, content: string) {
+  const saveInfo = httpsCallable(functions, "saveInfo");
+  await saveInfo({
     poolId,
     content,
+  });
+}
+
+export async function removeInfo(poolId: string) {
+  const removeInfo = httpsCallable(functions, "saveInfo");
+  await removeInfo({
+    poolId,
+    delete: true,
+  });
+}
+
+export async function saveReward(
+  poolId: string,
+  rewardId: string,
+  title: string,
+  content: string,
+  price?: number,
+  quantity?: number,
+  delivery?: {
+    countries: string[];
+    estimatedDate: number;
+  }
+) {
+  const saveReward = httpsCallable(functions, "saveReward");
+  await saveReward({
+    poolId,
+    rewardId,
+    title,
+    content,
+    delivery,
+    price,
+    quantity,
+  });
+}
+
+export async function removeReward(poolId: string, rewardId: string) {
+  const removeReward = httpsCallable(functions, "saveReward");
+  await removeReward({
+    poolId,
+    rewardId,
+    delete: true,
   });
 }
 

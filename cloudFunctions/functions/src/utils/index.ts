@@ -1,20 +1,23 @@
-import {Keypair} from "@solana/web3.js";
-import admin = require("firebase-admin");
-import {Helius} from "helius-sdk";
 import {AnchorProvider, Program, Wallet} from "@coral-xyz/anchor";
-import {createUmi} from "@metaplex-foundation/umi-bundle-defaults";
+import {bs58} from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {mplTokenMetadata} from "@metaplex-foundation/mpl-token-metadata";
 import {Umi, keypairIdentity} from "@metaplex-foundation/umi";
-import {bs58} from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import {createUmi} from "@metaplex-foundation/umi-bundle-defaults";
+import {nftStorageUploader} from "@metaplex-foundation/umi-uploader-nft-storage";
+import {Keypair} from "@solana/web3.js";
 import {defineString} from "firebase-functions/params";
 import {onInit} from "firebase-functions/v1";
-import {nftStorageUploader} from "@metaplex-foundation/umi-uploader-nft-storage";
+import {Helius} from "helius-sdk";
 import {SafePresale} from "./idl";
 import Idl from "./idl.json";
+import admin = require("firebase-admin");
 
 admin.initializeApp();
 
 export const db = admin.firestore();
+db.settings({
+  ignoreUndefinedProperties: true,
+});
 export let helius: Helius;
 export let umi: Umi;
 export let program: Program<SafePresale>;

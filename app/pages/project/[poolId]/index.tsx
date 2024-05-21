@@ -1,3 +1,4 @@
+import { Tab, Tabs, useMediaQuery } from "@mui/material";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   collection,
@@ -9,29 +10,36 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { MainBtn } from "../../../components/buttons/MainBtn";
+import { EditableDocument } from "../../../components/EditableDocument";
+import { StatusBtn } from "../../../components/buttons/StatusBtn";
 import { useData } from "../../../hooks/useData";
 import { useLogin } from "../../../hooks/useLogin";
 import { CommentsSection } from "../../../sections/CommentsSection";
-import { InfoSection } from "../../../sections/InfoSection";
 import { MainPane } from "../../../sections/MainPane";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
+import RewardsSection from "../../../sections/RewardsSection";
 import { ThumbnailSection } from "../../../sections/ThumbnailSection";
 import VestingDashboard from "../../../sections/VestingDashboard";
 import { getCurrentPrice } from "../../../utils/cloudFunctions";
 import { getCustomErrorMessage } from "../../../utils/error";
 import { db } from "../../../utils/firebase";
-import { buyPresale, launchToken } from "../../../utils/functions";
+import { launchToken } from "../../../utils/functions";
 import { getCollectionMintAddress, getStatus } from "../../../utils/helper";
-import { MintType, PoolType, Status } from "../../../utils/types";
+import { PoolType, Status } from "../../../utils/types";
+
+enum TabType {
+  MAIN,
+  THUMBNAIL,
+  PROJECTINFO,
+  REWARDS,
+  PURCHASE,
+}
 
 export default function Pool() {
   const [loading, setLoading] = useState(false);
   const { connection } = useConnection();
   const [status, setStatus] = useState<Status>();
   const [uniqueBackers, setUniqueBackers] = useState<number>(0);
-  const [mint, setMint] = useState<MintType>();
-  const [amountToPurchase, setAmountToPurchase] = useState<string>("");
   const [price, setPrice] = useState<number>();
   const { publicKey, signTransaction, signMessage } = useWallet();
   const { handleLogin } = useLogin();
@@ -39,21 +47,17 @@ export default function Pool() {
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
   const { poolId } = router.query;
+  const matches = useMediaQuery("(min-width:768px)");
+  const [tabValue, setTabValue] = useState<TabType>(TabType.MAIN);
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   useEffect(() => {
-    if (nft && pool) {
-      const unsubscribe = onSnapshot(
-        doc(db, `Mint/${nft.id}/Pool/${pool.pool}`),
-        (doc) => {
-          if (doc.exists()) {
-            const data = doc.data() as MintType;
-            setMint(data);
-          }
-        }
-      );
-      return () => unsubscribe();
+    if (!publicKey) {
+      setTabValue(TabType.MAIN);
     }
-  }, [nft, pool]);
+  }, [publicKey]);
 
   useEffect(() => {
     if (poolId) {
@@ -110,42 +114,12 @@ export default function Pool() {
     handleLogin,
   ]);
 
-  const buy = useCallback(async () => {
-    if (
-      !(
-        publicKey &&
-        connection &&
-        pool &&
-        amountToPurchase &&
-        nft &&
-        signTransaction
-      )
-    )
-      return;
-    try {
-      setLoading(true);
-      await buyPresale(
-        pool,
-        nft,
-        amountToPurchase,
-        publicKey,
-        connection,
-        signTransaction
-      );
-      toast.success("Success!");
-    } catch (error) {
-      toast.error(`${getCustomErrorMessage(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [pool, nft, amountToPurchase, publicKey, connection, signTransaction]);
-
-  const getButton = useMemo(() => {
+  const StatusButton = useMemo(() => {
     if (!status || !pool) return null;
     if (status === Status.PresaleInProgress) {
       if (!publicKey) {
         return (
-          <MainBtn
+          <StatusBtn
             color={"text-green-100 bg-green-700 hover:bg-green-800"}
             text={"Presale In Progress"}
           />
@@ -171,22 +145,16 @@ export default function Pool() {
             ) !== undefined)
         ) {
           return (
-            <MainBtn
-              handleClick={buy}
-              color={"text-green-100 bg-green-700 hover:bg-green-800"}
-              loading={loading}
+            <StatusBtn
               disabled={false}
-              amount={mint?.amount}
-              maxAllowedPerPurchase={pool.maxAmountPerPurchase}
-              amountToPurchase={amountToPurchase}
-              setAmountToPurchase={setAmountToPurchase}
-              show={true}
-              text={loading ? "" : "Fund"}
+              handleClick={async () => await router.push(`${poolId}/rewards`)}
+              color={"text-green-100 bg-green-700 hover:bg-green-800"}
+              text={"Back this project"}
             />
           );
         }
         return (
-          <MainBtn
+          <StatusBtn
             color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
             text={"Not part of whitelisted collection"}
           />
@@ -194,28 +162,28 @@ export default function Pool() {
       }
     } else if (status === Status.PresaleTargetMet) {
       return (
-        <MainBtn
+        <StatusBtn
           color={"text-green-100 bg-green-700 hover:bg-green-800"}
           text={"Presale Target Met"}
         />
       );
     } else if (status === Status.Expired) {
       return (
-        <MainBtn
+        <StatusBtn
           color={"text-gray-100 bg-gray-700 hover:bg-gray-800"}
           text={"Expired"}
         />
       );
     } else if (status === Status.VestingCompleted) {
       return (
-        <MainBtn
+        <StatusBtn
           color={"text-blue-100 bg-blue-700 hover:bg-blue-800"}
           text={"Vesting Completed"}
         />
       );
     } else if (status === Status.VestingInProgress) {
       return (
-        <MainBtn
+        <StatusBtn
           color={"text-yellow-100 bg-yellow-700 hover:bg-yellow-800"}
           text={"Vesting In Progress"}
         />
@@ -223,7 +191,7 @@ export default function Pool() {
     } else if (status === Status.ReadyToLaunch) {
       if (publicKey && publicKey.toBase58() === pool.authority) {
         return (
-          <MainBtn
+          <StatusBtn
             handleClick={launch}
             loading={loading}
             disabled={false}
@@ -233,86 +201,132 @@ export default function Pool() {
         );
       } else {
         return (
-          <MainBtn
+          <StatusBtn
             color={"text-red-100 bg-red-700 hover:bg-red-800"}
             text={"Awaiting Creator To Launch"}
           />
         );
       }
     }
-  }, [
-    status,
-    publicKey,
-    pool,
-    loading,
-    nft,
-    amountToPurchase,
-    mint,
-    buy,
-    launch,
-  ]);
+  }, [status, publicKey, pool, loading, nft, launch]);
 
-  return (
-    pool && (
-      <div className="flex flex-col items-center justify-center gap-8 max-w-screen-md w-full h-full">
-        <ThumbnailSection pool={pool} />
-        <InfoSection
-          poolCreator={pool.authority}
-          content={pool.additionalInfo || ""}
-          poolId={pool.pool}
-        />
-        <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
-          <MainPane
-            image={pool.image}
-            name={pool.name}
-            symbol={pool.symbol}
-            authority={pool.authority}
+  function setTabProps(tab: TabType) {
+    return {
+      value: tab,
+      id: `simple-tab-${tab}`,
+      "aria-controls": `simple-tabpanel-${tab}`,
+    };
+  }
+
+  const TabContent = useMemo(() => {
+    if (!pool || !status) return;
+    switch (tabValue) {
+      case TabType.MAIN:
+        return (
+          <div className="flex flex-col w-full gap-4">
+            <EditableDocument
+              pool={pool}
+              showEditButton={false}
+              title={"Info"}
+              titleStyle={"text-base md:text-lg text-gray-400"}
+            />
+            <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
+              <MainPane
+                image={pool.image}
+                name={pool.name}
+                symbol={pool.symbol}
+                authority={pool.authority}
+              />
+              {(status == Status.PresaleInProgress ||
+                status == Status.PresaleTargetMet ||
+                status == Status.ReadyToLaunch) && (
+                <PresaleDashboard
+                  liquidityPoolSupply={pool.liquidityPoolSupply}
+                  collectionsRequired={pool.collectionsRequired}
+                  uniqueBackers={uniqueBackers}
+                  symbol={pool.symbol}
+                  decimal={pool.decimal}
+                  totalSupply={pool.totalSupply}
+                  vestingPeriod={pool.vestingPeriod}
+                  liquidityCollected={pool.liquidityCollected}
+                  presaleTimeLimit={pool.presaleTimeLimit}
+                  presaleTarget={pool.presaleTarget}
+                  creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+                  lpMint={pool.lpMint}
+                  mint={pool.mint}
+                  description={pool.description}
+                />
+              )}
+              {(status == Status.VestingInProgress ||
+                status == Status.VestingCompleted) && (
+                <VestingDashboard
+                  description={pool.description}
+                  price={price}
+                  symbol={pool.symbol}
+                  decimal={pool.decimal}
+                  totalSupply={pool.totalSupply}
+                  vestingPeriod={pool.vestingPeriod}
+                  uniqueBackers={uniqueBackers}
+                  vestingStartedAt={pool.vestingStartedAt}
+                  totalLpClaimed={pool.totalLpClaimed}
+                  totalMintClaimed={pool.totalMintClaimed}
+                  initialSupply={pool.initialSupply}
+                  amountLpReceived={pool.amountLpReceived}
+                  liquidityPoolSupply={pool.liquidityPoolSupply}
+                  creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
+                  mint={pool.mint}
+                  lpMint={pool.lpMint}
+                />
+              )}
+              <div className="mt-4">{StatusButton}</div>
+            </div>
+            <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
+          </div>
+        );
+      case TabType.THUMBNAIL:
+        return <ThumbnailSection pool={pool} />;
+      case TabType.PROJECTINFO:
+        return (
+          <EditableDocument
+            pool={pool}
+            title={"Info"}
+            titleStyle={"text-base md:text-lg text-gray-400"}
           />
-          {(status == Status.PresaleInProgress ||
-            status == Status.PresaleTargetMet ||
-            status == Status.ReadyToLaunch) && (
-            <PresaleDashboard
-              liquidityPoolSupply={pool.liquidityPoolSupply}
-              collectionsRequired={pool.collectionsRequired}
-              uniqueBackers={uniqueBackers}
-              symbol={pool.symbol}
-              decimal={pool.decimal}
-              totalSupply={pool.totalSupply}
-              vestingPeriod={pool.vestingPeriod}
-              liquidityCollected={pool.liquidityCollected}
-              presaleTimeLimit={pool.presaleTimeLimit}
-              presaleTarget={pool.presaleTarget}
-              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
-              lpMint={pool.lpMint}
-              mint={pool.mint}
-              description={pool.description}
-            />
-          )}
-          {(status == Status.VestingInProgress ||
-            status == Status.VestingCompleted) && (
-            <VestingDashboard
-              description={pool.description}
-              price={price}
-              symbol={pool.symbol}
-              decimal={pool.decimal}
-              totalSupply={pool.totalSupply}
-              vestingPeriod={pool.vestingPeriod}
-              uniqueBackers={uniqueBackers}
-              vestingStartedAt={pool.vestingStartedAt}
-              totalLpClaimed={pool.totalLpClaimed}
-              totalMintClaimed={pool.totalMintClaimed}
-              initialSupply={pool.initialSupply}
-              amountLpReceived={pool.amountLpReceived}
-              liquidityPoolSupply={pool.liquidityPoolSupply}
-              creatorFeeBasisPoints={pool.creatorFeeBasisPoints}
-              mint={pool.mint}
-              lpMint={pool.lpMint}
-            />
-          )}
-          <div className="mt-4">{getButton}</div>
-        </div>
-        <CommentsSection poolId={pool.pool} poolCreator={pool.authority} />
+        );
+      case TabType.REWARDS:
+        return <RewardsSection pool={pool} editingMode={true} />;
+      case TabType.PURCHASE:
+        return <></>;
+    }
+  }, [pool, tabValue, status]);
+
+  const TabNavigationBar = useMemo(() => {
+    return (
+      pool &&
+      pool.authority == publicKey?.toBase58() && (
+        <Tabs
+          orientation={matches ? "vertical" : "horizontal"}
+          value={tabValue}
+          onChange={handleChange}
+          variant="scrollable"
+          className="w-full md:w-32"
+          aria-label="project tabs"
+        >
+          <Tab label="Main" {...setTabProps(TabType.MAIN)} />
+          <Tab label="Thumbnail" {...setTabProps(TabType.THUMBNAIL)} />
+          <Tab label="Info" {...setTabProps(TabType.PROJECTINFO)} />
+          <Tab label="Rewards" {...setTabProps(TabType.REWARDS)} />
+          <Tab label="Purchase" disabled {...setTabProps(TabType.PURCHASE)} />
+        </Tabs>
+      )
+    );
+  }, [tabValue, matches, pool, publicKey]);
+  return (
+    <div className="flex flex-col md:flex-row max-w-screen-xl gap-8 justify-center w-full h-full">
+      {TabNavigationBar}
+      <div className="flex w-full max-w-screen-lg justify-center">
+        {TabContent}
       </div>
-    )
+    </div>
   );
 }

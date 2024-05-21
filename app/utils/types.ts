@@ -209,6 +209,20 @@ export interface PoolType {
   updatedAt: Timestamp | number | null;
   additionalInfo?: string;
   thumbnail: Thumbnail;
+  rewards: Reward[];
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  content: string;
+  delivery?: {
+    countries: Array<string>;
+    estimatedDate: number;
+  };
+  price?: number;
+  quantity?: number;
+  quantityLeft?: number;
 }
 
 export interface Thumbnail {

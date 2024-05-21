@@ -5,11 +5,11 @@ import {onTaskDispatched} from "firebase-functions/v2/tasks";
 import {handleCommentsAndReplies} from "./commentsAndReplies";
 import {enQueue} from "./enQueue";
 import getPrice from "./getPrice";
-import linkAsset from "./linkAsset";
 import programWebhook from "./programWebhook";
-import {saveAdditionalInfo} from "./saveInfo";
+import saveAsset from "./saveAsset";
+import {saveInfo} from "./saveInfo";
+import {saveReward} from "./saveReward";
 import {saveThumbnail} from "./saveThumbnail";
-import unlinkAsset from "./unlinkAsset";
 import updatePool from "./updatePool";
 import {updatePoolStatus} from "./updatePoolStatus";
 import {verifySignIn} from "./verifySignIn";
@@ -29,12 +29,6 @@ exports.verifySignIn = onCall(
 exports.getPrice = onCall(
   async (data, context) => await getPrice(data, context)
 );
-
-exports.linkAsset = onCall(
-  async (data, context) => await linkAsset(data, context)
-);
-
-exports.unlinkAsset = onCall(async (_, context) => await unlinkAsset(context));
 
 exports.updatePoolStatus = onTaskDispatched(
   {
@@ -57,10 +51,18 @@ exports.handleCommentsAndReplies = onCall(
   async (data, context) => await handleCommentsAndReplies(data, context)
 );
 
-exports.saveAdditionalInfo = onCall(
-  async (data, context) => await saveAdditionalInfo(data, context)
+exports.saveInfo = onCall(
+  async (data, context) => await saveInfo(data, context)
 );
 
 exports.saveThumbnail = onCall(
   async (data, context) => await saveThumbnail(data, context)
+);
+
+exports.saveReward = onCall(
+  async (data, context) => await saveReward(data, context)
+);
+
+exports.saveAsset = onCall(
+  async (data, context) => await saveAsset(data, context)
 );

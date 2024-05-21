@@ -1,13 +1,14 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
 import {db} from "./utils";
 
-interface SaveAdditionalInfoRequest {
+interface SaveInfoRequest {
   poolId: string;
-  content: string;
+  content?: string;
+  delete?: boolean;
 }
 
-export async function saveAdditionalInfo(
-  data: SaveAdditionalInfoRequest,
+export async function saveInfo(
+  data: SaveInfoRequest,
   context: CallableContext
 ) {
   if (!context.auth) {
@@ -26,9 +27,10 @@ export async function saveAdditionalInfo(
       "Only the pool creator is allowed to call this function"
     );
   }
+
   await db.doc(`Pool/${data.poolId}`).set(
     {
-      additionalInfo: data.content,
+      additionalInfo: data.delete ? "" : data.content || "",
     },
     {merge: true}
   );

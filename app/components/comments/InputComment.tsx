@@ -40,6 +40,7 @@ const InputComment = (props: InputCommentProps) => {
       }
     >
       <textarea
+        id="comment"
         className="border border-gray-300 text-sm px-4 py-2 rounded-lg text-black w-full"
         placeholder="Add a comment..."
         value={commentValue}
