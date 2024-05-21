@@ -15,9 +15,6 @@ export async function verifySignIn(
   if (context.auth == null) {
     throw new HttpsError("permission-denied", "Not Authenticated");
   }
-  if (context.auth.token.firebase.sign_in_provider !== "anonymous") {
-    throw new HttpsError("permission-denied", "Wrong Authentication");
-  }
   const idToken =
     context.rawRequest.headers.authorization!.split("Bearer ")[1]!;
   const message = createLoginMessage(idToken.slice(0, 32));

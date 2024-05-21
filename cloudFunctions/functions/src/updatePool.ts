@@ -1,10 +1,10 @@
 import axios from "axios";
-import { log } from "firebase-functions/logger";
-import { EventContext } from "firebase-functions/v1";
-import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
-import { addToQueue } from "./utils/helper";
-import { db, helius } from "./utils/index";
-import { PoolType } from "./utils/types";
+import {log} from "firebase-functions/logger";
+import {EventContext} from "firebase-functions/v1";
+import {QueryDocumentSnapshot} from "firebase-functions/v1/firestore";
+import {addToQueue} from "./utils/helper";
+import {db, helius} from "./utils/index";
+import {PoolType} from "./utils/types";
 
 export default async function updatePool(
   snapshot: QueryDocumentSnapshot,
@@ -15,7 +15,7 @@ export default async function updatePool(
   const data = snapshot.data() as PoolType;
 
   // update metadata
-  const metadata = await helius.rpc.getAsset({ id: data.mint });
+  const metadata = await helius.rpc.getAsset({id: data.mint});
   let valid = true;
   let name;
   let description;
@@ -85,6 +85,6 @@ export default async function updatePool(
         inQueue: inQueue,
         collectionsRequired: collectionsRequired ? collectionsRequired : null,
       },
-      { merge: true }
+      {merge: true}
     );
 }
