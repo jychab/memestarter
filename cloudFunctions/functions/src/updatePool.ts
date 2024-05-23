@@ -62,6 +62,18 @@ export default async function updatePool(
   await db
     .collection("Pool")
     .doc(context.params.poolId)
+    .collection("Rewards")
+    .doc(context.params.poolId)
+    .set({
+      id: context.params.poolId,
+      title: "Pledge any amount",
+      content: "",
+      uniqueBackers: 0,
+    });
+
+  await db
+    .collection("Pool")
+    .doc(context.params.poolId)
     .set(
       {
         name: name,
@@ -73,13 +85,6 @@ export default async function updatePool(
           title: name,
           description: description,
         },
-        rewards: [
-          {
-            id: context.params.poolId,
-            title: "Pledge without a reward",
-            content: "",
-          },
-        ],
         valid: valid,
         mintMetadata: metadata,
         inQueue: inQueue,

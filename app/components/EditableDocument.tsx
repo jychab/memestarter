@@ -24,6 +24,7 @@ import {
 } from "../utils/cloudFunctions";
 import { uploadImage } from "../utils/functions";
 import { PoolType, Reward } from "../utils/types";
+import { Chip } from "./Chip";
 import EditorMenuControls from "./info/EditorMenuControls";
 interface EditableDocumentProps {
   pool: PoolType;
@@ -63,17 +64,13 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
         isEditable && price
           ? `Pledge ${price} ${
               pool.quoteMint === NATIVE_MINT.toBase58() ? "SOL" : "USDC"
-            } ${
-              quantity
-                ? `(${reward.quantityLeft || quantity}/${quantity} remaining)`
-                : ""
             }`
           : reward.title
       );
     } else if (title) {
       setMainTitle(title);
     }
-  }, [price, quantity, isEditable, reward, title, pool]);
+  }, [price, isEditable, reward, title, pool]);
 
   function fileListToImageFiles(fileList: FileList): File[] {
     return Array.from(fileList).filter((file) => {
@@ -260,6 +257,24 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
               </IconButton>
             </div>
           )}
+      </div>
+      <div className="flex gap-4 items-center">
+        {reward && (
+          <Chip
+            k={`${reward.uniqueBackers} Backers`}
+            textColor="text-blue-200"
+            bgColor="bg-blue-600"
+          />
+        )}
+        {reward && reward.quantity && (
+          <Chip
+            k={`Limited (${reward.quantity - reward.quantityBought} left of ${
+              reward.quantity
+            })`}
+            textColor="text-yellow-200"
+            bgColor="bg-yellow-600"
+          />
+        )}
       </div>
       {reward && reward.price !== undefined && isEditable && (
         <div className="grid grid-cols-3 items-center gap-4 w-full max-w-96 overflow-auto scrollbar-none h-24">

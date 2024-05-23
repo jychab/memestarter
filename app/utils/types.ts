@@ -209,20 +209,30 @@ export interface PoolType {
   updatedAt: Timestamp | number | null;
   additionalInfo?: string;
   thumbnail: Thumbnail;
-  rewards: Reward[];
+  uniqueBackers?: number;
 }
 
 export interface Reward {
   id: string;
   title: string;
   content: string;
+  uniqueBackers: number;
+  quantityBought: number;
   delivery?: {
     countries: Array<string>;
     estimatedDate: number;
   };
   price?: number;
   quantity?: number;
-  quantityLeft?: number;
+}
+
+export interface OrderHistory {
+  txId: string;
+  mintId: string;
+  rewardId: string;
+  poolId: string;
+  amount: number;
+  quantity?: number;
 }
 
 export interface Thumbnail {

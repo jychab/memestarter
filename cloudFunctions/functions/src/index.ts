@@ -6,6 +6,7 @@ import {handleCommentsAndReplies} from "./commentsAndReplies";
 import {enQueue} from "./enQueue";
 import getPrice from "./getPrice";
 import programWebhook from "./programWebhook";
+import purchaseReward from "./purchaseReward";
 import saveAsset from "./saveAsset";
 import {saveInfo} from "./saveInfo";
 import {saveReward} from "./saveReward";
@@ -61,6 +62,10 @@ exports.saveThumbnail = onCall(
 
 exports.saveReward = onCall(
   async (data, context) => await saveReward(data, context)
+);
+
+exports.purchaseReward = onCall(
+  async (data, context) => await purchaseReward(data, context)
 );
 
 exports.saveAsset = onCall(

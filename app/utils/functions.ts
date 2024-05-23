@@ -10,15 +10,13 @@ import { ref, uploadBytes, uploadString } from "firebase/storage";
 import { toast } from "react-toastify";
 import { DOMAIN_API_URL } from "./constants";
 import { db, storage } from "./firebase";
-import { getCollectionMintAddress } from "./helper";
 import {
-  buyPresaleIx,
   createPurchaseAuthorisationIx,
   initializePoolIx,
   launchTokenAmm,
 } from "./instructions";
 import { buildAndSendTransaction } from "./transactions";
-import { CreatePoolArgs, DAS, PoolType } from "./types";
+import { CreatePoolArgs, PoolType } from "./types";
 
 export async function launchToken(
   pool: PoolType,
@@ -51,48 +49,6 @@ export async function launchToken(
     connection
   );
   await buildAndSendTransaction(connection, [ix], publicKey, signTransaction);
-}
-
-export async function buyPresale(
-  pool: PoolType,
-  nft: DAS.GetAssetResponse,
-  amountToPurchase: string,
-  publicKey: PublicKey,
-  connection: Connection,
-  signTransaction: <T extends VersionedTransaction | Transaction>(
-    transaction: T
-  ) => Promise<T>
-) {
-  const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
-  const amount = parseFloat(amountToPurchase);
-  if (
-    !amountOfSolInWallet ||
-    amountOfSolInWallet.lamports < amount * LAMPORTS_PER_SOL * 1.01
-  ) {
-    throw Error(`Insufficient Sol. You need at least ${amount * 1.01} Sol.`);
-  }
-  let nftCollection;
-  if (pool.collectionsRequired) {
-    const collectionMintAddress = getCollectionMintAddress(nft);
-    if (!collectionMintAddress) {
-      throw Error("NFT has no collection");
-    }
-    nftCollection = new PublicKey(collectionMintAddress);
-  }
-
-  const ix = await buyPresaleIx(
-    {
-      quoteMint: new PublicKey(pool.quoteMint),
-      amount: amount * LAMPORTS_PER_SOL,
-      nft: new PublicKey(nft.id),
-      nftCollection: nftCollection,
-      poolId: new PublicKey(pool.pool),
-      signer: publicKey,
-    },
-    connection
-  );
-
-  await buildAndSendTransaction(connection, ix, publicKey, signTransaction);
 }
 
 export async function uploadMetadata(

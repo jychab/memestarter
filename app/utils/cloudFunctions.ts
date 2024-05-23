@@ -67,6 +67,25 @@ export async function removeInfo(poolId: string) {
   });
 }
 
+export async function purchaseReward(
+  mintId: string,
+  poolId: string,
+  rewardId: string,
+  txId: string,
+  amount: number,
+  quantity?: number
+) {
+  const purchaseReward = httpsCallable(functions, "purchaseReward");
+  await purchaseReward({
+    mintId,
+    poolId,
+    rewardId,
+    txId,
+    amount,
+    quantity,
+  });
+}
+
 export async function saveReward(
   poolId: string,
   rewardId: string,

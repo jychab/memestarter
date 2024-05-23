@@ -1,12 +1,12 @@
 import { AddCircle } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 import { FC, useEffect, useState } from "react";
 import { RewardCardItem } from "../components/RewardCardItem";
 import { useData } from "../hooks/useData";
 import { db } from "../utils/firebase";
-import { MintType, PoolType } from "../utils/types";
+import { MintType, PoolType, Reward } from "../utils/types";
 
 interface RewardsSectionProps {
   pool: PoolType;
@@ -20,6 +20,7 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
   const [selected, setSelected] = useState<string>();
   const [current, setCurrent] = useState<number>(0);
   const [showNew, setShowNew] = useState(false);
+  const [rewards, setRewards] = useState<Reward[]>([]);
   const { nft } = useData();
   const { publicKey } = useWallet();
   useEffect(() => {
@@ -37,6 +38,18 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
     }
   }, [nft, pool]);
 
+  useEffect(() => {
+    if (pool) {
+      const unsubscribe = onSnapshot(
+        collection(db, `Pool/${pool.pool}/Rewards`),
+        (snapshot) => {
+          setRewards(snapshot.docs.map((item) => item.data() as Reward));
+        }
+      );
+      return () => unsubscribe();
+    }
+  }, [pool]);
+
   return (
     <div className="flex flex-col gap-4 items-start w-full">
       <div className="flex gap-2 items-center">
@@ -52,7 +65,7 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
         )}
       </div>
       {!editingMode && <span className="text-sm">Select an option below</span>}
-      {pool.rewards
+      {rewards
         .sort((a, b) => (a.price || 0) - (b.price || 0))
         .map((reward) => (
           <RewardCardItem

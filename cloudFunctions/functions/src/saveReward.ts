@@ -1,6 +1,6 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
 import {db} from "./utils";
-import {PoolType} from "./utils/types";
+import {PoolType, Reward} from "./utils/types";
 
 interface SaveRewardRequest {
   poolId: string;
@@ -36,36 +36,39 @@ export async function saveReward(
       "Only the pool creator is allowed to call this function"
     );
   }
-  let currentRewards = pool.rewards;
-  const index = currentRewards.findIndex(
-    (reward) => reward.id === data.rewardId
-  );
+  const reward = (
+    await db.doc(`Pool/${data.poolId}/Rewards/${data.rewardId}`).get()
+  ).data() as Reward;
   if (data.delete) {
-    if (index == -1) {
+    if (!reward) {
       throw new HttpsError("aborted", "Reward does not exist!");
     }
-    currentRewards = currentRewards.filter((_, i) => i != index);
+    if (!reward.price) {
+      throw new HttpsError("aborted", "Cannot delete default reward");
+    }
+    if (reward.quantity && reward.quantityBought > 0) {
+      throw new HttpsError(
+        "aborted",
+        "Cannot delete reward because someone has already made a purchase"
+      );
+    }
+    await db.doc(`Pool/${data.poolId}/Rewards/${data.rewardId}`).delete();
   } else if (data.title && data.content) {
     const payload = {
       id: data.rewardId,
+      pool: data.poolId,
       title: data.title,
       content: data.content,
       delivery: data.delivery,
       price: data.price,
       quantity: data.quantity,
+      uniqueBackers: reward ? undefined : 0,
+      quantityBought: reward ? undefined : 0,
     };
-    if (index != -1) {
-      currentRewards[index] = {
-        ...payload,
-        quantityLeft: currentRewards[index].quantityLeft,
-      };
-    } else {
-      currentRewards.push(payload);
-    }
+    await db
+      .doc(`Pool/${data.poolId}/Rewards/${data.rewardId}`)
+      .set(payload, {merge: true});
   } else {
     throw new HttpsError("aborted", "Missing title or content field");
   }
-  await db
-    .doc(`Pool/${data.poolId}`)
-    .set({rewards: currentRewards}, {merge: true});
 }

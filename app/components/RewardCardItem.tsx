@@ -1,12 +1,18 @@
+import { Add, Remove } from "@mui/icons-material";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import Image from "next/image";
-import { FC, useCallback, useState } from "react";
+import { useRouter } from "next/router";
+import { FC, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useData } from "../hooks/useData";
+import { useLogin } from "../hooks/useLogin";
 import solanaLogo from "../public/solanaLogoMark.png";
+import { purchaseReward } from "../utils/cloudFunctions";
 import { getCustomErrorMessage } from "../utils/error";
-import { buyPresale } from "../utils/functions";
+import { formatLargeNumber, getCollectionMintAddress } from "../utils/helper";
+import { buyPresaleIx } from "../utils/instructions";
+import { buildAndSendTransaction } from "../utils/transactions";
 import { PoolType, Reward } from "../utils/types";
 import { EditableDocument } from "./EditableDocument";
 
@@ -34,41 +40,162 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
   onCancelCallback,
 }) => {
   const [amount, setAmount] = useState<string>("");
+  const [quantity, setQuantity] = useState<number | undefined>();
+  const [amountInSol, setAmountInSol] = useState<number>();
+  const [amountInLamports, setAmountInLamports] = useState<number>();
+  const [estimatedCost, setEstimatedCost] = useState<number>(0);
+  const [estimatedTokensReceivable, setEstimatedTokensReceivable] =
+    useState<number>(0);
   const [loading, setLoading] = useState(false);
-  const { publicKey, signTransaction } = useWallet();
+  const { publicKey, signTransaction, signMessage } = useWallet();
   const { connection } = useConnection();
+  const { handleLogin } = useLogin();
   const { nft } = useData();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (amountInLamports && pool) {
+      let maxAmount =
+        (pool.initialSupply * (10000 - pool.creatorFeeBasisPoints)) /
+        (10000 * 10 ** pool.decimal);
+      setEstimatedTokensReceivable(
+        Math.min((amountInLamports * maxAmount) / pool.presaleTarget, maxAmount)
+      );
+    } else {
+      setEstimatedTokensReceivable(0);
+    }
+  }, [amountInLamports, pool]);
+
+  useEffect(() => {
+    if (amountInSol && pool) {
+      setEstimatedCost(Math.round(amountInSol * 1.01 * 1000) / 1000);
+    } else {
+      setEstimatedCost(0);
+    }
+  }, [amountInSol, pool]);
+
+  useEffect(() => {
+    let amountPurchasedInSol;
+    let amountPurchasedInLamports;
+    try {
+      if (reward && reward.price) {
+        if (quantity && quantity > 0) {
+          amountPurchasedInLamports = quantity * reward.price;
+          amountPurchasedInSol = amountPurchasedInLamports / LAMPORTS_PER_SOL;
+        }
+      } else {
+        amountPurchasedInSol = parseFloat(amount);
+        amountPurchasedInLamports = amountPurchasedInSol * LAMPORTS_PER_SOL;
+      }
+    } catch (e) {
+      amountPurchasedInSol = undefined;
+      amountPurchasedInLamports = undefined;
+    }
+    setAmountInSol(amountPurchasedInSol);
+    setAmountInLamports(amountPurchasedInLamports);
+  }, [amount, quantity, reward]);
 
   const buy = useCallback(async () => {
-    if (!(publicKey && connection && pool && amount && nft && signTransaction))
+    if (
+      !(
+        publicKey &&
+        connection &&
+        pool &&
+        reward &&
+        nft &&
+        amountInSol &&
+        amountInLamports &&
+        signTransaction &&
+        signMessage
+      )
+    )
       return;
     try {
       setLoading(true);
-      await buyPresale(
-        pool,
-        nft,
-        amount,
-        publicKey,
+      const amountOfSolInWallet = await connection.getAccountInfo(publicKey);
+      if (
+        !amountOfSolInWallet ||
+        amountOfSolInWallet.lamports < amountInLamports * 1.01
+      ) {
+        throw new Error(
+          `Insufficient Sol. You need at least ${
+            Math.round(amountInSol * 1.01 * 1000) / 1000
+          } Sol.`
+        );
+      }
+      if (maxAllowed && (current || 0) + amountInLamports > maxAllowed) {
+        throw new Error(
+          `Input amount will bring total to ${
+            amountInSol + (current || 0) / LAMPORTS_PER_SOL
+          } Sol which exceeds the maximum quota of ${
+            maxAllowed / LAMPORTS_PER_SOL
+          } Sol.`
+        );
+      }
+      let nftCollection;
+      if (pool.collectionsRequired) {
+        const collectionMintAddress = getCollectionMintAddress(nft);
+        if (!collectionMintAddress) {
+          throw Error("NFT has no collection");
+        }
+        nftCollection = new PublicKey(collectionMintAddress);
+      }
+      await handleLogin(publicKey, signMessage);
+      const ix = await buyPresaleIx(
+        {
+          quoteMint: new PublicKey(pool.quoteMint),
+          amount: amountInLamports,
+          nft: new PublicKey(nft.id),
+          nftCollection: nftCollection,
+          poolId: new PublicKey(pool.pool),
+          signer: publicKey,
+        },
+        connection
+      );
+      const txId = await buildAndSendTransaction(
         connection,
+        ix,
+        publicKey,
         signTransaction
       );
+      await purchaseReward(
+        nft.id,
+        pool.pool,
+        reward.id,
+        txId,
+        amountInLamports,
+        quantity
+      );
       toast.success("Success!");
+      router.push("/");
     } catch (error) {
       toast.error(`${getCustomErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
-  }, [pool, nft, amount, publicKey, connection, signTransaction]);
+  }, [
+    pool,
+    nft,
+    amountInSol,
+    amountInLamports,
+    maxAllowed,
+    reward,
+    publicKey,
+    connection,
+    signTransaction,
+    signMessage,
+    handleLogin,
+  ]);
 
   return (
     <div
       onClick={() => reward && setSelected(reward.id)}
       className={`flex flex-col gap-4 w-full border p-4 rounded ${
         !editingMode
-          ? `hover:cursor-pointer hover:border-black hover:shadow-xl hover:-translate-y-1 ${
+          ? `${
               selected && reward && reward.id == selected
                 ? "border-green-700"
-                : "border-gray-300"
+                : "hover:cursor-pointer hover:border-black hover:shadow-xl hover:-translate-y-1 border-gray-300"
             }`
           : ""
       }`}
@@ -82,6 +209,8 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
             : {
                 title: "",
                 content: "",
+                uniqueBackers: 0,
+                quantityBought: 0,
                 id: crypto.randomUUID(),
                 price: LAMPORTS_PER_SOL,
               }
@@ -91,56 +220,87 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
         onCancelCallback={onCancelCallback}
       />
       {!editingMode && selected && reward && reward.id === selected && (
-        <div className="flex flex-col gap-1 items-end w-full">
-          <div className="flex flex-col md:flex-row w-full gap-4 md:gap-8 items-end">
-            <div className="flex flex-col gap-1 w-full">
-              <div className="flex text-[10px] justify-between">
-                <span className="text-gray-400">{`Pledged Amount: ${
-                  current || 0 / LAMPORTS_PER_SOL
-                } Sol`}</span>
-                {maxAllowed && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAmount(
-                        `${(maxAllowed - (current || 0)) / LAMPORTS_PER_SOL}`
-                      )
-                    }
-                    className="flex justify-between text-black hover:text-blue-600 cursor-pointer"
+        <div className="flex flex-col gap-4 items-end">
+          <div className="flex flex-col sm:flex-row w-full gap-4 sm:items-end justify-center ">
+            {!reward.price ? (
+              <div className="flex flex-col gap-1 w-auto flex-1">
+                <div className="flex text-[10px] justify-between">
+                  <span className="text-gray-400">{`Current: ${
+                    (current || 0) / LAMPORTS_PER_SOL
+                  } Sol`}</span>
+                  {maxAllowed && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAmount(
+                          `${(maxAllowed - (current || 0)) / LAMPORTS_PER_SOL}`
+                        )
+                      }
+                      className="flex justify-between text-black hover:text-blue-600 cursor-pointer"
+                    >
+                      <span>{`Max Allowed: ${
+                        maxAllowed / LAMPORTS_PER_SOL
+                      } Sol`}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="flex w-full">
+                  <label
+                    htmlFor="currency"
+                    id="currencyLabel"
+                    className="border-e-0 flex-shrink-0 inline-flex items-center justify-evenly gap-2 p-2 text-sm font-medium text-center border rounded-s-lg focus:outline-none border-gray-300"
                   >
-                    <span>{`Max Allowed: ${
-                      maxAllowed / LAMPORTS_PER_SOL
-                    } Sol`}</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex w-full">
-                <label
-                  htmlFor="currency"
-                  id="currencyLabel"
-                  className="border-e-0 flex-shrink-0 inline-flex items-center justify-evenly gap-2 p-2 text-sm font-medium text-center border rounded-s-lg focus:outline-none border-gray-300"
-                >
-                  <Image
-                    width={16}
-                    height={16}
-                    src={solanaLogo}
-                    alt={"solana logo"}
+                    <Image
+                      width={16}
+                      height={16}
+                      src={solanaLogo}
+                      alt={"solana logo"}
+                    />
+                  </label>
+                  <input
+                    type="number"
+                    id="currency"
+                    className="rounded-none rounded-e-lg w-full leading-none text-sm p-2 border border-gray-300 hover:border-green-700 focus:outline-none focus:border-green-700"
+                    value={amount}
+                    placeholder="Enter an amount"
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
                   />
-                </label>
-                <input
-                  type="number"
-                  id="currency"
-                  className="rounded-none rounded-e-lg w-full leading-none text-sm p-2 border border-gray-300 text-black hover:border-green-700 focus:outline-none focus:border-green-700"
-                  value={amount}
-                  placeholder="Enter an amount"
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-4 w-auto flex-1">
+                <span className="text-sm text-gray-400 font-medium">
+                  Quantity:
+                </span>
+                <div className="flex w-full">
+                  <button
+                    onClick={() => quantity && setQuantity(quantity - 1)}
+                    className="border-l border-y border-gray-300 rounded-s-lg py-1 px-2 sm:px-4"
+                  >
+                    <Remove fontSize="inherit" />
+                  </button>
+                  <input
+                    type="number"
+                    id="quantity-input"
+                    className="border border-gray-300 text-center leading-none text-sm p-2 w-full hover:border-green-700 focus:outline-none focus:border-green-700"
+                    placeholder="Enter a quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(parseInt(e.target.value))}
+                    required
+                  />
+                  <button
+                    onClick={() => setQuantity((quantity || 0) + 1)}
+                    className="border-r border-y border-gray-300 rounded-e-lg py-1 px-2 md:px-4"
+                  >
+                    <Add fontSize="inherit" />
+                  </button>
+                </div>
+              </div>
+            )}
             <button
               onClick={buy}
-              className={`text-white bg-green-700 flex items-center justify-center rounded w-full md:w-2/6 text-sm sm:text-base gap-1 px-4 py-1`}
+              className={`text-white bg-green-700 flex items-center justify-center rounded w-full sm:w-64 text-sm sm:text-base gap-2 px-4 py-1`}
             >
               {loading && (
                 <svg
@@ -162,7 +322,16 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
               Continue
             </button>
           </div>
-          <span className="text-[10px] text-gray-400">{`Platform Fee: 1%`}</span>
+          <div className="grid grid-cols-2 gap-x-2">
+            <span className="text-[10px] text-gray-400">{`Platform Fee:`}</span>
+            <span className="text-[10px] text-gray-400 text-end">{`1%`}</span>
+            <span className="text-[10px] text-gray-400">{`Estimated Cost:`}</span>
+            <span className="text-[10px] text-gray-400 text-end">{`~${estimatedCost} Sol`}</span>
+            <span className="text-[10px] text-gray-400">{`Tokens Receivable:`}</span>
+            <span className="text-[10px] text-gray-400 text-end ">{`~${formatLargeNumber(
+              estimatedTokensReceivable
+            )} $${pool.symbol}`}</span>
+          </div>
         </div>
       )}
     </div>

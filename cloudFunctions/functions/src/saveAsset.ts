@@ -1,13 +1,13 @@
 import {CallableContext, HttpsError} from "firebase-functions/v1/https";
 import {db} from "./utils";
 
-interface SaveAsset {
+interface SaveAssetRequest {
   nft?: any;
   delete?: boolean;
 }
 
 export default async function saveAsset(
-  data: SaveAsset,
+  data: SaveAssetRequest,
   context: CallableContext
 ): Promise<any> {
   if (!context.auth) {

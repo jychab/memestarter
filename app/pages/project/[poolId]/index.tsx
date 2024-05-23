@@ -1,11 +1,6 @@
 import { Tab, Tabs, useMediaQuery } from "@mui/material";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import {
-  collection,
-  doc,
-  getCountFromServer,
-  onSnapshot,
-} from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,7 +34,6 @@ export default function Pool() {
   const [loading, setLoading] = useState(false);
   const { connection } = useConnection();
   const [status, setStatus] = useState<Status>();
-  const [uniqueBackers, setUniqueBackers] = useState<number>(0);
   const [price, setPrice] = useState<number>();
   const { publicKey, signTransaction, signMessage } = useWallet();
   const { handleLogin } = useLogin();
@@ -63,10 +57,6 @@ export default function Pool() {
     if (poolId) {
       const unsubscribe = onSnapshot(doc(db, `Pool/${poolId}`), (doc) => {
         if (doc.exists()) {
-          const coll = collection(db, `Pool/${poolId}/Mint`);
-          getCountFromServer(coll).then((result) =>
-            setUniqueBackers(result.data().count)
-          );
           const poolData = doc.data() as PoolType;
           setPool(poolData);
           setStatus(getStatus(poolData));
@@ -245,7 +235,7 @@ export default function Pool() {
                 <PresaleDashboard
                   liquidityPoolSupply={pool.liquidityPoolSupply}
                   collectionsRequired={pool.collectionsRequired}
-                  uniqueBackers={uniqueBackers}
+                  uniqueBackers={pool.uniqueBackers || 0}
                   symbol={pool.symbol}
                   decimal={pool.decimal}
                   totalSupply={pool.totalSupply}
@@ -268,7 +258,7 @@ export default function Pool() {
                   decimal={pool.decimal}
                   totalSupply={pool.totalSupply}
                   vestingPeriod={pool.vestingPeriod}
-                  uniqueBackers={uniqueBackers}
+                  uniqueBackers={pool.uniqueBackers || 0}
                   vestingStartedAt={pool.vestingStartedAt}
                   totalLpClaimed={pool.totalLpClaimed}
                   totalMintClaimed={pool.totalMintClaimed}
@@ -300,7 +290,7 @@ export default function Pool() {
       case TabType.PURCHASE:
         return <></>;
     }
-  }, [pool, tabValue, status, uniqueBackers, price, StatusButton]);
+  }, [pool, tabValue, status, price, StatusButton]);
 
   const TabNavigationBar = useMemo(() => {
     return (

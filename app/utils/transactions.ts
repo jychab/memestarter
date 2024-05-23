@@ -1,6 +1,7 @@
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {
   AddressLookupTableAccount,
+  Commitment,
   ComputeBudgetProgram,
   Connection,
   PublicKey,
@@ -82,8 +83,9 @@ export async function buildAndSendTransaction(
   publicKey: PublicKey,
   signTransaction: <T extends VersionedTransaction | Transaction>(
     transaction: T
-  ) => Promise<T>
-) {
+  ) => Promise<T>,
+  commitment: Commitment = "confirmed"
+): Promise<string> {
   const [microLamports, units, recentBlockhash] = await Promise.all([
     getPriorityFeeEstimate("VeryHigh", ixs, publicKey, connection),
     getSimulationUnits(connection, ixs, publicKey, []),
@@ -94,10 +96,10 @@ export async function buildAndSendTransaction(
     // probably should add some margin of error to units
     ixs.unshift(
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: units * 1.1,
+        units: Math.round(units * 1.1),
       })
     );
-    console.log(`Compute Units: ${units * 1.1}`);
+    console.log(`Compute Units: ${Math.round(units * 1.1)}`);
   }
   console.log(`Blockhash: ${recentBlockhash.blockhash}`);
   let tx = new VersionedTransaction(
@@ -114,9 +116,16 @@ export async function buildAndSendTransaction(
       skipPreflight: true,
     }
   );
-  await connection.confirmTransaction({
-    signature: txId,
-    blockhash: recentBlockhash.blockhash,
-    lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
-  });
+  const result = await connection.confirmTransaction(
+    {
+      signature: txId,
+      blockhash: recentBlockhash.blockhash,
+      lastValidBlockHeight: recentBlockhash.lastValidBlockHeight,
+    },
+    commitment
+  );
+  if (result.value.err) {
+    throw new Error(JSON.stringify(result.value.err));
+  }
+  return txId;
 }
