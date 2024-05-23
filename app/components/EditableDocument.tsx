@@ -266,11 +266,11 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
             bgColor="bg-blue-600"
           />
         )}
-        {reward && reward.quantity && (
+        {reward && quantity && (
           <Chip
-            k={`Limited (${reward.quantity - reward.quantityBought} left of ${
-              reward.quantity
-            })`}
+            k={`Limited (${
+              parseInt(quantity) - reward.quantityBought
+            } left of ${quantity})`}
             textColor="text-yellow-200"
             bgColor="bg-yellow-600"
           />
