@@ -26,7 +26,7 @@ function CreateCollection() {
   const [decimals, setDecimals] = useState<number>(5);
   const [supply, setSupply] = useState<string>("1000000000");
   const [liquidityPoolSupplyInPercentage, setLiquidityPoolSupplyInPercentage] =
-    useState<string>("30"); //in percentage
+    useState<string>("10"); //in percentage
   const [description, setDescription] = useState<string>("");
   const [externalUrl, setExternalUrl] = useState<string>("");
 
