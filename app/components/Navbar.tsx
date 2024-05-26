@@ -12,7 +12,7 @@ export const Navbar: FC = () => {
 
   return (
     <nav className="bg-white border-b border-gray-200 px-4 pt-8 pb-8 shadow-sm">
-      <div className="mx-auto flex justify-between items-center max-w-screen-xl">
+      <div className="mx-auto flex justify-between items-center max-w-screen-2xl">
         <Link className="text-black uppercase text-base md:text-xl" href="/">
           <Image src={logo} width={140} className="h-auto" alt={"logo"} />
         </Link>
