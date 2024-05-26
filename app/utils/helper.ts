@@ -184,7 +184,10 @@ function countDecimalPlaces(number: number) {
 export async function determineOptimalParameters(totalSupply: number) {
   let tickSize;
   let orderSize;
-  if (totalSupply <= 100000) {
+  if (totalSupply <= 10000) {
+    tickSize = 0.001;
+    orderSize = 0.001;
+  } else if (totalSupply <= 100000) {
     tickSize = 0.0001;
     orderSize = 0.01;
   } else if (totalSupply <= 1000000) {
