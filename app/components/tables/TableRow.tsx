@@ -237,13 +237,15 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {(status === Status.VestingInProgress ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
-            {formatLargeNumber(mintElligible / 10 ** decimal)}
+            {mintElligible
+              ? formatLargeNumber(mintElligible / 10 ** decimal)
+              : ""}
           </td>
         )}
         {(status === Status.VestingInProgress ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
-            {lpElligible ? formatLargeNumber(lpElligible / 9) : ""}
+            {lpElligible ? formatLargeNumber(lpElligible / 10 ** 9) : ""}
           </td>
         )}
         {(status === Status.VestingInProgress ||
