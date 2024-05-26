@@ -56,6 +56,8 @@ export default async function purchaseReward(
       poolId: data.poolId,
       amount: data.amount,
       quantity: data.quantity,
+      address: context.auth.uid,
+      updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true}
   );

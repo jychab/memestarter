@@ -1,30 +1,30 @@
-import React, { FC } from "react";
-import { PoolType } from "../../utils/types";
-import { CreatorTableRow } from "../CreatorTableRow";
+import { FC } from "react";
+import { PoolType } from "../../../utils/types";
+import { CreatorTableRow } from "./CreatorTableRow";
 
-interface CreatedTableProps {
+interface FailedTableProps {
   pool: PoolType[];
   timer: number;
 }
 
-export const CreatedTable: FC<CreatedTableProps> = ({ pool, timer }) => {
+export const FailedTable: FC<FailedTableProps> = ({ pool, timer }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left rtl:text-right border border-gray-300">
         <thead className="uppercase border-b border-gray-300">
           <tr className="text-[10px]">
-            <th scope="col" className="hidden sm:table-cell w-16 p-2" />
+            <th scope="col" className="w-16 p-2" />
             <th scope="col" className="w-auto p-2">
               Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Total Funds Raised
+              Total Raised
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Presale Target
+              Withdrawn
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Presale End
+              Remaining
             </th>
             <th scope="col" className="w-24 text-center p-2" />
           </tr>
@@ -32,7 +32,7 @@ export const CreatedTable: FC<CreatedTableProps> = ({ pool, timer }) => {
         <tbody>
           {pool.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={7}>
+              <td className="p-2 text-xs" colSpan={6}>
                 <span>No projects found.</span>
               </td>
             </tr>

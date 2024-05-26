@@ -23,11 +23,12 @@ import {
   saveReward,
 } from "../utils/cloudFunctions";
 import { uploadImage } from "../utils/functions";
-import { PoolType, Reward } from "../utils/types";
+import { PoolType, Reward, Status } from "../utils/types";
 import { Chip } from "./Chip";
 import EditorMenuControls from "./info/EditorMenuControls";
 interface EditableDocumentProps {
   pool: PoolType;
+  status: Status;
   reward?: Reward;
   title?: string;
   titleStyle?: string;
@@ -37,6 +38,7 @@ interface EditableDocumentProps {
 }
 export const EditableDocument: FC<EditableDocumentProps> = ({
   pool,
+  status,
   reward,
   title,
   titleStyle,
@@ -220,6 +222,7 @@ export const EditableDocument: FC<EditableDocumentProps> = ({
         <span className={titleStyle}>{mainTitle}</span>
         {showEditButton &&
           !isEditable &&
+          status != Status.Expired &&
           publicKey &&
           publicKey.toBase58() == pool.authority && (
             <div className="flex">

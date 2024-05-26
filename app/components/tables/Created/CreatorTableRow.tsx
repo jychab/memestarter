@@ -4,20 +4,20 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { useLogin } from "../hooks/useLogin";
-import { getCustomErrorMessage } from "../utils/error";
-import { launchToken } from "../utils/functions";
+import { useLogin } from "../../../hooks/useLogin";
+import { getCustomErrorMessage } from "../../../utils/error";
+import { launchToken } from "../../../utils/functions";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
   getStatus,
-} from "../utils/helper";
+} from "../../../utils/helper";
 import {
   claimRewardForCreators,
   withdrawLpForCreator,
-} from "../utils/instructions";
-import { buildAndSendTransaction } from "../utils/transactions";
-import { PoolType, Status } from "../utils/types";
+} from "../../../utils/instructions";
+import { buildAndSendTransaction } from "../../../utils/transactions";
+import { PoolType, Status } from "../../../utils/types";
 
 interface CreatorTableRowProps {
   pool: PoolType;
@@ -155,7 +155,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
         <td
           onClick={() => router.push(`/project/${pool.pool}`)}
           scope="row"
-          className="cursor-pointer hidden sm:table-cell p-2"
+          className="cursor-pointer p-2"
         >
           <div className="relative w-8 h-8">
             <Image
@@ -206,19 +206,7 @@ export const CreatorTableRow: FC<CreatorTableRowProps> = ({ pool, timer }) => {
         {(status === Status.VestingCompleted ||
           status === Status.VestingInProgress) && (
           <td scope="row" className="p-2 text-center">
-            {initialSupplyForCreator
-              ? initialSupplyForCreator == initialSupplyClaimedByCreator
-                ? "Fully Claimed"
-                : formatLargeNumber(initialSupplyForCreator / 10 ** decimal)
-              : ""}
-          </td>
-        )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
-          <td scope="row" className="p-2 text-center">
-            {initialSupplyClaimedByCreator
-              ? formatLargeNumber(initialSupplyClaimedByCreator / 10 ** decimal)
-              : ""}
+            {formatLargeNumber(initialSupplyForCreator / 10 ** decimal)}
           </td>
         )}
         {(status === Status.VestingCompleted ||

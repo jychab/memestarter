@@ -1,9 +1,9 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CreatedTable } from "../../components/tables/CreatedTable";
-import { FailedTable } from "../../components/tables/FailedTable";
-import { LaunchedTable } from "../../components/tables/LaunchedTable";
+import { CreatedTable } from "../../components/tables/Created/CreatorCreatedTable";
+import { FailedTable } from "../../components/tables/Created/CreatorFailedTable";
+import { LaunchedTable } from "../../components/tables/Created/CreatorLaunchedTable";
 import { db } from "../../utils/firebase";
 import { getStatus } from "../../utils/helper";
 import { PoolType, Status } from "../../utils/types";
@@ -108,11 +108,11 @@ function MyProjects() {
     });
   }, [myPools, projectType]);
   return (
-    <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">
+    <div className="flex flex-col h-full w-full max-w-screen-xl gap-4 lg:items-center justify-between">
       {!publicKey ? (
         <span className="text-black">You need to sign in first.</span>
       ) : (
-        <div className="flex flex-col text-xs text-gray-400 gap-4">
+        <div className="flex flex-col w-full text-xs text-gray-400 gap-4">
           <div className="flex items-center justify-start">
             <div className="relative">
               <button

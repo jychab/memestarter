@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import useFirestoreWtihSWR from "../../../../hooks/useFirestoreWithSWR";
 import RewardsSection from "../../../../sections/RewardsSection";
+import { getStatus } from "../../../../utils/helper";
 import { PoolType } from "../../../../utils/types";
 
 function Rewards() {
@@ -8,13 +9,19 @@ function Rewards() {
   const router = useRouter();
   const poolId = router.query.poolId;
   const { data } = getDocument(`Pool/${poolId}`);
-  return (
-    data && (
-      <div className="max-w-screen-lg w-full ">
-        <RewardsSection pool={data.data() as PoolType} />
-      </div>
-    )
-  );
+  if (data && data.exists()) {
+    const pool = data.data() as PoolType;
+    const status = getStatus(pool);
+    return (
+      status && (
+        <div className="max-w-screen-lg w-full ">
+          <RewardsSection pool={pool} status={status} />
+        </div>
+      )
+    );
+  } else {
+    return null;
+  }
 }
 
 export default Rewards;

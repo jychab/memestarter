@@ -4,22 +4,22 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { useData } from "../hooks/useData";
-import { Project } from "../sections/MintDashboard";
-import { getCustomErrorMessage } from "../utils/error";
+import { useData } from "../../hooks/useData";
+import { Project } from "../../sections/MintDashboard";
+import { getCustomErrorMessage } from "../../utils/error";
 import {
   convertSecondsToNearestUnit,
   formatLargeNumber,
   getStatus,
-} from "../utils/helper";
+} from "../../utils/helper";
 import {
   checkClaimElligibility,
   claimReward,
   withdraw,
   withdrawLp,
-} from "../utils/instructions";
-import { buildAndSendTransaction } from "../utils/transactions";
-import { Status } from "../utils/types";
+} from "../../utils/instructions";
+import { buildAndSendTransaction } from "../../utils/transactions";
+import { Status } from "../../utils/types";
 
 interface TableRowProps {
   project: Project;
@@ -165,7 +165,6 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
       totalAmountWithdrawn,
       lpClaimed,
       mintElligible,
-      mintClaimed,
       lpElligible,
       image,
       pool,
@@ -177,7 +176,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         <td
           onClick={() => router.push(`/project/${pool}`)}
           scope="row"
-          className="cursor-pointer hidden sm:table-cell p-2"
+          className="cursor-pointer p-2"
         >
           <div className="relative w-8 h-8">
             <Image
@@ -196,15 +195,23 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         >
           {name}
         </td>
-        <td scope="row" className="p-2 text-center">
-          {amount / LAMPORTS_PER_SOL + " Sol"}
-        </td>
         {(status === Status.PresaleInProgress ||
           status === Status.PresaleTargetMet ||
           status === Status.ReadyToLaunch ||
           status === Status.Expired) && (
           <td scope="row" className="p-2 text-center">
-            {liquidityCollected / LAMPORTS_PER_SOL + " Sol"}
+            {amount / LAMPORTS_PER_SOL + " Sol"}
+          </td>
+        )}
+        {(status === Status.PresaleInProgress ||
+          status === Status.PresaleTargetMet ||
+          status === Status.ReadyToLaunch ||
+          status === Status.Expired) && (
+          <td scope="row" className="p-2 text-center">
+            {(liquidityCollected -
+              (totalAmountWithdrawn ? totalAmountWithdrawn : 0)) /
+              LAMPORTS_PER_SOL +
+              " Sol"}
           </td>
         )}
         {(status === Status.PresaleInProgress ||
@@ -227,23 +234,14 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
                 : "Ended"}
             </td>
           )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
+        {(status === Status.VestingInProgress ||
+          status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
-            {mintElligible
-              ? mintElligible == mintClaimed
-                ? "Fully Claimed"
-                : formatLargeNumber(mintElligible / 10 ** decimal)
-              : ""}
+            {formatLargeNumber(mintElligible / 10 ** decimal)}
           </td>
         )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
-          <td className="p-2 text-center">
-            {mintClaimed ? formatLargeNumber(mintClaimed / 10 ** decimal) : ""}
-          </td>
-        )}
-        {status === Status.VestingInProgress && (
+        {(status === Status.VestingInProgress ||
+          status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
             {lpElligible ? formatLargeNumber(lpElligible / 9) : ""}
           </td>
@@ -258,13 +256,12 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               : ""}
           </td>
         )}
-        {(status === Status.VestingCompleted ||
-          status === Status.VestingInProgress) && (
+        {(status === Status.VestingInProgress ||
+          status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
             {lpClaimed ? formatLargeNumber(lpClaimed / 10 ** decimal) : ""}
           </td>
         )}
-
         {status === Status.VestingInProgress && timer && (
           <td className="p-2 text-center">
             {`${convertSecondsToNearestUnit(
@@ -275,13 +272,8 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
               .join(" ")} left`}
           </td>
         )}
-        {status === Status.Expired && (
-          <td scope="row" className="p-2 text-center">
-            {(liquidityCollected -
-              (totalAmountWithdrawn ? totalAmountWithdrawn : 0)) /
-              LAMPORTS_PER_SOL +
-              " Sol"}
-          </td>
+        {status === Status.VestingCompleted && (
+          <td className="p-2 text-center">{"Ended"}</td>
         )}
         {status === Status.Expired && (
           <td className="p-2 text-center">

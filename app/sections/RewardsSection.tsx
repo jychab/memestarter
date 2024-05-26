@@ -6,15 +6,17 @@ import { FC, useEffect, useState } from "react";
 import { RewardCardItem } from "../components/RewardCardItem";
 import { useData } from "../hooks/useData";
 import { db } from "../utils/firebase";
-import { MintType, PoolType, Reward } from "../utils/types";
+import { MintType, PoolType, Reward, Status } from "../utils/types";
 
 interface RewardsSectionProps {
   pool: PoolType;
+  status: Status;
   editingMode?: boolean;
 }
 
 export const RewardsSection: FC<RewardsSectionProps> = ({
   pool,
+  status,
   editingMode = false,
 }) => {
   const [selected, setSelected] = useState<string>();
@@ -54,21 +56,25 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
     <div className="flex flex-col gap-4 items-start w-full">
       <div className="flex gap-2 items-center">
         <span className="text-base md:text-lg text-gray-400">Rewards</span>
-        {editingMode && publicKey && publicKey.toBase58() == pool.authority && (
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => setShowNew(true)}
-          >
-            <AddCircle color="inherit" fontSize="inherit" />
-          </IconButton>
-        )}
+        {editingMode &&
+          status != Status.Expired &&
+          publicKey &&
+          publicKey.toBase58() == pool.authority && (
+            <IconButton
+              color="inherit"
+              size="medium"
+              onClick={() => setShowNew(true)}
+            >
+              <AddCircle color="inherit" fontSize="inherit" />
+            </IconButton>
+          )}
       </div>
       {!editingMode && <span className="text-sm">Select an option below</span>}
       {rewards
         .sort((a, b) => (a.price || 0) - (b.price || 0))
         .map((reward) => (
           <RewardCardItem
+            status={status}
             key={reward.id}
             reward={reward}
             setSelected={setSelected}
@@ -81,6 +87,7 @@ export const RewardsSection: FC<RewardsSectionProps> = ({
         ))}
       {showNew && (
         <RewardCardItem
+          status={status}
           setSelected={setSelected}
           selected={selected}
           pool={pool}

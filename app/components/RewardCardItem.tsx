@@ -13,11 +13,12 @@ import { getCustomErrorMessage } from "../utils/error";
 import { formatLargeNumber, getCollectionMintAddress } from "../utils/helper";
 import { buyPresaleIx } from "../utils/instructions";
 import { buildAndSendTransaction } from "../utils/transactions";
-import { PoolType, Reward } from "../utils/types";
+import { PoolType, Reward, Status } from "../utils/types";
 import { EditableDocument } from "./EditableDocument";
 
 interface RewardCardItemProps {
   pool: PoolType;
+  status: Status;
   reward?: Reward;
   current?: number;
   setSelected: (rewardId: string) => void;
@@ -30,6 +31,7 @@ interface RewardCardItemProps {
 
 export const RewardCardItem: FC<RewardCardItemProps> = ({
   pool,
+  status,
   setSelected,
   selected,
   current,
@@ -201,6 +203,7 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
       }`}
     >
       <EditableDocument
+        status={status}
         titleStyle={"text-base"}
         pool={pool}
         reward={

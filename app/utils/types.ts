@@ -228,11 +228,13 @@ export interface Reward {
 
 export interface OrderHistory {
   txId: string;
+  address: string;
   mintId: string;
   rewardId: string;
   poolId: string;
   amount: number;
   quantity?: number;
+  updatedAt: Timestamp;
 }
 
 export interface Thumbnail {

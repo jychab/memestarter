@@ -11,10 +11,9 @@ import {
 import Image from "next/image";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { CompletedTable } from "../components/tables/CompletedTable";
-import { ExpiredTable } from "../components/tables/ExpiredTable";
-import { FundedTable } from "../components/tables/FundedTable";
-import { VestingTable } from "../components/tables/VestingTable";
+import { FundedTable } from "../components/tables/BackedTable";
+import { ExpiredTable } from "../components/tables/FailedTable";
+import { VestingTable } from "../components/tables/LaunchedTable";
 import { useData } from "../hooks/useData";
 import { useLogin } from "../hooks/useLogin";
 import { linkAsset, unlinkAsset } from "../utils/cloudFunctions";
@@ -30,10 +29,9 @@ interface InventoryItemProps {
 }
 enum ProjectType {
   all = "All",
-  funded = "Funded",
-  vesting = "Vesting",
-  completed = "Completed",
-  expired = "Expired",
+  backed = "Backed",
+  launched = "Launched",
+  failed = "Failed",
 }
 export interface Project extends MintType, PoolType {}
 
@@ -162,7 +160,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     return projects.filter((item) => {
       const status = getStatus(item);
       return (
-        (projectType === ProjectType.funded ||
+        (projectType === ProjectType.backed ||
           projectType === ProjectType.all) &&
         (status === Status.PresaleInProgress ||
           status === Status.PresaleTargetMet ||
@@ -172,26 +170,15 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   }, [projects, projectType]);
 
   // Define useMemo for other filtered project types
-  const vestingProjects = useMemo(() => {
+  const launchedProjects = useMemo(() => {
     if (!projects) return [];
     return projects.filter((item) => {
       const status = getStatus(item);
       return (
-        (projectType === ProjectType.vesting ||
+        (projectType === ProjectType.launched ||
           projectType === ProjectType.all) &&
-        status === Status.VestingInProgress
-      );
-    });
-  }, [projects, projectType]);
-
-  const completedProjects = useMemo(() => {
-    if (!projects) return [];
-    return projects.filter((item) => {
-      const status = getStatus(item);
-      return (
-        (projectType === ProjectType.completed ||
-          projectType === ProjectType.all) &&
-        status === Status.VestingCompleted
+        (status === Status.VestingInProgress ||
+          status === Status.VestingCompleted)
       );
     });
   }, [projects, projectType]);
@@ -201,7 +188,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     return projects.filter((item) => {
       const status = getStatus(item);
       return (
-        (projectType === ProjectType.expired ||
+        (projectType === ProjectType.failed ||
           projectType === ProjectType.all) &&
         status === Status.Expired
       );
@@ -210,7 +197,7 @@ export const MintDashboard: FC<InventoryItemProps> = ({
 
   return (
     <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 border text-black border-gray-300 rounded right-2">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col w-full gap-4">
         <div className={`flex items-center justify-between gap-2`}>
           <div className="flex items-center gap-2">
             {setSelectedItem && (
@@ -358,35 +345,27 @@ export const MintDashboard: FC<InventoryItemProps> = ({
           </div>
         </div>
         <div className="flex flex-col text-xs text-gray-400 gap-4">
-          {(projectType === ProjectType.funded ||
+          {(projectType === ProjectType.backed ||
             projectType === ProjectType.all) && (
-            <span>{ProjectType.funded}</span>
+            <span>{ProjectType.backed}</span>
           )}
-          {(projectType === ProjectType.funded ||
+          {(projectType === ProjectType.backed ||
             projectType === ProjectType.all) && (
             <FundedTable projects={fundedProjects} timer={timer} />
           )}
-          {(projectType === ProjectType.vesting ||
+          {(projectType === ProjectType.launched ||
             projectType === ProjectType.all) && (
-            <span>{ProjectType.vesting}</span>
+            <span>{ProjectType.launched}</span>
           )}
-          {(projectType === ProjectType.vesting ||
+          {(projectType === ProjectType.launched ||
             projectType === ProjectType.all) && (
-            <VestingTable projects={vestingProjects} timer={timer} />
+            <VestingTable projects={launchedProjects} timer={timer} />
           )}
-          {(projectType === ProjectType.completed ||
+          {(projectType === ProjectType.failed ||
             projectType === ProjectType.all) && (
-            <span>{ProjectType.completed}</span>
+            <span>{ProjectType.failed}</span>
           )}
-          {(projectType === ProjectType.completed ||
-            projectType === ProjectType.all) && (
-            <CompletedTable projects={completedProjects} timer={timer} />
-          )}
-          {(projectType === ProjectType.expired ||
-            projectType === ProjectType.all) && (
-            <span>{ProjectType.expired}</span>
-          )}
-          {(projectType === ProjectType.expired ||
+          {(projectType === ProjectType.failed ||
             projectType === ProjectType.all) && (
             <ExpiredTable projects={expiredProjects} timer={timer} />
           )}

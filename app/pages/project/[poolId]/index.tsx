@@ -9,6 +9,7 @@ import { EditableDocument } from "../../../components/EditableDocument";
 import { StatusBtn } from "../../../components/buttons/StatusBtn";
 import { useData } from "../../../hooks/useData";
 import { useLogin } from "../../../hooks/useLogin";
+import { BackersSection } from "../../../sections/BackersSection";
 import { CommentsSection } from "../../../sections/CommentsSection";
 import { MainPane } from "../../../sections/MainPane";
 import PresaleDashboard from "../../../sections/PresaleDashboard";
@@ -27,7 +28,7 @@ enum TabType {
   THUMBNAIL,
   PROJECTINFO,
   REWARDS,
-  PURCHASE,
+  BACKERS,
 }
 
 export default function Pool() {
@@ -41,7 +42,7 @@ export default function Pool() {
   const [pool, setPool] = useState<PoolType>();
   const router = useRouter();
   const { poolId } = router.query;
-  const matches = useMediaQuery("(min-width:768px)");
+  const matches = useMediaQuery("(min-width:1024px)");
   const [tabValue, setTabValue] = useState<TabType>(TabType.MAIN);
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -221,6 +222,7 @@ export default function Pool() {
               showEditButton={false}
               title={"Info"}
               titleStyle={"text-base md:text-lg text-gray-400"}
+              status={status}
             />
             <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
               <MainPane
@@ -276,19 +278,22 @@ export default function Pool() {
           </div>
         );
       case TabType.THUMBNAIL:
-        return <ThumbnailSection pool={pool} />;
+        return <ThumbnailSection pool={pool} status={status} />;
       case TabType.PROJECTINFO:
         return (
           <EditableDocument
             pool={pool}
             title={"Info"}
             titleStyle={"text-base md:text-lg text-gray-400"}
+            status={status}
           />
         );
       case TabType.REWARDS:
-        return <RewardsSection pool={pool} editingMode={true} />;
-      case TabType.PURCHASE:
-        return <></>;
+        return (
+          <RewardsSection pool={pool} editingMode={true} status={status} />
+        );
+      case TabType.BACKERS:
+        return <BackersSection poolId={pool.pool} />;
     }
   }, [pool, tabValue, status, price, StatusButton]);
 
@@ -301,22 +306,22 @@ export default function Pool() {
           value={tabValue}
           onChange={handleChange}
           variant="scrollable"
-          className="w-full md:w-32"
+          className="w-full lg:w-32"
           aria-label="project tabs"
         >
           <Tab label="Main" {...setTabProps(TabType.MAIN)} />
           <Tab label="Thumbnail" {...setTabProps(TabType.THUMBNAIL)} />
           <Tab label="Info" {...setTabProps(TabType.PROJECTINFO)} />
           <Tab label="Rewards" {...setTabProps(TabType.REWARDS)} />
-          <Tab label="Purchase" disabled {...setTabProps(TabType.PURCHASE)} />
+          <Tab label="Backers" {...setTabProps(TabType.BACKERS)} />
         </Tabs>
       )
     );
   }, [tabValue, matches, pool, publicKey]);
   return (
-    <div className="flex flex-col md:flex-row max-w-screen-xl gap-8 justify-center w-full h-full">
+    <div className="flex flex-col lg:flex-row max-w-screen-xl gap-8 justify-center w-full h-full">
       {TabNavigationBar}
-      <div className="flex w-full max-w-screen-lg justify-center">
+      <div className="flex w-full max-w-screen-xl justify-center">
         {TabContent}
       </div>
     </div>

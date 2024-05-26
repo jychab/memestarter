@@ -1,44 +1,44 @@
-import React, { FC } from "react";
-import { PoolType } from "../../utils/types";
-import { CreatorTableRow } from "../CreatorTableRow";
+import { FC } from "react";
+import { Project } from "../../sections/MintDashboard";
+import { TableRow } from "./TableRow";
 
-interface FailedTableProps {
-  pool: PoolType[];
+interface ExpiredTableProps {
+  projects: Project[];
   timer: number;
 }
 
-export const FailedTable: FC<FailedTableProps> = ({ pool, timer }) => {
+export const ExpiredTable: FC<ExpiredTableProps> = ({ projects, timer }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left rtl:text-right border border-gray-300">
         <thead className="uppercase border-b border-gray-300">
           <tr className="text-[10px]">
-            <th scope="col" className="hidden sm:table-cell w-16 p-2" />
+            <th scope="col" className="w-16 p-2" />
             <th scope="col" className="w-auto p-2">
               Project
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Total Funds Raised
+              Your Contribution
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Funds Withdrawn
+              Total Raised
             </th>
             <th scope="col" className="w-24 text-center p-2">
-              Funds Remaining
+              Withdrawable
             </th>
             <th scope="col" className="w-24 text-center p-2" />
           </tr>
         </thead>
         <tbody>
-          {pool.length === 0 && (
+          {projects.length === 0 && (
             <tr>
-              <td className="p-2 text-xs" colSpan={6}>
+              <td className="p-2 text-xs" colSpan={7}>
                 <span>No projects found.</span>
               </td>
             </tr>
           )}
-          {pool.map((mypool, index) => (
-            <CreatorTableRow key={index} pool={mypool} timer={timer} />
+          {projects.map((project, index) => (
+            <TableRow key={index} project={project} timer={timer} />
           ))}
         </tbody>
       </table>

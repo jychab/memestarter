@@ -7,12 +7,16 @@ import CardItem from "../components/CardItem";
 import { useLogin } from "../hooks/useLogin";
 import { saveThumbnail } from "../utils/cloudFunctions";
 import { uploadImage } from "../utils/functions";
-import { PoolType } from "../utils/types";
+import { PoolType, Status } from "../utils/types";
 
 interface ThumbnailSectionProps {
   pool: PoolType;
+  status: Status;
 }
-export const ThumbnailSection: FC<ThumbnailSectionProps> = ({ pool }) => {
+export const ThumbnailSection: FC<ThumbnailSectionProps> = ({
+  pool,
+  status,
+}) => {
   const { publicKey, signMessage } = useWallet();
   const { handleLogin } = useLogin();
   const [isEditable, setIsEditable] = useState(false);
@@ -59,15 +63,18 @@ export const ThumbnailSection: FC<ThumbnailSectionProps> = ({ pool }) => {
     <div className="flex flex-col gap-4 items-start w-full">
       <div className="flex w-full gap-2 items-center">
         <span className="text-base md:text-lg text-gray-400">Thumbnail</span>
-        {!isEditable && publicKey && publicKey.toBase58() == pool.authority && (
-          <IconButton
-            color="inherit"
-            size="medium"
-            onClick={() => setIsEditable(true)}
-          >
-            <Edit color="inherit" fontSize="inherit" />
-          </IconButton>
-        )}
+        {!isEditable &&
+          status != Status.Expired &&
+          publicKey &&
+          publicKey.toBase58() == pool.authority && (
+            <IconButton
+              color="inherit"
+              size="medium"
+              onClick={() => setIsEditable(true)}
+            >
+              <Edit color="inherit" fontSize="inherit" />
+            </IconButton>
+          )}
       </div>
       <div
         className={`flex flex-col rounded w-full ${
