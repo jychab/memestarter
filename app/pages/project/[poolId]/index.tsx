@@ -321,9 +321,9 @@ export default function Pool() {
     );
   }, [tabValue, matches, pool, publicKey]);
   return (
-    <div className="flex flex-col lg:flex-row max-w-screen-xl gap-8 justify-center w-full h-full">
+    <div className="flex flex-col lg:flex-row max-w-screen-lg gap-8 justify-center w-full h-full">
       {TabNavigationBar}
-      <div className="flex w-full max-w-screen-lg justify-center">
+      <div className="flex w-full max-w-screen-md justify-center">
         {TabContent}
       </div>
     </div>
