@@ -220,8 +220,10 @@ export default function Pool() {
             <EditableDocument
               pool={pool}
               showEditButton={false}
-              title={"Info"}
-              titleStyle={"text-base md:text-lg text-gray-400"}
+              title={pool.thumbnail.title}
+              titleStyle={
+                "text-2xl md:text-3xl text-black font-light uppercase text-center w-full line-clamp-2"
+              }
               status={status}
             />
             <div className="flex flex-col gap-4 border p-4 rounded w-full text-gray-400 font-medium">
@@ -321,7 +323,7 @@ export default function Pool() {
   return (
     <div className="flex flex-col lg:flex-row max-w-screen-xl gap-8 justify-center w-full h-full">
       {TabNavigationBar}
-      <div className="flex w-full max-w-screen-xl justify-center">
+      <div className="flex w-full max-w-screen-lg justify-center">
         {TabContent}
       </div>
     </div>
