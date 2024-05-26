@@ -178,6 +178,9 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
   }, [
     pool,
     nft,
+    current,
+    quantity,
+    router,
     amountInSol,
     amountInLamports,
     maxAllowed,
