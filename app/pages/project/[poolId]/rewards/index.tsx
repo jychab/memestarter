@@ -14,7 +14,7 @@ function Rewards() {
     const status = getStatus(pool);
     return (
       status && (
-        <div className="max-w-screen-md w-full ">
+        <div className="max-w-screen-lg w-full ">
           <RewardsSection pool={pool} status={status} />
         </div>
       )

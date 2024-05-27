@@ -119,7 +119,7 @@ function Profile() {
   }, [publicKey, currentUser]);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-screen-xl gap-4 lg:items-center">
+    <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center">
       {!publicKey ? (
         <span className="text-black">You need to sign in first.</span>
       ) : selectedItem ? (

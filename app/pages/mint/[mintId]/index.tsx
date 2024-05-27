@@ -31,7 +31,7 @@ export default function Mint() {
   }, [collectionMintData]);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-screen-xl gap-4 lg:items-center justify-between">
+    <div className="flex flex-col h-full w-full max-w-screen-lg gap-4 lg:items-center justify-between">
       {item && <MintDashboard item={item} collectionItem={collectionItem} />}
     </div>
   );

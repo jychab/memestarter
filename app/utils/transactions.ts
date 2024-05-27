@@ -87,11 +87,15 @@ export async function buildAndSendTransaction(
   commitment: Commitment = "confirmed"
 ): Promise<string> {
   const [microLamports, units, recentBlockhash] = await Promise.all([
-    getPriorityFeeEstimate("VeryHigh", ixs, publicKey, connection),
+    getPriorityFeeEstimate("High", ixs, publicKey, connection),
     getSimulationUnits(connection, ixs, publicKey, []),
     connection.getLatestBlockhash({ commitment: "confirmed" }),
   ]);
-  ixs.unshift(ComputeBudgetProgram.setComputeUnitPrice({ microLamports }));
+  ixs.unshift(
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: Math.round(microLamports),
+    })
+  );
   if (units) {
     // probably should add some margin of error to units
     ixs.unshift(

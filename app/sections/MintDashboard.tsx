@@ -1,3 +1,4 @@
+import { Tab, Tabs } from "@mui/material";
 import { useWallet } from "@solana/wallet-adapter-react";
 import {
   DocumentData,
@@ -9,7 +10,7 @@ import {
   query,
 } from "firebase/firestore";
 import Image from "next/image";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { FundedTable } from "../components/tables/BackedTable";
 import { ExpiredTable } from "../components/tables/FailedTable";
@@ -46,8 +47,6 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const [collectionImage, setCollectionImage] = useState<string>();
   const [collectionName, setCollectionName] = useState<string>();
   const [projectType, setProjectType] = useState<ProjectType>(ProjectType.all);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const { publicKey, signMessage } = useWallet();
   const { handleLogin } = useLogin();
@@ -103,32 +102,6 @@ export const MintDashboard: FC<InventoryItemProps> = ({
     );
     return () => unsubscribe();
   }, [item, projectType, publicKey]);
-
-  useEffect(() => {
-    // Function to handle click outside the dialog
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        // Click occurred outside the dialog, so close the dialog
-        setShow(false);
-      }
-    };
-
-    // Attach event listener when the dialog is open
-    if (show) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      // Remove event listener when the dialog is closed
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    // Cleanup the event listener on component unmount
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [show]);
 
   const handleLinkage = useCallback(
     async (selectedItem: DAS.GetAssetResponse | undefined) => {
@@ -194,6 +167,32 @@ export const MintDashboard: FC<InventoryItemProps> = ({
       );
     });
   }, [projects, projectType]);
+
+  function setTabProps(tab: ProjectType) {
+    return {
+      value: tab,
+      id: `simple-tab-${tab}`,
+      "aria-controls": `simple-tabpanel-${tab}`,
+    };
+  }
+
+  const TabNavigationBar = useMemo(() => {
+    return (
+      <Tabs
+        orientation={"horizontal"}
+        value={projectType}
+        onChange={(e, value) => setProjectType(value)}
+        variant="scrollable"
+        className="w-full"
+        aria-label="project tabs"
+      >
+        <Tab label="All" {...setTabProps(ProjectType.all)} />
+        <Tab label="Backed" {...setTabProps(ProjectType.backed)} />
+        <Tab label="Launched" {...setTabProps(ProjectType.launched)} />
+        <Tab label="Failed" {...setTabProps(ProjectType.failed)} />
+      </Tabs>
+    );
+  }, [projectType]);
 
   return (
     <div className="animate-fade-left animate-ease-linear animate-duration-150 p-4 flex flex-col flex-1 w-full justify-between gap-4 border text-black border-gray-300 rounded right-2">
@@ -303,68 +302,21 @@ export const MintDashboard: FC<InventoryItemProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-start">
-          <div className="relative">
-            <button
-              id="dropdown-type-button"
-              onClick={() => setShow(!show)}
-              className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 pr-2 justify-center text-sm font-medium text-center border rounded focus:outline-none text-black border-gray-300"
-              type="button"
-            >
-              {projectType}
-              <svg
-                className="w-2.5 h-2.5 ms-2.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 10 6"
-              >
-                <path stroke="currentColor" d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <div
-              id="dropdown-type"
-              hidden={!show}
-              ref={dropdownRef}
-              className="z-20 mt-2 absolute rounded w-28"
-            >
-              <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
-                {Object.values(ProjectType).map((value, index) => (
-                  <li key={index}>
-                    <button
-                      type="button"
-                      className="inline-flex w-full px-4 py-2 text-sm "
-                      onClick={() => setProjectType(value)}
-                    >
-                      {value}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+        {TabNavigationBar}
         <div className="flex flex-col text-xs text-gray-400 gap-4">
-          {(projectType === ProjectType.backed ||
-            projectType === ProjectType.all) && (
-            <span>{ProjectType.backed}</span>
-          )}
+          {projectType === ProjectType.all && <span>{ProjectType.backed}</span>}
           {(projectType === ProjectType.backed ||
             projectType === ProjectType.all) && (
             <FundedTable projects={fundedProjects} timer={timer} />
           )}
-          {(projectType === ProjectType.launched ||
-            projectType === ProjectType.all) && (
+          {projectType === ProjectType.all && (
             <span>{ProjectType.launched}</span>
           )}
           {(projectType === ProjectType.launched ||
             projectType === ProjectType.all) && (
             <VestingTable projects={launchedProjects} timer={timer} />
           )}
-          {(projectType === ProjectType.failed ||
-            projectType === ProjectType.all) && (
-            <span>{ProjectType.failed}</span>
-          )}
+          {projectType === ProjectType.all && <span>{ProjectType.failed}</span>}
           {(projectType === ProjectType.failed ||
             projectType === ProjectType.all) && (
             <ExpiredTable projects={expiredProjects} timer={timer} />

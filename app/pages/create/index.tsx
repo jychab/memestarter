@@ -142,7 +142,7 @@ function CreateCollection() {
           signTransaction
         );
         toast.success("Success!");
-        router.push("/");
+        router.push("/myprojects");
       } catch (error) {
         console.log(error);
         toast.error(`${getCustomErrorMessage(error)}`);

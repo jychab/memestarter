@@ -1,6 +1,7 @@
+import { Tab, Tabs } from "@mui/material";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CreatedTable } from "../../components/tables/Created/CreatorCreatedTable";
 import { FailedTable } from "../../components/tables/Created/CreatorFailedTable";
 import { LaunchedTable } from "../../components/tables/Created/CreatorLaunchedTable";
@@ -20,8 +21,6 @@ function MyProjects() {
   const [projectType, setProjectType] = useState<CreatorProjectType>(
     CreatorProjectType.All
   );
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [show, setShow] = useState(false);
 
   const [timer, setTimer] = useState<number>(Date.now());
 
@@ -44,32 +43,6 @@ function MyProjects() {
       return () => unsubscribe();
     }
   }, [publicKey]);
-
-  useEffect(() => {
-    // Function to handle click outside the dialog
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        // Click occurred outside the dialog, so close the dialog
-        setShow(false);
-      }
-    };
-
-    // Attach event listener when the dialog is open
-    if (show) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      // Remove event listener when the dialog is closed
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    // Cleanup the event listener on component unmount
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [show]);
 
   const createdProjects = useMemo(() => {
     if (!myPools) return [];
@@ -107,81 +80,55 @@ function MyProjects() {
       );
     });
   }, [myPools, projectType]);
-  return (
-    <div className="flex flex-col h-full w-full max-w-screen-xl gap-4 lg:items-center justify-between">
-      {!publicKey ? (
-        <span className="text-black">You need to sign in first.</span>
-      ) : (
-        <div className="flex flex-col w-full text-xs text-gray-400 gap-4">
-          <div className="flex items-center justify-start">
-            <div className="relative">
-              <button
-                id="dropdown-type-button"
-                onClick={() => setShow(!show)}
-                className="relative flex-shrink-0 z-10 w-28 inline-flex items-center py-2 px-2 pr-2 justify-center text-sm font-medium text-center border rounded focus:outline-none text-black border-gray-300"
-                type="button"
-              >
-                {projectType}
-                <svg
-                  className="w-2.5 h-2.5 ms-2.5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 10 6"
-                >
-                  <path stroke="currentColor" d="m1 1 4 4 4-4" />
-                </svg>
-              </button>
-              <div
-                id="dropdown-type"
-                hidden={!show}
-                ref={dropdownRef}
-                className="z-20 mt-2 absolute rounded w-28"
-              >
-                <ul className="py-2 text-sm text-black z-30 bg-white border-gray-300 border">
-                  {Object.values(CreatorProjectType).map((value, index) => (
-                    <li key={index}>
-                      <button
-                        type="button"
-                        className="inline-flex w-full px-4 py-2 text-sm "
-                        onClick={() => setProjectType(value)}
-                      >
-                        {value}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
 
-          {(projectType === CreatorProjectType.All ||
-            projectType === CreatorProjectType.Created) && (
-            <span>{CreatorProjectType.Created}</span>
-          )}
-          {(projectType === CreatorProjectType.All ||
-            projectType === CreatorProjectType.Created) && (
-            <CreatedTable pool={createdProjects} timer={timer} />
-          )}
+  function setTabProps(tab: CreatorProjectType) {
+    return {
+      value: tab,
+      id: `simple-tab-${tab}`,
+      "aria-controls": `simple-tabpanel-${tab}`,
+    };
+  }
 
-          {projectType === CreatorProjectType.Launched ||
-            (projectType === CreatorProjectType.All && (
-              <span>{CreatorProjectType.Launched}</span>
-            ))}
-          {(projectType === CreatorProjectType.Launched ||
-            projectType === CreatorProjectType.All) && (
-            <LaunchedTable pool={launchedProjects} timer={timer} />
-          )}
+  const TabNavigationBar = useMemo(() => {
+    return (
+      <Tabs
+        orientation={"horizontal"}
+        value={projectType}
+        onChange={(e, value) => setProjectType(value)}
+        variant="scrollable"
+        className="w-full"
+        aria-label="project tabs"
+      >
+        <Tab label="All" {...setTabProps(CreatorProjectType.All)} />
+        <Tab label="Created" {...setTabProps(CreatorProjectType.Created)} />
+        <Tab label="Launched" {...setTabProps(CreatorProjectType.Launched)} />
+        <Tab label="Failed" {...setTabProps(CreatorProjectType.Failed)} />
+      </Tabs>
+    );
+  }, [projectType]);
+  return !publicKey ? (
+    <span className="text-black">You need to sign in first.</span>
+  ) : (
+    <div className="flex flex-col w-full h-full justify-center max-w-screen-lg gap-4 text-gray-400 text-sm">
+      {TabNavigationBar}
+      {projectType === CreatorProjectType.All && (
+        <span>{CreatorProjectType.Created}</span>
+      )}
+      {(projectType === CreatorProjectType.All ||
+        projectType === CreatorProjectType.Created) && (
+        <CreatedTable pool={createdProjects} timer={timer} />
+      )}
+      {projectType === CreatorProjectType.All && (
+        <span>{CreatorProjectType.Launched}</span>
+      )}
+      {(projectType === CreatorProjectType.Launched ||
+        projectType === CreatorProjectType.All) && (
+        <LaunchedTable pool={launchedProjects} timer={timer} />
+      )}
 
-          {(projectType === CreatorProjectType.Failed ||
-            projectType === CreatorProjectType.All) && (
-            <span>{CreatorProjectType.Failed}</span>
-          )}
-          {(projectType === CreatorProjectType.Failed ||
-            projectType === CreatorProjectType.All) && (
-            <FailedTable pool={failedProjects} timer={timer} />
-          )}
-        </div>
+      {(projectType === CreatorProjectType.Failed ||
+        projectType === CreatorProjectType.All) && (
+        <FailedTable pool={failedProjects} timer={timer} />
       )}
     </div>
   );

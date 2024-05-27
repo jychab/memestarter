@@ -261,7 +261,7 @@ export const TableRow: FC<TableRowProps> = ({ project, timer }) => {
         {(status === Status.VestingInProgress ||
           status === Status.VestingCompleted) && (
           <td className="p-2 text-center">
-            {lpClaimed ? formatLargeNumber(lpClaimed / 10 ** decimal) : ""}
+            {lpClaimed ? formatLargeNumber(lpClaimed / 10 ** 9) : ""}
           </td>
         )}
         {status === Status.VestingInProgress && timer && (
