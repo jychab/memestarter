@@ -1,5 +1,5 @@
-import { useLocalStorage } from "@solana/wallet-adapter-react";
 import { Dispatch, FC, SetStateAction, useEffect } from "react";
+import { useSessionStorage } from "../hooks/useSessionStorage";
 
 interface OnboardingProps {
   hide: boolean | undefined;
@@ -7,7 +7,7 @@ interface OnboardingProps {
 }
 
 export const OnboardingScreen: FC<OnboardingProps> = ({ hide, setHide }) => {
-  const [localHide, setLocalHide] = useLocalStorage("onboarding", false);
+  const [localHide, setLocalHide] = useSessionStorage("onboarding", false);
 
   useEffect(() => {
     if (hide == undefined) {

@@ -2,6 +2,7 @@ import { collection, limit, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CardItem from "../components/CardItem";
 import useFirestoreWtihSWR from "../hooks/useFirestoreWithSWR";
+import { useSessionStorage } from "../hooks/useSessionStorage";
 import { OnboardingScreen } from "../sections/OnboardScreen";
 import { db } from "../utils/firebase";
 import { PoolType } from "../utils/types";
@@ -21,10 +22,12 @@ enum FilterCriteria {
 
 function Projects() {
   const [projects, setProjects] = useState<PoolType[]>();
-  const [sortCriteria, setSortCriteria] = useState<SortCriteria>(
+  const [sortCriteria, setSortCriteria] = useSessionStorage<SortCriteria>(
+    "sortCriteria",
     SortCriteria.liquidity
   );
-  const [filterCriteria, setFilterCriteria] = useState<FilterCriteria>(
+  const [filterCriteria, setFilterCriteria] = useSessionStorage<FilterCriteria>(
+    "filterCriteria",
     FilterCriteria.ongoing
   );
   const filterDropDownRef = useRef<HTMLDivElement>(null);
