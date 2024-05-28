@@ -67,9 +67,9 @@ export const CardItem: FC<CardItemProps> = ({
       <button
         disabled={disabled}
         onClick={() => router.push(`project/${pool.pool}`)}
-        className="group cursor overflow-hidden rounded hover:shadow-xl w-full max-w-80 duration-200 p-4 hover:border hover:border-gray-300"
+        className="group cursor overflow-hidden rounded hover:shadow-xl w-full duration-200 p-4 hover:border hover:border-gray-300 flex flex-col gap-2"
       >
-        <div className="relative w-full h-44 overflow-hidden">
+        <div className="relative w-full h-48 overflow-hidden">
           <Image
             priority={true}
             className={`rounded object-cover`}
@@ -84,12 +84,12 @@ export const CardItem: FC<CardItemProps> = ({
             </div>
           )}
         </div>
-        <div className="flex flex-col w-full min-h-16 h-fit group-hover:max-h-40 gap-2 overflow-hidden bg-white p-2">
+        <div className="flex flex-col w-full min-h-16 h-fit group-hover:max-h-40 gap-2 overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex gap-2 items-center">
               <div className="w-8 h-8 relative">
                 <Image
-                  className={`rounded-full object-cover group-hover:border-2 group-hover:border-gray-400`}
+                  className={`rounded-full object-cover`}
                   fill={true}
                   priority={true}
                   sizes="33vw"
@@ -99,17 +99,17 @@ export const CardItem: FC<CardItemProps> = ({
                 />
               </div>
               <div className="flex flex-col items-start w-fit">
-                <span className="text-gray-800 text-xs md:text-sm text-start line-clamp-2">
+                <span className="text-gray-800 font-medium text-base text-start line-clamp-2 hover:underline">
                   {title ? title : pool.thumbnail.title}
                 </span>
-                <span className="truncate text-gray-400 text-[10px] lg:text-xs">
-                  {`${pool.name} [ticker: ${pool.symbol}]`}
+                <span className="truncate text-gray-400 text-xs">
+                  {`[symbol: ${pool.symbol}] ${pool.name}`}
                 </span>
               </div>
             </div>
           </div>
           <div className="hidden group-hover:flex">
-            <span className="text-gray-900 text-xs md:text-sm text-start line-clamp-3">
+            <span className="text-gray-800 font-light text-sm md:text-sm text-start line-clamp-3">
               {description ? description : pool.thumbnail.description}
             </span>
           </div>
@@ -132,13 +132,13 @@ export const CardItem: FC<CardItemProps> = ({
                   />
                 </svg>
               )}
-              <span className="text-[10px] md:text-xs w-full truncate">
+              <span className="text-xs w-full truncate">
                 {presaleDurationLeft || status}
               </span>
             </div>
             {presaleDurationLeft && (
               <div className="hidden gap-1 group-hover:flex flex-none items-center">
-                <span className="text-[10px] lg:text-xs text-gray-900 ">
+                <span className="text-xs text-gray-900 ">
                   {`${
                     pool.liquidityCollected
                       ? pool.liquidityCollected / LAMPORTS_PER_SOL
@@ -154,7 +154,7 @@ export const CardItem: FC<CardItemProps> = ({
               </div>
             )}
             {presaleDurationLeft && (
-              <span className="text-[10px] lg:text-xs group-hover:hidden text-gray-900">
+              <span className="text-xs group-hover:hidden text-gray-900">
                 {`${percentage}% funded`}
               </span>
             )}

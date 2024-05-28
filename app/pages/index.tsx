@@ -167,7 +167,7 @@ function Projects() {
     <>
       <OnboardingScreen hide={hide} setHide={setHide} />
       <div className="flex flex-col w-full h-auto max-w-screen-xl mx-auto gap-4 overflow-auto scrollbar-none">
-        <div className="flex gap-4">
+        <div className="flex gap-4 p-4">
           <div className="flex items-center justify-start">
             <div className="relative">
               <button
@@ -274,7 +274,7 @@ function Projects() {
             </svg>
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 items-center justify-center w-full min-w-[200px]">
           {projects &&
             projects.length > 0 &&
             projects.map((project) => (
