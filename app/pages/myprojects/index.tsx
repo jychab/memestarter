@@ -19,7 +19,7 @@ function MyProjects() {
   const { publicKey } = useWallet();
   const [myPools, setMyPools] = useState<PoolType[]>();
   const [projectType, setProjectType] = useState<CreatorProjectType>(
-    CreatorProjectType.All
+    CreatorProjectType.Created
   );
 
   const [timer, setTimer] = useState<number>(Date.now());
@@ -125,7 +125,9 @@ function MyProjects() {
         projectType === CreatorProjectType.All) && (
         <LaunchedTable pool={launchedProjects} timer={timer} />
       )}
-
+      {projectType === CreatorProjectType.All && (
+        <span>{CreatorProjectType.Failed}</span>
+      )}
       {(projectType === CreatorProjectType.Failed ||
         projectType === CreatorProjectType.All) && (
         <FailedTable pool={failedProjects} timer={timer} />

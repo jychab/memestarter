@@ -336,7 +336,7 @@ export const RewardCardItem: FC<RewardCardItemProps> = ({
             <span className="text-[10px] text-gray-400">{`Tokens Receivable:`}</span>
             <span className="text-[10px] text-gray-400 text-end ">{`~${formatLargeNumber(
               estimatedTokensReceivable
-            )} $${pool.symbol}`}</span>
+            )} ${pool.symbol}`}</span>
           </div>
         </div>
       )}

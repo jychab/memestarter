@@ -46,7 +46,9 @@ export const MintDashboard: FC<InventoryItemProps> = ({
   const [name, setName] = useState<string>();
   const [collectionImage, setCollectionImage] = useState<string>();
   const [collectionName, setCollectionName] = useState<string>();
-  const [projectType, setProjectType] = useState<ProjectType>(ProjectType.all);
+  const [projectType, setProjectType] = useState<ProjectType>(
+    ProjectType.backed
+  );
   const [loading, setLoading] = useState(false);
   const { publicKey, signMessage } = useWallet();
   const { handleLogin } = useLogin();

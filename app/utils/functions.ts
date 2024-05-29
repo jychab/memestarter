@@ -140,4 +140,5 @@ export async function createPool(
     args.publicKey,
     signTransaction
   );
+  return poolId.toBase58();
 }
