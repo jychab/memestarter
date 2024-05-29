@@ -2,8 +2,7 @@ import { NATIVE_MINT } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { collection, limit, query, where } from "firebase/firestore";
-import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import CardItem from "../../components/CardItem";
 import useFirestoreWtihSWR from "../../hooks/useFirestoreWithSWR";
@@ -20,7 +19,6 @@ function CreateCollection() {
   const { connection } = useConnection();
   const { handleLogin } = useLogin();
   const { publicKey, signTransaction, signMessage } = useWallet();
-  const router = useRouter();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState(1);
@@ -66,11 +64,13 @@ function CreateCollection() {
 
   const { data } = useCollection<PoolType>(createPoolQuery);
 
-  if (data) {
-    toast.success("Success");
-    setLoading(false);
-    setPage(4);
-  }
+  useEffect(() => {
+    if (data) {
+      toast.success("Success");
+      setLoading(false);
+      setPage(4);
+    }
+  }, [data]);
 
   const handleNameChange = (e: any) => {
     setName(e.target.value);
@@ -277,13 +277,15 @@ function CreateCollection() {
           )}
           {page == 4 && data && (
             <div className="flex flex-col gap-4 justify-center items-center">
-              <span className="text-lg">
+              <span className="text-xl text-center">
                 {`Congratulations on creating your project token!`}
               </span>
-              <span>
-                {`Whats's next? Provide the details of your project to help backers learn more about it!`}
+              <span className="text-base text-center">
+                {`Whats's next? Click on the card below to fill in more details about your project!`}
               </span>
-              <CardItem pool={data[0]} timer={Date.now()} />
+              <div className="flex justify-center items-center w-80">
+                <CardItem pool={data[0]} timer={Date.now()} />
+              </div>
             </div>
           )}
           {page <= 3 && (
